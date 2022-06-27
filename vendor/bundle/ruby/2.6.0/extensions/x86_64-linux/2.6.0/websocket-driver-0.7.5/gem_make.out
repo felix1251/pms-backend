@@ -1,0 +1,15 @@
+current directory: /home/zero/Desktop/academic_advising/academic_advising_backend/vendor/bundle/ruby/2.6.0/gems/websocket-driver-0.7.5/ext/websocket-driver
+/home/zero/.rbenv/versions/2.6.3/bin/ruby -I /home/zero/.rbenv/versions/2.6.3/lib/ruby/2.6.0 -r ./siteconf20220517-27679-4okygl.rb extconf.rb
+creating Makefile
+
+current directory: /home/zero/Desktop/academic_advising/academic_advising_backend/vendor/bundle/ruby/2.6.0/gems/websocket-driver-0.7.5/ext/websocket-driver
+make "DESTDIR=" clean
+
+current directory: /home/zero/Desktop/academic_advising/academic_advising_backend/vendor/bundle/ruby/2.6.0/gems/websocket-driver-0.7.5/ext/websocket-driver
+make "DESTDIR="
+compiling websocket_mask.c
+linking shared-object websocket_mask.so
+
+current directory: /home/zero/Desktop/academic_advising/academic_advising_backend/vendor/bundle/ruby/2.6.0/gems/websocket-driver-0.7.5/ext/websocket-driver
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20220517-27679-1lxotm5
