@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   include ActiveModel::Serializers::JSON
   has_secure_password
+  belongs_to :company
 
   serialize :address, Array
   validates :email,
@@ -9,7 +10,7 @@ class User < ApplicationRecord
             uniqueness: { case_sensitive: false }
 
   def attributes
-    { id: id, email: email, page_access_rigths: page_access_rigths, action_access_rigths: action_access_rigths, fullname: fullname}
+    { id: id, email: email, page_access_rigths: page_access_rigths, action_access_rigths: action_access_rigths, position: position, name: name}
   end
 
   def generate_password_token!

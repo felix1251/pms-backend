@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :prerequisite do
+  factory :company do
     
   end
 end

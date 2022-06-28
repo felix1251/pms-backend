@@ -3,9 +3,14 @@ class SigninController < ApplicationController
   before_action :authorize_access_request!, only: [:destroy]
 
   def create
-    user = User.find_by!(email: params[:email])
-    if user.authenticate(params[:password])
+    company = Company.find_by!(code: params[:company_code])
+    user = User.find_by!(username: params[:username])
 
+    if user && company.id != user.company_id
+      not_found
+    end
+    
+    if user.authenticate(params[:password])
       page_access_rigths = JSON.parse(user.page_access_rigths)
       action_access_rigths = JSON.parse(user.action_access_rigths)
       
@@ -22,7 +27,7 @@ class SigninController < ApplicationController
                           secure: Rails.env.production?)
       render json: { csrf: tokens[:csrf] }
     else
-      not_authorized
+      not_found
     end
   end
 
@@ -35,6 +40,6 @@ class SigninController < ApplicationController
   private
 
   def not_found
-    render json: { error: 'Cannont find such email and password combination' }, status: :not_found
+    render json: { error: 'Cannont find such company, username and password combination' }, status: :not_found
   end
 end
