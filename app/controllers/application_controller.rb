@@ -11,11 +11,7 @@ class ApplicationController < ActionController::API
   private
 
   def current_user
-    @current_user ||= User.joins("LEFT JOIN colleges as c ON c.id = users.college_id
-                                LEFT JOIN curriculums as cu ON cu.id = users.curriculum_id")
-                                .select("users.id, users.email, users.role, users.fullname, 
-                                users.college_id ,users.curriculum_id, c.code AS college_code, cu.code AS curriculum_code")
-                                .find(payload['user_id'])
+    @current_user ||= User.find(payload['user_id'])
   end
 
   def bad_request

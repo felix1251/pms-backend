@@ -1,10 +1,15 @@
+require 'json'
 class SigninController < ApplicationController
   before_action :authorize_access_request!, only: [:destroy]
 
   def create
     user = User.find_by!(email: params[:email])
     if user.authenticate(params[:password])
-      payload  = { user_id: user.id, aud: [user.role] }
+
+      page_access_rigths = JSON.parse(user.page_access_rigths)
+      action_access_rigths = JSON.parse(user.action_access_rigths)
+      
+      payload  = { user_id: user.id, page_aud: page_access_rigths, action_aud: action_access_rigths }
       session = JWTSessions::Session.new(payload: payload,
                                           refresh_by_access_allowed: true,
                                           namespace: "user_#{user.id}")

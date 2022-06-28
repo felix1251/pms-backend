@@ -1,20 +1,16 @@
 class User < ApplicationRecord
   include ActiveModel::Serializers::JSON
   has_secure_password
-  belongs_to :college, optional: true
-  belongs_to :curriculum, optional: true
-  has_many :todos, :dependent => :delete_all
-  
-  enum role: %i[student adviser dean system_admin].freeze
 
+  serialize :address, Array
   validates :email,
             format: { with: URI::MailTo::EMAIL_REGEXP },
             presence: true,
             uniqueness: { case_sensitive: false }
 
-  # def attributes
-  #   { id: id, email: email, role: role, fullname: fullname ,college_id: college_id, curriculum_id: curriculum_id }
-  # end
+  def attributes
+    { id: id, email: email, page_access_rigths: page_access_rigths, action_access_rigths: action_access_rigths, fullname: fullname}
+  end
 
   def generate_password_token!
     begin

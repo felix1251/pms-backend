@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   post 'signin', controller: :signin, action: :create
   delete 'signin', controller: :signin, action: :destroy
   get 'me', controller: :users, action: :me
+  get 'check_user_access', controller: :users, action: :check_user_access
+  
 
   resources :password_resets, only: [:create] do
     collection do

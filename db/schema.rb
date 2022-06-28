@@ -17,14 +17,12 @@ ActiveRecord::Schema.define(version: 2018_07_04_144112) do
     t.string "password_digest"
     t.string "fullname", null: false
     t.boolean "status", default: true
-    t.integer "college_id"
-    t.integer "curriculum_id"
+    t.text "page_access_rigths", default: "[\"D\", \"R\", \"T\", \"S\", \"V\"]"
+    t.text "action_access_rigths", default: "[\"A\", \"D\", \"E\", \"X\"]"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "reset_password_token"
     t.datetime "reset_password_token_expires_at"
-    t.index ["college_id"], name: "index_users_on_college_id"
-    t.index ["curriculum_id"], name: "index_users_on_curriculum_id"
     t.index ["email"], name: "index_users_on_email"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token"
   end
