@@ -40,6 +40,6 @@ class SigninController < ApplicationController
   private
 
   def not_found
-    render json: { error: 'Cannont find such company, username and password combination' }, status: :not_found
+    render json: { error: "Can't find such company, username and password combination" }, status: :not_found
   end
 end
