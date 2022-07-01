@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
 
+  resources :page_access_controls
+  resources :page_accesses
+  resources :user_page_accesses
   resources :companies
   post 'refresh', controller: :refresh, action: :create
   post 'signin', controller: :signin, action: :create

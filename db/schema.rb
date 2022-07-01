@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 2022_06_28_014956) do
     t.string "name", default: ""
     t.boolean "hr_head", default: false
     t.string "username", null: false
-    t.boolean "status", default: true
+    t.string "status", default: "A"
     t.text "page_access_rigths", default: "[\"D\", \"R\", \"T\", \"S\", \"V\"]"
     t.text "action_access_rigths", default: "[\"A\", \"D\", \"E\", \"X\"]"
     t.datetime "created_at", null: false

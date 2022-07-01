@@ -7,7 +7,7 @@ class CreateUsers < ActiveRecord::Migration[5.2]
       t.string :name, default: ''
       t.boolean :hr_head, default: false
       t.string :username, null: false, length: {minimum: 5, maximum: 20}, unique: true
-      t.boolean :status, default: true
+      t.string :status, default: 'A'
       t.text :page_access_rigths, default: "[\"D\", \"R\", \"T\", \"S\", \"V\"]"
       t.text :action_access_rigths, default: "[\"A\", \"D\", \"E\", \"X\"]"
       t.timestamps

@@ -9,6 +9,8 @@ class User < ApplicationRecord
             presence: true,
             uniqueness: { case_sensitive: false }
 
+  enum status: %i[A I].freeze
+
   def attributes
     { id: id, email: email, page_access_rigths: page_access_rigths, action_access_rigths: action_access_rigths, position: position, name: name}
   end

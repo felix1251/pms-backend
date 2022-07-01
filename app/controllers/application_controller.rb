@@ -37,4 +37,12 @@ class ApplicationController < ActionController::API
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(' ') }, status: :unprocessable_entity
   end
+
+  def check_page_access_rights(page)
+    page_access_rigths = JSON.parse(current_user.page_access_rigths)
+    unless page_access_rigths.include?(page)
+      render json: { error: 'access denied' }, status: :forbidden
+    end
+  end
+
 end
