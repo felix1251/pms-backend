@@ -39,7 +39,7 @@ class ApplicationController < ActionController::API
   end
 
   def check_page_access_rights(page)
-    page_access_rigths = JSON.parse(current_user.page_access_rigths)
+    page_access_rigths = current_user.page_access_rigths.pluck(:access_code)
     unless page_access_rigths.include?(page)
       render json: { error: 'access denied' }, status: :forbidden
     end

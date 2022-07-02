@@ -11,10 +11,7 @@ class SigninController < ApplicationController
     end
     
     if user.authenticate(params[:password])
-      page_access_rigths = JSON.parse(user.page_access_rigths)
-      action_access_rigths = JSON.parse(user.action_access_rigths)
-      
-      payload  = { user_id: user.id, page_aud: page_access_rigths, action_aud: action_access_rigths }
+      payload  = { user_id: user.id }
       session = JWTSessions::Session.new(payload: payload,
                                           refresh_by_access_allowed: true,
                                           namespace: "user_#{user.id}")

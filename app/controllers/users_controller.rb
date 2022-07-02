@@ -7,8 +7,7 @@ class UsersController < ApplicationController
   end
 
   def check_user_access
-    page_access_rigths = JSON.parse(current_user.page_access_rigths)
-    action_access_rigths = JSON.parse(current_user.action_access_rigths)
+    page_access_rigths = current_user.user_page_accesses.where(:status = "A").pluck(:access_code)
     render json: {page: page_access_rigths, actions: action_access_rigths}
   end
 

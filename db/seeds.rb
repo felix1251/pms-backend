@@ -1,10 +1,31 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-# movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 Company.create(code: 'two_aces', description: 'Two Aces Corporation')
 company = Company.last
 User.create(position: "HR head", company_id: company.id, hr_head: true, username: "fabacajen", name: "Admin",
             email: "sample@dev.com", password: "password", password_confirmation: "password")
+PageAccess.create(access_code: "D", page: "dashboard")
+PageAccess.create(access_code: "P", page: "payroll")
+PageAccess.create(access_code: "T", page: "time keeping")
+PageActionAccess.create(access_code: "A", action: "add")
+PageActionAccess.create(access_code: "E", action: "edit")
+PageActionAccess.create(access_code: "D", action: "delete")
+PageActionAccess.create(access_code: "X", action: "export")
+UserPageAccess.create(user_id: 1, page_access_id: 1)
+UserPageAccess.create(user_id: 1, page_access_id: 2)
+UserPageAccess.create(user_id: 1, page_access_id: 3)
+UserPageActionAccess.create(user_id: 1, page_access_id: 1, page_action_access_id: 1)
+UserPageActionAccess.create(user_id: 1, page_access_id: 1, page_action_access_id: 2)
+UserPageActionAccess.create(user_id: 1, page_access_id: 1, page_action_access_id: 3)
+UserPageActionAccess.create(user_id: 1, page_access_id: 1, page_action_access_id: 4)
+UserPageActionAccess.create(user_id: 1, page_access_id: 2, page_action_access_id: 1)
+UserPageActionAccess.create(user_id: 1, page_access_id: 2, page_action_access_id: 2)
+UserPageActionAccess.create(user_id: 1, page_access_id: 2, page_action_access_id: 3)
+UserPageActionAccess.create(user_id: 1, page_access_id: 2, page_action_access_id: 4)
+UserPageActionAccess.create(user_id: 1, page_access_id: 3, page_action_access_id: 1)
+UserPageActionAccess.create(user_id: 1, page_access_id: 3, page_action_access_id: 2)
+UserPageActionAccess.create(user_id: 1, page_access_id: 3, page_action_access_id: 3)
+UserPageActionAccess.create(user_id: 1, page_access_id: 3, page_action_access_id: 4)
+UserPageActionAccess.create(user_id: 1, page_access_id: 4, page_action_access_id: 1)
+UserPageActionAccess.create(user_id: 1, page_access_id: 4, page_action_access_id: 2)
+UserPageActionAccess.create(user_id: 1, page_access_id: 4, page_action_access_id: 3)
+UserPageActionAccess.create(user_id: 1, page_access_id: 4, page_action_access_id: 4)
+

@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
 
+  resources :user_page_action_accesses
+  resources :page_action_accesses
   resources :page_access_controls
   resources :page_accesses
   resources :user_page_accesses

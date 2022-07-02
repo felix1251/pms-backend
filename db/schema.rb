@@ -10,13 +10,49 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_06_28_014956) do
+ActiveRecord::Schema.define(version: 2022_07_01_134643) do
 
   create_table "companies", force: :cascade do |t|
     t.string "code", null: false
     t.text "description", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "page_accesses", force: :cascade do |t|
+    t.string "access_code", null: false
+    t.string "page", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "page_action_accesses", force: :cascade do |t|
+    t.string "access_code", null: false
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "user_page_accesses", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "page_access_id", null: false
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_access_id"], name: "index_user_page_accesses_on_page_access_id"
+    t.index ["user_id"], name: "index_user_page_accesses_on_user_id"
+  end
+
+  create_table "user_page_action_accesses", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "page_access_id", null: false
+    t.integer "page_action_access_id", null: false
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_access_id"], name: "index_user_page_action_accesses_on_page_access_id"
+    t.index ["page_action_access_id"], name: "index_user_page_action_accesses_on_page_action_access_id"
+    t.index ["user_id"], name: "index_user_page_action_accesses_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -27,8 +63,6 @@ ActiveRecord::Schema.define(version: 2022_06_28_014956) do
     t.boolean "hr_head", default: false
     t.string "username", null: false
     t.string "status", default: "A"
-    t.text "page_access_rigths", default: "[\"D\", \"R\", \"T\", \"S\", \"V\"]"
-    t.text "action_access_rigths", default: "[\"A\", \"D\", \"E\", \"X\"]"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "reset_password_token"
