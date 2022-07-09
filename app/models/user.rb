@@ -2,18 +2,21 @@ class User < ApplicationRecord
   include ActiveModel::Serializers::JSON
   has_secure_password
   belongs_to :company
+  has_many :page_accesses
+  has_many :page_action_accesses
+  has_one :session_record
+  has_many :device_session_records
 
-  serialize :address, Array
   validates :email,
             format: { with: URI::MailTo::EMAIL_REGEXP },
             presence: true,
             uniqueness: { case_sensitive: false }
 
-  enum status: %i[A I].freeze
+  enum status: { A: "A", I: "I"}
 
-  def attributes
-    { id: id, email: email, page_access_rigths: page_access_rigths, action_access_rigths: action_access_rigths, position: position, name: name}
-  end
+  # def attributes
+  #   { id: id, email: email, position: position, name: name, company_id: company_id }
+  # end
 
   def generate_password_token!
     begin

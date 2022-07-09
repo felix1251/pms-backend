@@ -4,7 +4,7 @@ class CreateUserPageActionAccesses < ActiveRecord::Migration[5.2]
       t.references :user, null: false
       t.references :page_access, null: false
       t.references :page_action_access, null: false
-      t.string :status, :default => "A"
+      t.string :status, null: false, :default => "I"
       t.timestamps
     end
   end

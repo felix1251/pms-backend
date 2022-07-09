@@ -6,11 +6,22 @@ class SigninController < ApplicationController
     company = Company.find_by!(code: params[:company_code])
     user = User.find_by!(username: params[:username])
 
-    if user && company.id != user.company_id
-      not_found
-    end
+    # if user && company.id != user.company_id
+    #   not_found
+    # end
     
-    if user.authenticate(params[:password])
+    if user && user.authenticate(params[:password]) && company.id == user.company_id
+
+      record = SessionRecords.find_by!(user_id: user.id)
+      if record.first_logged_in != nil && record.previous_logged_in != nil && record.recent_logged_in != nil 
+        record.update({previous_logged_in: user.recent_logged_in, recent_logged_in: DateTime.now})
+      else
+        record.update({first_logged_in: DateTime.now, previous_logged_in: DateTime.now, recent_logged_in: DateTime.now})
+      end
+
+      device = user.device_session_records.build({ip_address: "", device_name:  ""})
+      device.save!
+
       payload  = { user_id: user.id }
       session = JWTSessions::Session.new(payload: payload,
                                           refresh_by_access_allowed: true,
@@ -20,8 +31,8 @@ class SigninController < ApplicationController
       response.set_cookie(JWTSessions.access_cookie,
                           value: tokens[:access],
                           httponly: true,
-                          # expires: 1.hour.from_now,
                           secure: Rails.env.production?)
+                          
       render json: { csrf: tokens[:csrf] }
     else
       not_found

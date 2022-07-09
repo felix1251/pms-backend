@@ -1,3 +1,3 @@
 class PageActionAccess < ApplicationRecord
-      enum access_code: %i[A E D X].freeze
+      enum access_code: { A: "A", E: "E", D: "D", X: "X"}
 end
