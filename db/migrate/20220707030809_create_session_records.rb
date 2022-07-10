@@ -5,7 +5,7 @@ class CreateSessionRecords < ActiveRecord::Migration[5.2]
       t.datetime :first_logged_in
       t.datetime :previous_logged_in
       t.datetime :recent_logged_in
-      t.string :status, null: false
+      t.string :status, default: "I"
       t.timestamps
     end
   end
