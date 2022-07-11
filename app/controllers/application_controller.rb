@@ -12,7 +12,6 @@ class ApplicationController < ActionController::API
 
   def check_backend_session
     _user_session = SessionRecord.find_by!(user_id: current_user.id)
-    ip_address = Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address 
     unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
       session.flush_by_access_payload
