@@ -1,17 +1,8 @@
 Rails.application.routes.draw do
 
-  resources :device_session_records
-  resources :session_records
-  resources :user_page_action_accesses
-  resources :page_action_accesses
-  resources :page_access_controls
-  resources :page_accesses
-  resources :user_page_accesses
-  resources :companies
-  
   post 'refresh', controller: :refresh, action: :create
   post 'signin', controller: :signin, action: :create
-  delete 'signin', controller: :signin, action: :destroy
+  delete 'signin', controller: :signin, action: :logout
   get 'me', controller: :users, action: :me
   get 'check_user_access', controller: :users, action: :check_user_access
   
@@ -25,6 +16,14 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
+      resources :device_session_records
+      resources :session_records
+      resources :user_page_action_accesses
+      resources :page_action_accesses
+      resources :page_access_controls
+      resources :page_accesses
+      resources :user_page_accesses
+      resources :companies    
     end
   end
 end

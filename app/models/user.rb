@@ -14,9 +14,9 @@ class User < ApplicationRecord
 
   enum status: { A: "A", I: "I"}
 
-  # def attributes
-  #   { id: id, email: email, position: position, name: name, company_id: company_id }
-  # end
+  def attributes
+    { id: id, email: email, position: position, name: name, company_id: company_id }
+  end
 
   def generate_password_token!
     begin

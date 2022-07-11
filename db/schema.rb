@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.string "device_name"
     t.integer "user_id", null: false
     t.string "action"
+    t.datetime "at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_device_session_records_on_user_id"
@@ -50,6 +51,10 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.datetime "previous_logged_in"
     t.datetime "recent_logged_in"
     t.string "status", default: "I"
+    t.integer "sign_in_count", default: 0
+    t.string "current_device", default: ""
+    t.string "current_os", default: ""
+    t.string "current_ip_address", default: ""
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_session_records_on_user_id"

@@ -10,6 +10,30 @@ class ApplicationController < ActionController::API
 
   private
 
+  def check_backend_session
+    _user_session = SessionRecord.find_by!(user_id: current_user.id)
+    ip_address = Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address 
+    unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os
+      session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
+      session.flush_by_access_payload
+      render json: {error: "X-DEVICES"}, status: :unauthorized
+    end
+  end
+
+  def get_operating_system
+    if request.env['HTTP_USER_AGENT'].downcase.match(/mac/i)
+      "Mac"
+    elsif request.env['HTTP_USER_AGENT'].downcase.match(/windows/i)
+      "Windows"
+    elsif request.env['HTTP_USER_AGENT'].downcase.match(/linux/i)
+      "Linux"
+    elsif request.env['HTTP_USER_AGENT'].downcase.match(/unix/i)
+      "Unix"
+    else
+      "Unknown: #{request.env['HTTP_USER_AGENT']}"
+    end
+  end
+
   def current_user
     @current_user ||= User.find(payload['user_id'])
   end
@@ -37,12 +61,4 @@ class ApplicationController < ActionController::API
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(' ') }, status: :unprocessable_entity
   end
-
-  # def check_page_access_rights(page)
-  #   page_access_rigths = current_user.page_access_rigths.pluck(:access_code)
-  #   unless page_access_rigths.include?(page)
-  #     render json: { error: 'access denied' }, status: :forbidden
-  #   end
-  # end
-  
 end
