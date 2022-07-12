@@ -1,4 +1,4 @@
-class PageAccessesController < ApplicationController
+class Api::V1::PageAccessesController < ApplicationController
   before_action :set_page_access, only: [:show, :update, :destroy]
 
   # GET /page_accesses

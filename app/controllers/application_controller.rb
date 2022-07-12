@@ -1,3 +1,4 @@
+require 'socket'
 class ApplicationController < ActionController::API
   include JWTSessions::RailsAuthorization
   rescue_from ActionController::ParameterMissing, with: :bad_request
@@ -12,10 +13,10 @@ class ApplicationController < ActionController::API
 
   def check_backend_session
     _user_session = SessionRecord.find_by!(user_id: current_user.id)
-    unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os
+    unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A"
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
       session.flush_by_access_payload
-      render json: {error: "X-DEVICES"}, status: :unauthorized
+      render json: {error: "Signed-in in other devices", device: _user_session.current_device, type: "X-DEVICES"}, status: :unauthorized
     end
   end
 
@@ -31,6 +32,21 @@ class ApplicationController < ActionController::API
     else
       "Unknown: #{request.env['HTTP_USER_AGENT']}"
     end
+  end
+
+  def current_user_page_access
+    page_access_rigths = UserPageAccess.joins("LEFT JOIN page_accesses AS p ON p.id = user_page_accesses.page_access_id")
+                                      .select("user_page_accesses.*, p.access_code")
+                                      .where(user_id: current_user.id, status: "A")
+                                      .pluck(:access_code)
+  end
+
+  def ip_address
+    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address
+  end
+
+  def host_name
+    Socket.gethostname
   end
 
   def current_user

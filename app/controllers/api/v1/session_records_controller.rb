@@ -1,4 +1,4 @@
-class SessionRecordsController < ApplicationController
+class Api::V1::SessionRecordsController < ApplicationController
   before_action :set_session_record, only: [:show, :update, :destroy]
 
   # GET /session_records

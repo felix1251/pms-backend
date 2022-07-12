@@ -8,11 +8,7 @@ class UsersController < ApplicationController
   end
 
   def check_user_access
-    page_access_rigths = UserPageAccess.joins("LEFT JOIN page_accesses AS p ON p.id = user_page_accesses.page_access_id")
-                                      .select("user_page_accesses.*, p.access_code")
-                                      .where(user_id: current_user.id, status: "A")
-                                      .pluck(:access_code)
-    render json: {page_access: page_access_rigths}
+    render json: {page_access: current_user_page_access}
   end
-  
+
 end

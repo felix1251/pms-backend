@@ -25,8 +25,7 @@ class SigninController < ApplicationController
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)
         else
-          info = @user.device_session_records.first
-          session_warning(info) 
+          session_warning(@user) 
         end
       end
     else
@@ -45,9 +44,12 @@ class SigninController < ApplicationController
   private
 
   def clear_session(user)
-    _user = SessionRecord.find_by!(user_id: user)
+    _user = SessionRecord.find_by!(user_id: user.id)
+    user.device_session_records.build({ip_address: ip_address, 
+                                      device_name: host_name, os: get_operating_system, 
+                                      action: "SESSION CLEARED", at: DateTime.now}).save!
     if _user.update({status: "I"})
-      render json: {status: "session cleared, try to signin again."}, status: :ok
+      render json: {status: "Session cleared, try to Sign In again."}, status: :ok
     end
   end
 
@@ -59,8 +61,6 @@ class SigninController < ApplicationController
   def update_user_and_device_session_records(user)
     first_create = false
 
-    ip_address = Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address
-
     @record = SessionRecord.where(user_id: user.id).first_or_create do |record|
       record.recent_logged_in = DateTime.now
       record.previous_logged_in = DateTime.now
@@ -68,30 +68,43 @@ class SigninController < ApplicationController
       record.current_ip_address = ip_address
       record.current_os = get_operating_system
       record.status = "A"
-      record.current_device = Socket.gethostname
+      record.current_device = host_name
       record.sign_in_count += 1
       first_create = true
     end
 
     if first_create == false
-      @record.update({current_ip_address: ip_address, current_os: get_operating_system, previous_logged_in: @record.recent_logged_in, recent_logged_in: DateTime.now, current_device: @record.current_device, status: "A", sign_in_count: @record.sign_in_count+1})
+      @record.update({current_ip_address: ip_address, current_os: get_operating_system,
+                    previous_logged_in: @record.recent_logged_in, recent_logged_in: DateTime.now, 
+                    current_device: host_name, status: "A", sign_in_count: @record.sign_in_count+1})
     end
     
-    device = user.device_session_records.build({ip_address: @record.current_ip_address , device_name: @record.current_device, os: @record.current_os,  action: "LOGGED IN", at: @record.recent_logged_in})
+    device = user.device_session_records.build({ip_address: @record.current_ip_address, 
+                                              device_name: @record.current_device, os: @record.current_os, 
+                                              action: "SIGNED IN", at: @record.recent_logged_in})
     device.save!
   end
 
   def update_user_session_upon_logout
     _user = SessionRecord.find_by!(user_id: current_user.id)
     _user.update({status: "I"})
+    current_user.device_session_records.build({ip_address: ip_address, 
+                                              device_name: host_name, os: get_operating_system, 
+                                              action: "SIGNED OUT", at: DateTime.now}).save!
   end
 
   def not_found
     render json: { error: "Can't find such company, username and password combination" }, status: :not_found
   end
 
-  def session_warning(info)
-    render json: { error: "You still have pending session", session_pending: true, recent_activity: {os: info.os, device_name: info.device_name, action: info.action, at: info.created_at}, 
-      possible_reason: ["You did not logout your previous session", "someone is currently using this account"]}, status: :unauthorized
+  def session_warning(user)
+    info = user.device_session_records.where("action = 'SIGNED IN'").first
+    user.device_session_records.build({ip_address: ip_address, 
+                                    device_name: host_name, os: get_operating_system, 
+                                    action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
+
+    render json: { error: "You still have pending session", session_pending: true,current_ip_address: ip_address, current_os: get_operating_system,
+                  current_device: host_name,recent_activity: {ip: info.ip_address, os: info.os, device_name: info.device_name, action: info.action, at: info.at}, 
+                  possible_reason: ["You did not logout your previous session", "someone is currently using this account in other devices"]}, status: :unauthorized
   end
 end
