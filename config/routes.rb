@@ -3,10 +3,7 @@ Rails.application.routes.draw do
   post 'refresh', controller: :refresh, action: :create
   post 'signin', controller: :signin, action: :create
   delete 'signin', controller: :signin, action: :logout
-  get 'me', controller: :users, action: :me
-  get 'check_user_access', controller: :users, action: :check_user_access
   
-
   resources :password_resets, only: [:create] do
     collection do
       get ':token', action: :edit, as: :edit
@@ -23,7 +20,11 @@ Rails.application.routes.draw do
       resources :page_access_controls
       resources :page_accesses
       resources :user_page_accesses
-      resources :companies    
+      resources :companies
+      get 'counts', controller: :counts, action: :counts
+      get 'me', controller: :users, action: :me
+      get 'current_user_access', controller: :users, action: :current_user_access
+      get 'system_accounts', controller: :users, action: :system_accounts
     end
   end
 end

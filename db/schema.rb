@@ -17,6 +17,7 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.text "description", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_companies_on_code"
   end
 
   create_table "device_session_records", force: :cascade do |t|
@@ -96,8 +97,8 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.datetime "reset_password_token_expires_at"
     t.integer "company_id", null: false
     t.index ["company_id"], name: "index_users_on_company_id"
-    t.index ["email"], name: "index_users_on_email"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token"
+    t.index ["username"], name: "index_users_on_username"
   end
 
 end

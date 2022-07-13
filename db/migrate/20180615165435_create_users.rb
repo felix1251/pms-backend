@@ -6,7 +6,7 @@ class CreateUsers < ActiveRecord::Migration[5.2]
       t.string :position, default: "HR-staff"
       t.string :name, default: ''
       t.boolean :hr_head, default: false
-      t.string :username, null: false, length: {minimum: 5, maximum: 20}, unique: true
+      t.string :username, null: false, length: {minimum: 5, maximum: 20}, unique: true, index: true
       t.string :status, default: 'A'
       t.timestamps
     end

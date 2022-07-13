@@ -16,6 +16,8 @@ gem 'bcrypt', '~> 3.1.7'
 # Use JWTSessions to build JWT auth
 gem 'jwt_sessions', '~> 2.4'
 
+gem 'will_paginate', '~> 3.1.0'
+
 gem 'dotenv-rails'
 
 # Reduces boot times through caching; required in config/boot.rb

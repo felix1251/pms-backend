@@ -41,6 +41,14 @@ class ApplicationController < ActionController::API
                                       .pluck(:access_code)
   end
 
+  def current_user_page_action_access(page)
+      page_id = PageAccess.find_by!(access_code: page).id
+      result = UserPageActionAccess.joins("LEFT JOIN page_action_accesses AS p ON p.id = user_page_action_accesses.page_action_access_id")
+                                        .select("user_page_action_accesses.*, p.access_code*")
+                                        .where(user_id: current_user.id, page_access_id: page_id, status: "A")
+                                        .pluck(:access_code)
+  end
+
   def ip_address
     Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address
   end
@@ -50,7 +58,10 @@ class ApplicationController < ActionController::API
   end
 
   def current_user
-    @current_user ||= User.find(payload['user_id'])
+    @current_user ||= User.joins("LEFT JOIN companies AS c ON c.id = users.company_id")
+                          .select("users.id, users.company_id, users.hr_head, users.email, users.position, users.name,
+                            c.description AS company_name")
+                          .find(payload['user_id'])
   end
 
   def bad_request
