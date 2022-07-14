@@ -34,16 +34,18 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
 
   create_table "page_accesses", force: :cascade do |t|
     t.string "access_code", null: false
-    t.string "page", default: "I", null: false
+    t.string "page", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["access_code"], name: "index_page_accesses_on_access_code"
   end
 
   create_table "page_action_accesses", force: :cascade do |t|
     t.string "access_code", null: false
-    t.string "action", default: "I", null: false
+    t.string "action", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
   create_table "session_records", force: :cascade do |t|
@@ -88,7 +90,7 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.string "password_digest"
     t.string "position", default: "HR-staff"
     t.string "name", default: ""
-    t.boolean "hr_head", default: false
+    t.boolean "admin", default: false
     t.string "username", null: false
     t.string "status", default: "A"
     t.datetime "created_at", null: false

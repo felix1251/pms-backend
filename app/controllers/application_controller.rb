@@ -12,7 +12,8 @@ class ApplicationController < ActionController::API
   private
 
   def check_backend_session
-    _user_session = SessionRecord.find_by!(user_id: current_user.id)
+    authorize_access_request!
+    _user_session = SessionRecord.find_by!(user_id: payload['user_id'])
     unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A"
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
       session.flush_by_access_payload
@@ -37,7 +38,7 @@ class ApplicationController < ActionController::API
   def current_user_page_access
     page_access_rigths = UserPageAccess.joins("LEFT JOIN page_accesses AS p ON p.id = user_page_accesses.page_access_id")
                                       .select("user_page_accesses.*, p.access_code")
-                                      .where(user_id: current_user.id, status: "A")
+                                      .where(user_id: payload['user_id'], status: "A")
                                       .pluck(:access_code)
   end
 
@@ -45,7 +46,7 @@ class ApplicationController < ActionController::API
       page_id = PageAccess.find_by!(access_code: page).id
       result = UserPageActionAccess.joins("LEFT JOIN page_action_accesses AS p ON p.id = user_page_action_accesses.page_action_access_id")
                                         .select("user_page_action_accesses.*, p.access_code*")
-                                        .where(user_id: current_user.id, page_access_id: page_id, status: "A")
+                                        .where(user_id: payload['user_id'], page_access_id: page_id, status: "A")
                                         .pluck(:access_code)
   end
 
@@ -59,8 +60,8 @@ class ApplicationController < ActionController::API
 
   def current_user
     @current_user ||= User.joins("LEFT JOIN companies AS c ON c.id = users.company_id")
-                          .select("users.id, users.company_id, users.hr_head, users.email, users.position, users.name,
-                            c.description AS company_name")
+                          .select("users.id, users.company_id, users.admin, users.email, users.position, users.name,
+                                  c.description AS company_name")
                           .find(payload['user_id'])
   end
 

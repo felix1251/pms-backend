@@ -1,6 +1,5 @@
 require 'json'
 class Api::V1::UsersController < ApplicationController
-  before_action :authorize_access_request!
   before_action :check_backend_session
 
   def me
@@ -8,10 +7,14 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def system_accounts
-    page = 1
-    per_page = 2
-    accounts = User.paginate(:page => 1, :per_page => per_page)
-    render json: accounts
+    page = params[:page]
+    per_page = params[:per_page]
+    accounts = User.paginate(:page => page, :per_page => per_page)
+                    .select("users.id, users.company_id, users.admin, users.email, users.position,
+                    users.name, users.status, DATE(users.created_at) AS created")
+                    .where(company_id: payload['company_id'])
+                    
+    render json: {accounts: accounts, count: accounts.count} 
   end
 
   def current_user_access

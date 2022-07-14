@@ -7,8 +7,9 @@ class SigninController < ApplicationController
   def create
     if @user && @user.authenticate(params[:password]) && @company.id == @user.company_id && @user.status == "A"
       @session_records = SessionRecord.find_by!(user_id: @user.id) rescue nil
+      
       if @session_records == nil || @session_records.status == "I"
-        payload  = { user_id: @user.id }
+        payload  = { user_id: @user.id, company_id: @user.company_id }
         session = JWTSessions::Session.new(payload: payload,
                                             refresh_by_access_allowed: true,
                                             namespace: "user_#{@user.id}")
@@ -86,7 +87,7 @@ class SigninController < ApplicationController
   end
 
   def update_user_session_upon_logout
-    _user = SessionRecord.find_by!(user_id: current_user.id)
+    _user = SessionRecord.find_by!(user_id: payload["user_id"])
     _user.update({status: "I"})
     current_user.device_session_records.build({ip_address: ip_address, 
                                               device_name: host_name, os: get_operating_system, 
