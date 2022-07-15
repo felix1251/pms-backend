@@ -10,8 +10,8 @@ class Api::V1::UsersController < ApplicationController
     page = params[:page]
     per_page = params[:per_page]
     accounts = User.paginate(:page => page, :per_page => per_page)
-                    .select("users.id, users.company_id, users.admin, users.email, users.position,
-                    users.name, users.status, DATE(users.created_at) AS created")
+                    .select("id, company_id, admin, email, position,
+                      name, status, DATE(created_at) AS created")
                     .where(company_id: payload['company_id'])
                     
     render json: {accounts: accounts, count: accounts.count} 

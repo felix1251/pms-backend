@@ -1,10 +1,10 @@
 class Api::V1::PageAccessesController < ApplicationController
+  before_action :check_backend_session
   before_action :set_page_access, only: [:show, :update, :destroy]
 
   # GET /page_accesses
   def index
     @page_accesses = PageAccess.all
-
     render json: @page_accesses
   end
 
@@ -13,10 +13,19 @@ class Api::V1::PageAccessesController < ApplicationController
     render json: @page_access
   end
 
+  def get_page_acess_for_selection
+    page_tree = []
+    page = PageAccess.select("id, page AS title, access_code AS key, access_code").all
+    action = PageActionAccess.select("id, action AS title, access_code AS key").all
+    page.each do |pg|
+      page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
+    end
+    render json: {page: page_tree}
+  end
+
   # POST /page_accesses
   def create
     @page_access = PageAccess.new(page_access_params)
-
     if @page_access.save
       render json: @page_access, status: :created, location: @page_access
     else
@@ -47,5 +56,13 @@ class Api::V1::PageAccessesController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def page_access_params
       params.fetch(:page_access, {})
+    end
+
+    def get_action_on_selection(action, key)
+      show_action = []
+      action.each do |ac|
+        show_action.push({id: ac.id, title: ac.title, key: "#{key+ac.key}"})
+      end
+      return show_action
     end
 end
