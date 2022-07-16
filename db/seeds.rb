@@ -1,11 +1,11 @@
-PageAccess.create(access_code: "D", page: "dashboard")
-PageAccess.create(access_code: "P", page: "payroll")
-PageAccess.create(access_code: "T", page: "time keeping")
-PageAccess.create(access_code: "S", page: "System Acounts")
-PageActionAccess.create(access_code: "A", action: "add")
-PageActionAccess.create(access_code: "E", action: "edit")
-PageActionAccess.create(access_code: "D", action: "delete")
-PageActionAccess.create(access_code: "X", action: "export")
+PageAccess.create(access_code: "D", page: "Dashboard")
+PageAccess.create(access_code: "P", page: "Payroll")
+PageAccess.create(access_code: "T", page: "Time Keeping")
+PageAccess.create(access_code: "S", page: "System Accounts")
+PageActionAccess.create(access_code: "A", action: "Add")
+PageActionAccess.create(access_code: "E", action: "Edit")
+PageActionAccess.create(access_code: "D", action: "Delete")
+PageActionAccess.create(access_code: "X", action: "Export")
 
 Company.create(code: 'two_aces', description: 'Two Aces Corporation')
 company = Company.last
@@ -21,7 +21,6 @@ User.create(position: "HR-Time Keeping", company_id: company.id, admin: false, u
 
 User.create(position: "HR-Payroll", company_id: company.id, admin: false, username: "hrpayroll", name: "Payroll Account",
             email: "sample4@dev.com", password: "password", password_confirmation: "password")
-
 
 users = User.where("admin = true")
 

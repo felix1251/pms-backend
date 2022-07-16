@@ -12,7 +12,6 @@ class ApplicationController < ActionController::API
   private
 
   def check_backend_session
-    authorize_access_request!
     _user_session = SessionRecord.find_by!(user_id: payload['user_id'])
     unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A"
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")

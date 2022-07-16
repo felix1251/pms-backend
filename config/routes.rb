@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
+      resources :users
       resources :device_session_records
       resources :session_records
       resources :user_page_action_accesses
@@ -25,6 +26,7 @@ Rails.application.routes.draw do
       get 'me', controller: :users, action: :me
       get 'current_user_access', controller: :users, action: :current_user_access
       get 'system_accounts', controller: :users, action: :system_accounts
+      get 'get_account', controller: :users, action: :get_account
       get 'get_page_acess_for_selection', controller: :page_accesses, action: :get_page_acess_for_selection
     end
   end

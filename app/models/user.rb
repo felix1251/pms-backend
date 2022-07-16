@@ -2,10 +2,10 @@ class User < ApplicationRecord
   include ActiveModel::Serializers::JSON
   has_secure_password
   belongs_to :company
-  has_many :page_accesses
-  has_many :page_action_accesses
   has_one :session_record
   has_many :device_session_records
+  has_many :user_page_accesses
+  has_many :user_page_action_accesses
 
   validates :email,
             format: { with: URI::MailTo::EMAIL_REGEXP },

@@ -1,4 +1,6 @@
+require 'json'
 class Api::V1::PageAccessesController < ApplicationController
+  before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_page_access, only: [:show, :update, :destroy]
 
@@ -20,7 +22,7 @@ class Api::V1::PageAccessesController < ApplicationController
     page.each do |pg|
       page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
     end
-    render json: {page: page_tree}
+    render json: page_tree.to_json
   end
 
   # POST /page_accesses

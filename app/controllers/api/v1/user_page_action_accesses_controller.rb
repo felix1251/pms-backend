@@ -18,7 +18,7 @@ class Api::V1::UserPageActionAccessesController < ApplicationController
     @user_page_action_access = UserPageActionAccess.new(user_page_action_access_params)
 
     if @user_page_action_access.save
-      render json: @user_page_action_access, status: :created, location: @user_page_action_access
+      render json: @user_page_action_access, status: :created
     else
       render json: @user_page_action_access.errors, status: :unprocessable_entity
     end
