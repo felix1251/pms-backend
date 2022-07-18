@@ -20,7 +20,11 @@ class Api::V1::PageAccessesController < ApplicationController
     page = PageAccess.select("id, page AS title, access_code AS key, access_code").all
     action = PageActionAccess.select("id, action AS title, access_code AS key").all
     page.each do |pg|
-      page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
+      if pg.access_code == "H"
+        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: []})
+      else
+        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
+      end
     end
     render json: page_tree.to_json
   end

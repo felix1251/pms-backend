@@ -7,11 +7,11 @@ class User < ApplicationRecord
   has_many :user_page_accesses
   has_many :user_page_action_accesses
 
-  validates :email,
-            format: { with: URI::MailTo::EMAIL_REGEXP },
-            presence: true,
-            uniqueness: { case_sensitive: false }
-
+  validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
+  validates :username, presence: true, uniqueness: { case_sensitive: false }
+  validates :position, presence: true
+  validates :name, presence: true
+  validates :username, format: { without: /\s/ , message: 'cannot contain whitespace' }
   enum status: { A: "A", I: "I"}
 
   # def attributes

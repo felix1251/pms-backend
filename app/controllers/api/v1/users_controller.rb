@@ -11,14 +11,30 @@ class Api::V1::UsersController < ApplicationController
   def create
     company = Company.find(payload["company_id"])
     @user = company.users.new(user_params)
-    page = page_access_params
-    action = page_action_access_params
-    if @user.save
-      @user.user_page_access.create(page)
-      @user.user_page_action_access.create(action)
-      render json: @user, status: :created
+    page = params[:access][:page]
+    action = params[:access][:action]
+    if page.present? && action.present?
+      if @user.save
+        page_store = []
+        action_store = []
+        page.each do |pg|
+          page_store.push({page_access_id: pg["page_access_id"], status: pg["status"]})
+        end
+        action.each do |ac|
+          action_store.push({page_access_id: ac["page_access_id"], page_action_access_id: ac["page_action_access_id"],status: ac["status"]})
+        end
+        page_access_save = @user.user_page_accesses.create(page_store)
+        action_access_save = @user.user_page_action_accesses.create(action_store)
+        if page_access_save && action_access_save
+          render json: {user: @user, page_access: page_access_save, action_access: action_access_save}, status: :created
+        else
+          render json: {error: "Saving access error"}, status: :unprocessable_entity
+        end
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
     else
-      render json: @user.errors, status: :unprocessable_entity
+      render json: {error: "missing params"}, status: :unprocessable_entity
     end
   end
 
@@ -61,16 +77,16 @@ class Api::V1::UsersController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:name, :email, :position, :username, :password, :password_confirmation)
+    params.require(:user).permit(:name, :email, :position, :username, :admin, :password, :password_confirmation)
   end
 
-  def page_access_params
-    params.require(:page_access)
-  end
+  # def page_access_params
+  #   params.require(:page_access)
+  # end
 
-  def page_action_access_params
-    params.require(:action_access)
-  end
+  # def page_action_access_params
+  #   params.require(:action_access)
+  # end
 
   def set_user
     @user = User.find(params[:id])

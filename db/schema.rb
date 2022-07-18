@@ -93,6 +93,7 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.boolean "admin", default: false
     t.string "username", null: false
     t.string "status", default: "A"
+    t.boolean "system_default", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "reset_password_token"

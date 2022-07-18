@@ -50,7 +50,7 @@ class ApplicationController < ActionController::API
   end
 
   def ip_address
-    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address
+    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address unless Rails.env.production? rescue nil
   end
 
   def host_name
