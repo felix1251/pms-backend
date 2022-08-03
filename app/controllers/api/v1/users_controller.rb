@@ -58,7 +58,7 @@ class Api::V1::UsersController < ApplicationController
     page = params[:page]
     per_page = params[:per_page]
     accounts = User.paginate(:page => page, :per_page => per_page)
-                    .select("id, company_id, admin, email, position,
+                    .select("id, company_id, admin, email, position, system_default,
                       name, status, DATE(created_at) AS created")
                     .where(company_id: payload['company_id'])
                     

@@ -7,7 +7,7 @@ class User < ApplicationRecord
   has_many :user_page_accesses
   has_many :user_page_action_accesses
 
-  validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
+  validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
   validates :username, presence: true, uniqueness: { case_sensitive: false }
   validates :position, presence: true
   validates :name, presence: true
