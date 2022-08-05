@@ -106,7 +106,7 @@ class SigninController < ApplicationController
                                     action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
 
     render json: { error: "You still have pending session", session_pending: true,current_ip_address: ip_address, current_os: get_operating_system,
-                  current_device: host_name,recent_activity: {ip: info.ip_address, os: info.os, device_name: info.device_name, action: info.action, at: info.at}, 
+                  current_device: host_name, recent_activity: {ip: info.ip_address, os: info.os, device_name: info.device_name, action: info.action, at: info.at}, 
                   possible_reason: ["You did not logout your previous session", "someone is currently using this account in other devices"]}, status: :unauthorized
   end
 end

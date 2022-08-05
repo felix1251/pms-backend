@@ -2,7 +2,7 @@ require 'json'
 class Api::V1::UsersController < ApplicationController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_user, only: [:get_account]
+  before_action :set_user, only: [:get_account, :update]
 
   def me
       render json: current_user
@@ -38,6 +38,36 @@ class Api::V1::UsersController < ApplicationController
     end
   end
 
+  def update
+    page = params[:access][:page]
+    action = params[:access][:action]
+    if page.present? && action.present?
+      if @user.update(user_params)
+        page_store = []
+        action_store = []
+        page.each do |pg|
+          info_one = @user.user_page_accesses.find_by!(page_access_id: pg["page_access_id"]).update(status: pg["status"])
+          if info_one
+            page_store.push({page_access_id: pg["page_access_id"], status: pg["status"]})
+          end
+        end
+        action.each do |ac|
+          info_two = @user.user_page_action_accesses.find_by!(page_access_id: ac["page_access_id"], 
+                                                            page_action_access_id: ac["page_action_access_id"])
+                                                            .update(status: ac["status"])
+          if info_two
+            action_store.push({page_access_id: ac["page_access_id"], page_action_access_id: ac["page_action_access_id"], status: ac["status"]})
+          end
+        end
+        render json: {user: @user, action_access: action_store, page_access: page_store}
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
+    else
+      render json: {error: "missing params"}, status: :unprocessable_entity
+    end
+  end
+
   def get_account
     user_page_access = @user.user_page_accesses.joins("LEFT JOIN page_accesses AS p ON p.id = page_access_id")  
                                               .select("user_page_accesses.*, p.access_code")
@@ -50,7 +80,7 @@ class Api::V1::UsersController < ApplicationController
                                     .select("user_page_action_accesses.*, p.access_code, pa.access_code")
                                     .where(status: "A")
                                     .pluck("p.access_code, pa.access_code")
-                                    
+    
     render json: {account: @user, page_access: user_page_access, action_access: user_page_action_access}
   end
 
