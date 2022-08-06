@@ -2,7 +2,7 @@ require 'json'
 class Api::V1::UsersController < ApplicationController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_user, only: [:get_account, :update]
+  before_action :set_user, only: [:get_account, :update, :destroy]
 
   def me
     render json: { 
@@ -55,6 +55,10 @@ class Api::V1::UsersController < ApplicationController
     end
   end
 
+  def destroy
+    @user.update(status: "I")
+  end
+
   def get_account
     render json: {account: @user, access: user_page_action_access(@user)}
   end
@@ -84,7 +88,7 @@ class Api::V1::UsersController < ApplicationController
       ["SA"]
     elsif action_name == 'update'
       ["SE"]
-    elsif action_name == 'delete'
+    elsif action_name == 'destroy'
       ["SD"]
     elsif action_name == 'system_accounts' || action_name == 'get_account'
       ['SV']
@@ -96,7 +100,7 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def update_params
-    params.require(:user).permit(:name, :email, :position)
+    params.require(:user).permit(:name, :email, :position, :admin)
   end
 
   def set_user
