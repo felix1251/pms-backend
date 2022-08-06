@@ -8,7 +8,6 @@ class PasswordResetsController < ApplicationController
       user.generate_password_token!
       UserMailer.reset_password(user).deliver_now
     end
-
     render json: :ok
   end
 

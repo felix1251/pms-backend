@@ -24,7 +24,7 @@ Rails.application.routes.draw do
       resources :companies
       get 'counts', controller: :counts, action: :counts
       get 'me', controller: :users, action: :me
-      get 'current_user_access', controller: :users, action: :current_user_access
+      # get 'current_user_page_access', controller: :users, action: :current_user_page_access
       get 'system_accounts', controller: :users, action: :system_accounts
       get 'get_account', controller: :users, action: :get_account
       get 'get_page_acess_for_selection', controller: :page_accesses, action: :get_page_acess_for_selection

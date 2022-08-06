@@ -1,51 +1,52 @@
 class Api::V1::UserPageActionAccessesController < ApplicationController
-  before_action :set_user_page_action_access, only: [:show, :update, :destroy]
 
-  # GET /user_page_action_accesses
-  def index
-    @user_page_action_accesses = UserPageActionAccess.all
+  # before_action :set_user_page_action_access, only: [:show, :update, :destroy]
 
-    render json: @user_page_action_accesses
-  end
+  # # GET /user_page_action_accesses
+  # def index
+  #   @user_page_action_accesses = UserPageActionAccess.all
 
-  # GET /user_page_action_accesses/1
-  def show
-    render json: @user_page_action_access
-  end
+  #   render json: @user_page_action_accesses
+  # end
 
-  # POST /user_page_action_accesses
-  def create
-    @user_page_action_access = UserPageActionAccess.new(user_page_action_access_params)
+  # # GET /user_page_action_accesses/1
+  # def show
+  #   render json: @user_page_action_access
+  # end
 
-    if @user_page_action_access.save
-      render json: @user_page_action_access, status: :created
-    else
-      render json: @user_page_action_access.errors, status: :unprocessable_entity
-    end
-  end
+  # # POST /user_page_action_accesses
+  # def create
+  #   @user_page_action_access = UserPageActionAccess.new(user_page_action_access_params)
 
-  # PATCH/PUT /user_page_action_accesses/1
-  def update
-    if @user_page_action_access.update(user_page_action_access_params)
-      render json: @user_page_action_access
-    else
-      render json: @user_page_action_access.errors, status: :unprocessable_entity
-    end
-  end
+  #   if @user_page_action_access.save
+  #     render json: @user_page_action_access, status: :created
+  #   else
+  #     render json: @user_page_action_access.errors, status: :unprocessable_entity
+  #   end
+  # end
 
-  # DELETE /user_page_action_accesses/1
-  def destroy
-    @user_page_action_access.destroy
-  end
+  # # PATCH/PUT /user_page_action_accesses/1
+  # def update
+  #   if @user_page_action_access.update(user_page_action_access_params)
+  #     render json: @user_page_action_access
+  #   else
+  #     render json: @user_page_action_access.errors, status: :unprocessable_entity
+  #   end
+  # end
 
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_user_page_action_access
-      @user_page_action_access = UserPageActionAccess.find(params[:id])
-    end
+  # # DELETE /user_page_action_accesses/1
+  # def destroy
+  #   @user_page_action_access.destroy
+  # end
 
-    # Only allow a trusted parameter "white list" through.
-    def user_page_action_access_params
-      params.fetch(:user_page_action_access, {})
-    end
+  # private
+  #   # Use callbacks to share common setup or constraints between actions.
+  #   def set_user_page_action_access
+  #     @user_page_action_access = UserPageActionAccess.find(params[:id])
+  #   end
+
+  #   # Only allow a trusted parameter "white list" through.
+  #   def user_page_action_access_params
+  #     params.fetch(:user_page_action_access, {})
+  #   end
 end

@@ -1,15 +1,18 @@
 require 'json'
 require 'socket'
 class SigninController < ApplicationController
-  before_action :set_user, only: [:create]
   before_action :authorize_access_request!, only: [:logout]
+  before_action :set_user, only: [:create]
 
   def create
     if @user && @user.authenticate(params[:password]) && @company.id == @user.company_id && @user.status == "A"
       @session_records = SessionRecord.find_by!(user_id: @user.id) rescue nil
       
       if @session_records == nil || @session_records.status == "I"
-        payload  = { user_id: @user.id, company_id: @user.company_id }
+        payload  = {  user_id: @user.id, 
+                      company_id: @user.company_id, 
+                      aud: user_page_action_access(@user)
+                    }
         session = JWTSessions::Session.new(payload: payload,
                                             refresh_by_access_allowed: true,
                                             namespace: "user_#{@user.id}")

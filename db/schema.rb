@@ -63,16 +63,6 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.index ["user_id"], name: "index_session_records_on_user_id"
   end
 
-  create_table "user_page_accesses", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "page_access_id", null: false
-    t.string "status", default: "I", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["page_access_id"], name: "index_user_page_accesses_on_page_access_id"
-    t.index ["user_id"], name: "index_user_page_accesses_on_user_id"
-  end
-
   create_table "user_page_action_accesses", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "page_access_id", null: false
@@ -86,7 +76,7 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "email", default: "", null: false
+    t.string "email", default: ""
     t.string "password_digest"
     t.string "position", default: "HR-staff"
     t.string "name", default: ""

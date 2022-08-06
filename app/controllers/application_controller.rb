@@ -20,6 +20,12 @@ class ApplicationController < ActionController::API
     end
   end
 
+  def check_page_access(page)
+    unless payload["page_access"].include?(page)
+      render json: forbidden
+    end
+  end
+
   def get_operating_system
     if request.env['HTTP_USER_AGENT'].downcase.match(/mac/i)
       "Mac"
@@ -34,23 +40,18 @@ class ApplicationController < ActionController::API
     end
   end
 
-  def current_user_page_access
-    page_access_rigths = UserPageAccess.joins("LEFT JOIN page_accesses AS p ON p.id = user_page_accesses.page_access_id")
-                                      .select("user_page_accesses.*, p.access_code")
-                                      .where(user_id: payload['user_id'], status: "A")
-                                      .pluck(:access_code)
-  end
-
-  def current_user_page_action_access(page)
-      page_id = PageAccess.find_by!(access_code: page).id
-      result = UserPageActionAccess.joins("LEFT JOIN page_action_accesses AS p ON p.id = user_page_action_accesses.page_action_access_id")
-                                        .select("user_page_action_accesses.*, p.access_code*")
-                                        .where(user_id: payload['user_id'], page_access_id: page_id, status: "A")
-                                        .pluck(:access_code)
+  def user_page_action_access(user)
+    page_action_access = user.user_page_action_accesses
+                            .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
+                            .joins("LEFT JOIN page_action_accesses AS pa ON pa.id = user_page_action_accesses.page_action_access_id") 
+                            .select("user_page_action_accesses.*, p.access_code, pa.access_code")
+                            .where(status: "A")
+                            .pluck("p.access_code, pa.access_code")
+                            .map{|e| e.join('')}
   end
 
   def ip_address
-    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address unless Rails.env.production? rescue nil
+    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address rescue "unknown"
   end
 
   def host_name

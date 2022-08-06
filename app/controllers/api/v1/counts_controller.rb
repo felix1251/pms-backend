@@ -6,5 +6,4 @@ class Api::V1::CountsController < ApplicationController
     company_users = User.where(company_id: payload["company_id"]).count
     render json: {company_user_count: company_users}
   end
-
 end

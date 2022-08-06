@@ -21,7 +21,13 @@ class Api::V1::PageAccessesController < ApplicationController
     action = PageActionAccess.select("id, action AS title, access_code AS key").all
     page.each do |pg|
       if pg.access_code == "H"
-        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: []})
+        view_only = {}
+        action.each do |ac|
+          if ac.key == "V"
+            view_only = {id: ac.id, title: ac.title, key: "#{pg.key+ac.key}"}
+          end
+        end
+        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: [view_only]})
       else
         page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
       end
