@@ -2,14 +2,7 @@ require 'json'
 class Api::V1::UsersController < ApplicationController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_user, only: [:get_account, :update, :destroy]
-
-  def me
-    render json: { 
-      user: current_user, 
-      access: user_page_action_access(current_user) 
-    }
-  end
+  before_action :set_user, only: [:update, :destroy, :retrieve_archived_account]
 
   def create
     company = Company.find(payload["company_id"])
@@ -56,11 +49,19 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def destroy
-    @user.update(status: "I")
+    if !@user.system_default && @user.update(status: "I")
+      render json: @user
+    else
+      render json: @user.errors, status: :unprocessable_entity
+    end
   end
 
   def get_account
-    render json: {account: @user, access: user_page_action_access(@user)}
+    @account = User.select("id, company_id, admin, email, position, system_default,
+                          name, status, created_at")
+                          .find(params[:id])
+    
+    render json: {account: @account, access: user_page_action_access(@account)}
   end
 
   def system_accounts
@@ -72,6 +73,25 @@ class Api::V1::UsersController < ApplicationController
                     .where(company_id: payload['company_id'], status: "A")
                     
     render json: {accounts: accounts, count: accounts.count} 
+  end
+
+  def archived_accounts
+    page = params[:page]
+    per_page = params[:per_page]
+    accounts = User.paginate(:page => page, :per_page => per_page)
+                    .select("id, company_id, admin, email, position, system_default,
+                      name, status, DATE(created_at) AS created")
+                    .where(company_id: payload['company_id'], status: "I")
+                    
+    render json: {accounts: accounts, count: accounts.count} 
+  end
+
+  def retrieve_archived_account
+    if !@user.system_default && @user.update(status: "A")
+      render json: @user
+    else
+      render json: @user.errors, status: :unprocessable_entity
+    end
   end
 
   def token_claims
@@ -86,11 +106,11 @@ class Api::V1::UsersController < ApplicationController
   def allowed_aud
     if action_name == 'create'
       ["SA"]
-    elsif action_name == 'update'
+    elsif action_name == 'update' || action_name = 'retrieve_archived_account'
       ["SE"]
     elsif action_name == 'destroy'
       ["SD"]
-    elsif action_name == 'system_accounts' || action_name == 'get_account'
+    else
       ['SV']
     end
   end
@@ -106,5 +126,4 @@ class Api::V1::UsersController < ApplicationController
   def set_user
     @user = User.find(params[:id])
   end
-
 end

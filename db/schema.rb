@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_07_054501) do
+ActiveRecord::Schema.define(version: 2022_08_07_112024) do
 
   create_table "companies", force: :cascade do |t|
     t.string "code", null: false
@@ -18,6 +18,15 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_companies_on_code"
+  end
+
+  create_table "departments", force: :cascade do |t|
+    t.integer "company_id", null: false
+    t.text "name", null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_departments_on_company_id"
   end
 
   create_table "device_session_records", force: :cascade do |t|
@@ -30,6 +39,50 @@ ActiveRecord::Schema.define(version: 2022_07_07_054501) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_device_session_records_on_user_id"
+  end
+
+  create_table "employees", force: :cascade do |t|
+    t.integer "company_id", null: false
+    t.string "status", default: "A"
+    t.string "biometric_no", default: ""
+    t.string "first_name", null: false
+    t.string "middle_name", null: false
+    t.string "last_name", null: false
+    t.string "suffix", default: ""
+    t.string "position", null: false
+    t.integer "department_id"
+    t.string "assigned_area", default: ""
+    t.string "job_classification", null: false
+    t.integer "mode_of_salary_id", null: false
+    t.datetime "date_hired", null: false
+    t.datetime "date_resigned", null: false
+    t.string "employment_status", null: false
+    t.string "sex", null: false
+    t.string "birthdate", null: false
+    t.integer "age", null: false
+    t.string "phone_number", default: "", null: false
+    t.string "email", default: ""
+    t.string "street", null: false
+    t.string "barangay", null: false
+    t.string "municipality", null: false
+    t.string "province", null: false
+    t.string "sss_no", null: false
+    t.string "hdmf_no", null: false
+    t.string "tin_no", null: false
+    t.string "phic_no", null: false
+    t.string "highest_educational_attainment", null: false
+    t.string "institution", null: false
+    t.string "course", default: ""
+    t.string "graduate_school", default: ""
+    t.integer "employee_compensation", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_employees_on_company_id"
+    t.index ["date_hired"], name: "index_employees_on_date_hired"
+    t.index ["department_id"], name: "index_employees_on_department_id"
+    t.index ["employment_status"], name: "index_employees_on_employment_status"
+    t.index ["mode_of_salary_id"], name: "index_employees_on_mode_of_salary_id"
+    t.index ["sex"], name: "index_employees_on_sex"
   end
 
   create_table "page_accesses", force: :cascade do |t|

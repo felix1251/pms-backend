@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
+      resources :departments
+      resources :employees
       resources :users
       resources :device_session_records
       resources :session_records
@@ -23,7 +25,7 @@ Rails.application.routes.draw do
       resources :user_page_accesses
       resources :companies
       get 'counts', controller: :counts, action: :counts
-      get 'me', controller: :users, action: :me
+      get 'me', controller: :me, action: :me
       # get 'current_user_page_access', controller: :users, action: :current_user_page_access
       get 'system_accounts', controller: :users, action: :system_accounts
       get 'get_account', controller: :users, action: :get_account

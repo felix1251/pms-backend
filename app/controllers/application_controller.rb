@@ -50,6 +50,16 @@ class ApplicationController < ActionController::API
                             .map{|e| e.join('')}
   end
 
+  def user_page_action_route(user)
+    page_action_access = user.user_page_action_accesses
+                            .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
+                            .select("LOWER(p.page) as route, user_page_action_accesses.status")
+                            .where(status: "A")
+                            .first
+                            .route
+                            .parameterize(separator: '_')        
+  end
+
   def ip_address
     Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address rescue "unknown"
   end
