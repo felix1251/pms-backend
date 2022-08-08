@@ -49,10 +49,26 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def destroy
-    if !@user.system_default && @user.update(status: "I")
-      render json: @user
+    if !@user.system_default
+      if @user.update(status: "I")
+        render json: @user
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
     else
-      render json: @user.errors, status: :unprocessable_entity
+      render json: {error: "can't modify, user is default"}, status: :forbidden
+    end
+  end
+
+  def retrieve_archived_account
+    if !@user.system_default
+      if @user.update(status: "A")
+        render json: @user
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
+    else
+      render json: {error: "can't modify, user is default"}, status: :forbidden
     end
   end
 
@@ -65,8 +81,14 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def system_accounts
-    page = params[:page]
-    per_page = params[:per_page]
+    max_per_page = 13
+    page = params[:page].to_i
+    per_page = params[:per_page].to_i
+
+    if per_page > max_per_page
+      per_page = max_per_page
+    end
+
     accounts = User.paginate(:page => page, :per_page => per_page)
                     .select("id, company_id, admin, email, position, system_default,
                       name, status, DATE(created_at) AS created")
@@ -76,22 +98,20 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def archived_accounts
-    page = params[:page]
-    per_page = params[:per_page]
+    max_per_page = 13
+    page = params[:page].to_i
+    per_page = params[:per_page].to_i
+
+    if per_page > max_per_page
+      per_page = max_per_page
+    end
+
     accounts = User.paginate(:page => page, :per_page => per_page)
                     .select("id, company_id, admin, email, position, system_default,
                       name, status, DATE(created_at) AS created")
                     .where(company_id: payload['company_id'], status: "I")
                     
     render json: {accounts: accounts, count: accounts.count} 
-  end
-
-  def retrieve_archived_account
-    if !@user.system_default && @user.update(status: "A")
-      render json: @user
-    else
-      render json: @user.errors, status: :unprocessable_entity
-    end
   end
 
   def token_claims
@@ -104,12 +124,13 @@ class Api::V1::UsersController < ApplicationController
   private
 
   def allowed_aud
-    if action_name == 'create'
-      ["SA"]
-    elsif action_name == 'update' || action_name = 'retrieve_archived_account'
-      ["SE"]
-    elsif action_name == 'destroy'
-      ["SD"]
+    case action_name 
+    when 'create'
+      ['SA']
+    when 'update' , 'retrieve_archived_account'
+      ['SE']
+    when 'destroy'
+      ['SD']
     else
       ['SV']
     end

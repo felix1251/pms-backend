@@ -57,7 +57,7 @@ class ApplicationController < ActionController::API
                             .where(status: "A")
                             .first
                             .route
-                            .parameterize(separator: '_')        
+                            .parameterize(separator: '-')        
   end
 
   def ip_address
