@@ -4,7 +4,6 @@ class Api::V1::EmployeesController < ApplicationController
   # GET /employees
   def index
     @employees = Employee.all
-
     render json: @employees
   end
 

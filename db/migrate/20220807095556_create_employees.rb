@@ -11,10 +11,10 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :position, null: false
       t.references :department, index: true
       t.string :assigned_area, :default => ""
-      t.string :job_classification, null: false
-      t.references :mode_of_salary, null: false, index: true
+      t.string :job_classification, null: false, index: true
+      t.references :salary_mode, null: false, index: true
       t.datetime :date_hired, null: false, index: true
-      t.datetime :date_resigned, null: false
+      t.datetime :date_resigned, :default => ""
       t.string :employment_status, null: false, index: true
       t.string :sex, null: false, index: true
       t.string :birthdate, null: false
@@ -31,7 +31,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :phic_no, null: false
       t.string :highest_educational_attainment, null: false
       t.string :institution, null: false
-      t.string :course, :default => ""
+      t.text :course, :default => ""
       t.string :graduate_school, :default => ""
       t.integer :employee_compensation, null: false
       t.timestamps

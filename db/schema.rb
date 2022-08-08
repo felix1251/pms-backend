@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_07_112024) do
+ActiveRecord::Schema.define(version: 2022_08_08_081544) do
 
   create_table "companies", force: :cascade do |t|
     t.string "code", null: false
@@ -53,9 +53,9 @@ ActiveRecord::Schema.define(version: 2022_08_07_112024) do
     t.integer "department_id"
     t.string "assigned_area", default: ""
     t.string "job_classification", null: false
-    t.integer "mode_of_salary_id", null: false
+    t.integer "salary_mode_id", null: false
     t.datetime "date_hired", null: false
-    t.datetime "date_resigned", null: false
+    t.datetime "date_resigned"
     t.string "employment_status", null: false
     t.string "sex", null: false
     t.string "birthdate", null: false
@@ -72,7 +72,7 @@ ActiveRecord::Schema.define(version: 2022_08_07_112024) do
     t.string "phic_no", null: false
     t.string "highest_educational_attainment", null: false
     t.string "institution", null: false
-    t.string "course", default: ""
+    t.text "course", default: ""
     t.string "graduate_school", default: ""
     t.integer "employee_compensation", null: false
     t.datetime "created_at", null: false
@@ -81,7 +81,8 @@ ActiveRecord::Schema.define(version: 2022_08_07_112024) do
     t.index ["date_hired"], name: "index_employees_on_date_hired"
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["employment_status"], name: "index_employees_on_employment_status"
-    t.index ["mode_of_salary_id"], name: "index_employees_on_mode_of_salary_id"
+    t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
   end
 
@@ -99,6 +100,12 @@ ActiveRecord::Schema.define(version: 2022_08_07_112024) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
+  end
+
+  create_table "salary_modes", force: :cascade do |t|
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "session_records", force: :cascade do |t|
