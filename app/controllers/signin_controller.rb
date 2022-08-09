@@ -10,7 +10,7 @@ class SigninController < ApplicationController
       
       if @session_records == nil || @session_records.status == "I"
         payload  = {  user_id: @user.id, 
-                      company_id: @user.company_id, 
+                      company_id: @user.company_id,
                       aud: user_page_action_access(@user)
                     }
         session = JWTSessions::Session.new(payload: payload,

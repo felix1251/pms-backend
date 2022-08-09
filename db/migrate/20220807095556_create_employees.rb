@@ -2,6 +2,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
   def change
     create_table :employees do |t|
       t.references :company, null: false, index: true
+      t.string :employee_id, null: false, index: true
       t.string :status, :default => "A"
       t.string :biometric_no, :default => ""
       t.string :first_name, null: false
@@ -11,7 +12,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :position, null: false
       t.references :department, index: true
       t.string :assigned_area, :default => ""
-      t.string :job_classification, null: false, index: true
+      t.string :job_classification, :default => "", index: true
       t.references :salary_mode, null: false, index: true
       t.datetime :date_hired, null: false, index: true
       t.datetime :date_resigned, :default => ""
@@ -19,21 +20,26 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :sex, null: false, index: true
       t.string :birthdate, null: false
       t.integer :age, null: false
-      t.string :phone_number, null: false, :default => ""
+      t.string :phone_number, :default => ""
       t.string :email, :default => ""
       t.string :street, :null => false
       t.string :barangay, :null => false
       t.string :municipality, :null => false
       t.string :province, :null => false
-      t.string :sss_no, null: false
-      t.string :hdmf_no, null: false
-      t.string :tin_no, null: false
-      t.string :phic_no, null: false
+      t.string :sss_no, :default => ""
+      t.string :hdmf_no, :default => ""
+      t.string :tin_no, :default => ""
+      t.string :phic_no, :default => ""
       t.string :highest_educational_attainment, null: false
-      t.string :institution, null: false
+      t.string :institution, :default => ""
       t.text :course, :default => ""
+      t.text :course_major, :default => ""
       t.string :graduate_school, :default => ""
-      t.integer :employee_compensation, null: false
+      t.string :encrypted_compensation
+      t.string :encrypted_compensation_salt
+      t.string :encrypted_compensation_iv
+      t.string :emergency_contact_person, :default => ""
+      t.string :emergency_contact_number, :default => ""
       t.timestamps
     end
   end

@@ -11,6 +11,10 @@ class ApplicationController < ActionController::API
 
   private
 
+  def execute_sql_query(sql)
+    ActiveRecord::Base.connection.exec_query(sql)
+  end
+
   def check_backend_session
     _user_session = SessionRecord.find_by!(user_id: payload['user_id'])
     unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A"
@@ -61,7 +65,7 @@ class ApplicationController < ActionController::API
   end
 
   def ip_address
-    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address rescue "unknown"
+    Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address rescue "unknown #{request.ip}"
   end
 
   def host_name

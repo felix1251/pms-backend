@@ -43,6 +43,7 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
 
   create_table "employees", force: :cascade do |t|
     t.integer "company_id", null: false
+    t.string "employee_id", null: false
     t.string "status", default: "A"
     t.string "biometric_no", default: ""
     t.string "first_name", null: false
@@ -52,7 +53,7 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "position", null: false
     t.integer "department_id"
     t.string "assigned_area", default: ""
-    t.string "job_classification", null: false
+    t.string "job_classification", default: ""
     t.integer "salary_mode_id", null: false
     t.datetime "date_hired", null: false
     t.datetime "date_resigned"
@@ -60,26 +61,32 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "sex", null: false
     t.string "birthdate", null: false
     t.integer "age", null: false
-    t.string "phone_number", default: "", null: false
+    t.string "phone_number", default: ""
     t.string "email", default: ""
     t.string "street", null: false
     t.string "barangay", null: false
     t.string "municipality", null: false
     t.string "province", null: false
-    t.string "sss_no", null: false
-    t.string "hdmf_no", null: false
-    t.string "tin_no", null: false
-    t.string "phic_no", null: false
+    t.string "sss_no", default: ""
+    t.string "hdmf_no", default: ""
+    t.string "tin_no", default: ""
+    t.string "phic_no", default: ""
     t.string "highest_educational_attainment", null: false
-    t.string "institution", null: false
+    t.string "institution", default: ""
     t.text "course", default: ""
+    t.text "course_major", default: ""
     t.string "graduate_school", default: ""
-    t.integer "employee_compensation", null: false
+    t.string "encrypted_compensation"
+    t.string "encrypted_compensation_salt"
+    t.string "encrypted_compensation_iv"
+    t.string "emergency_contact_person", default: ""
+    t.string "emergency_contact_number", default: ""
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_employees_on_company_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
     t.index ["department_id"], name: "index_employees_on_department_id"
+    t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status"], name: "index_employees_on_employment_status"
     t.index ["job_classification"], name: "index_employees_on_job_classification"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
@@ -104,8 +111,10 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
 
   create_table "salary_modes", force: :cascade do |t|
     t.string "description"
+    t.string "code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_salary_modes_on_code"
   end
 
   create_table "session_records", force: :cascade do |t|
