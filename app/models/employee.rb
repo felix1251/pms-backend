@@ -14,6 +14,7 @@ class Employee < ApplicationRecord
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
 
       def attributes
+            # don't show this encrypted_columns 
             super.except('encrypted_compensation', 'encrypted_compensation_salt', 'encrypted_compensation_iv')
       end
 

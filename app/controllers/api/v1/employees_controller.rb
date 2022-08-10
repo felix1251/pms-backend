@@ -28,6 +28,7 @@ class Api::V1::EmployeesController < ApplicationController
     sql += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, UPPER(emp.course) AS course, UPPER(emp.institution) AS institution"
     sql += " ,UPPER(emp.highest_educational_attainment) AS highest_educational_attainment, emp.biometric_no, emp.employee_id"
     sql += " ,UPPER(emp.emergency_contact_person) AS contact_person, UPPER(emergency_contact_number) AS contact_person_number"
+    sql += " ,UPPER(emp.course_major) as course_major"
     # main column
     sql += " FROM employees AS emp"
     # joins
@@ -40,7 +41,7 @@ class Api::V1::EmployeesController < ApplicationController
     sql += " LIMIT #{per_page} OFFSET #{records_fetch_point};"
     # execute query
     employees = execute_sql_query(sql)
-    render json: employees
+    render json: {employees: employees, all_count: Employee.all.count}
   end
 
   # GET /employees/1
@@ -51,7 +52,6 @@ class Api::V1::EmployeesController < ApplicationController
   # POST /employees
   def create
     @employee = Employee.new(employee_params)
-
     if @employee.save
       render json: @employee, status: :created, location: @employee
     else
