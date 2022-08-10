@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
 
   create_table "departments", force: :cascade do |t|
     t.integer "company_id", null: false
-    t.text "name", null: false
+    t.string "name", null: false
     t.string "code", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

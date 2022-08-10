@@ -15,33 +15,40 @@ class Api::V1::EmployeesController < ApplicationController
     end
     records_fetch_point = (current_page - 1) * per_page
 
-    sql = ""
-    sql += "SELECT"
+    sql_start = ""
+    sql_start += "SELECT"
+    # only to display count
+    sql_count = " COUNT(*) as total_count"
     # columns
-    sql += " emp.id, emp.company_id, emp.status, emp.biometric_no, UPPER(emp.first_name) AS first_name"
-    sql += " ,UPPER(emp.middle_name) AS middle_name, UPPER(emp.last_name) AS last_name, UPPER(emp.suffix) AS suffix"
-    sql += " ,UPPER(emp.position) as position, UPPER(dp.name) AS department_name, UPPER(sm.description) AS salary_mode_desc"
-    sql += " ,UPPER(emp.assigned_area) as assigned_area, UPPER(emp.job_classification) AS job_classification"
-    sql += " ,DATE(emp.date_hired) as date_hired, UPPER(emp.employment_status) AS employment_status, UPPER(emp.sex) AS sex"
-    sql += " ,emp.birthdate, emp.status ,emp.age, emp.email, emp.phone_number, UPPER(emp.street) AS street"
-    sql += " ,UPPER(emp.barangay) AS barangay, UPPER(emp.municipality) AS municipality, UPPER(emp.province) AS province"
-    sql += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, UPPER(emp.course) AS course, UPPER(emp.institution) AS institution"
-    sql += " ,UPPER(emp.highest_educational_attainment) AS highest_educational_attainment, emp.biometric_no, emp.employee_id"
-    sql += " ,UPPER(emp.emergency_contact_person) AS contact_person, UPPER(emergency_contact_number) AS contact_person_number"
-    sql += " ,UPPER(emp.course_major) as course_major"
+    sql_select = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
+    sql_select += " ,emp.middle_name, emp.last_name, emp.suffix"
+    sql_select += " ,emp.position, dp.name AS department_name, sm.description AS salary_mode_desc"
+    sql_select += " ,emp.assigned_area, emp.job_classification"
+    sql_select += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
+    sql_select += " ,emp.birthdate, emp.status ,emp.age, emp.email, emp.phone_number, emp.street"
+    sql_select += " ,emp.barangay, emp.municipality, emp.province"
+    sql_select += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
+    sql_select += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
+    sql_select += " ,emp.emergency_contact_person, emergency_contact_number"
+    sql_select += " ,emp.course_major"
     # main column
-    sql += " FROM employees AS emp"
+    sql_from = " FROM employees AS emp"
     # joins
-    sql += " LEFT JOIN departments AS dp ON dp.id = emp.department_id"
-    sql += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
+    sql_join = " LEFT JOIN departments AS dp ON dp.id = emp.department_id"
+    sql_join += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
     # conditions
-    sql += " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
-    sql += " ORDER BY last_name ASC, first_name ASC"
+    sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql_sort = " ORDER BY last_name ASC, first_name ASC"
     # paginate
-    sql += " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
     # execute query
-    employees = execute_sql_query(sql)
-    render json: {employees: employees, all_count: Employee.all.count}
+    begin
+      employees = execute_sql_query(sql_start + sql_select + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
+      employee_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
+      render json: {employees: employees, total_count: employee_count.first["total_count"]}
+    rescue Exception => exc
+      render json: { error: exc.message }, status: :unprocessable_entity
+    end
   end
 
   # GET /employees/1
