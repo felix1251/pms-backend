@@ -14,9 +14,9 @@ class User < ApplicationRecord
   validates :username, format: { without: /\s/ , message: 'cannot contain whitespace' }
   enum status: { A: "A", I: "I"}
 
-  # def attributes
-  #   { id: id, email: email, position: position, name: name, company_id: company_id, hr_head: hr_head }
-  # end
+  def attributes
+    super.except('password_digest', 'reset_password_token', 'reset_password_token_expires_at')
+  end
 
   def generate_password_token!
     begin

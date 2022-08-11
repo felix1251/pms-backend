@@ -20,17 +20,17 @@ class Api::V1::EmployeesController < ApplicationController
     # only to display count
     sql_count = " COUNT(*) as total_count"
     # columns
-    sql_select = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
-    sql_select += " ,emp.middle_name, emp.last_name, emp.suffix"
-    sql_select += " ,emp.position, dp.name AS department_name, sm.description AS salary_mode_desc"
-    sql_select += " ,emp.assigned_area, emp.job_classification"
-    sql_select += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
-    sql_select += " ,emp.birthdate, emp.status ,emp.age, emp.email, emp.phone_number, emp.street"
-    sql_select += " ,emp.barangay, emp.municipality, emp.province"
-    sql_select += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
-    sql_select += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
-    sql_select += " ,emp.emergency_contact_person, emergency_contact_number"
-    sql_select += " ,emp.course_major"
+    sql_fields = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
+    sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
+    sql_fields += " ,emp.position, dp.name AS department_name, sm.description AS salary_mode_desc"
+    sql_fields += " ,emp.assigned_area, emp.job_classification"
+    sql_fields += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
+    sql_fields += " ,emp.birthdate, emp.status ,emp.age, emp.email, emp.phone_number, emp.street"
+    sql_fields += " ,emp.barangay, emp.municipality, emp.province"
+    sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
+    sql_fields += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
+    sql_fields += " ,emp.emergency_contact_person, emergency_contact_number"
+    sql_fields += " ,emp.course_major"
     # main column
     sql_from = " FROM employees AS emp"
     # joins
@@ -41,9 +41,10 @@ class Api::V1::EmployeesController < ApplicationController
     sql_sort = " ORDER BY last_name ASC, first_name ASC"
     # paginate
     sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
-    # execute query
+  
+    # render json: Employee.all
     begin
-      employees = execute_sql_query(sql_start + sql_select + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
+      employees = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
       employee_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
       render json: {employees: employees, total_count: employee_count.first["total_count"]}
     rescue Exception => exc

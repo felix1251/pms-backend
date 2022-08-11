@@ -7,7 +7,6 @@ class SigninController < ApplicationController
   def create
     if @user && @user.authenticate(params[:password]) && @company.id == @user.company_id && @user.status == "A"
       @session_records = SessionRecord.find_by!(user_id: @user.id) rescue nil
-      
       if @session_records == nil || @session_records.status == "I"
         payload  = {  user_id: @user.id, 
                       company_id: @user.company_id,
@@ -34,7 +33,11 @@ class SigninController < ApplicationController
         end
       end
     else
-      not_found
+      if @user.status == "I"
+        render json: {error: 'This account is disabled '}, status: :unprocessable_entity
+      else
+        not_found
+      end
     end
   end
 

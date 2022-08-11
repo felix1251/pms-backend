@@ -16,8 +16,9 @@ class ApplicationController < ActionController::API
   end
 
   def check_backend_session
-    _user_session = SessionRecord.find_by!(user_id: payload['user_id'])
-    unless Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A"
+    account = User.find(payload['user_id'])
+    _user_session = account.session_record
+    unless account.status == "A" &&  Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A" 
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
       session.flush_by_access_payload
       render json: {error: "Signed-in in other devices", device: _user_session.current_device, type: "X-DEVICES"}, status: :unauthorized

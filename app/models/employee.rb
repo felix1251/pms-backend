@@ -4,10 +4,10 @@ class Employee < ApplicationRecord
       belongs_to :salary_mode
       before_create :add_custom_column_data
       before_update :on_emp_update
-      
-      secret_key = Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]
-      secret_key =  [secret_key].pack("H*")
-      attr_encrypted :compensation, :key => secret_key, :mode => :per_attribute_iv_and_salt
+
+      secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
+      secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
+      attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv, insecure_mode: true, algorithm: 'aes-256-cbc'
 
       validates :compensation, numericality: { only_integer: true }
       validates :biometric_no, uniqueness: { scope: :company_id }

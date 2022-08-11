@@ -136,11 +136,11 @@ Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", la
                   employment_status: "sample", sex: "female", birthdate: "February 26, 1998", age: 23, phone_number: "09079247641", email: "sample1@dev.com",
                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
                   hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
-                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , compensation: 35000)
+                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , compensation: 30000)
 
 Employee.create!(company_id: 1, first_name: "john christian", middle_name: "gellermo", last_name: "salazar", suffix: "", biometric_no: 102, position: "crew", 
                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 3, date_hired: Date.today, date_resigned: "", 
                   employment_status: "sample", sex: "female", birthdate: "February 26, 1998", age: 23, phone_number: "09079247641", email: "sample2@dev.com",
                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
                   hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
-                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , compensation: 35000)
+                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering", compensation: 30000)
