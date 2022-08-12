@@ -6,8 +6,8 @@ class Employee < ApplicationRecord
       before_update :on_emp_update
 
       secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
-      secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
-      attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv, insecure_mode: true, algorithm: 'aes-256-cbc'
+      # secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
+      attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv_and_salt, insecure_mode: true, algorithm: 'aes-256-cbc', marshal: true
 
       validates :compensation, numericality: { only_integer: true }
       validates :biometric_no, uniqueness: { scope: :company_id }

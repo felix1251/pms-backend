@@ -14,12 +14,13 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :assigned_area, :default => ""
       t.string :job_classification, :default => "", index: true
       t.references :salary_mode, null: false, index: true
-      t.datetime :date_hired, null: false, index: true
-      t.datetime :date_resigned, :default => ""
+      t.date :date_hired, null: false, index: true
+      t.date :date_resigned, :default => ""
       t.string :employment_status, null: false, index: true
       t.string :sex, null: false, index: true
-      t.string :birthdate, null: false
+      t.date :birthdate, null: false
       t.integer :age, null: false
+      t.string :civil_status, :default => ""
       t.string :phone_number, :default => ""
       t.string :email, :default => ""
       t.string :street, :null => false
@@ -40,6 +41,8 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :encrypted_compensation_iv
       t.string :emergency_contact_person, :default => ""
       t.string :emergency_contact_number, :default => ""
+      t.text :remarks, :default => ""
+      t.text :others, :default => ""
       t.timestamps
     end
   end

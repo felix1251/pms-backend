@@ -81,6 +81,8 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "encrypted_compensation_iv"
     t.string "emergency_contact_person", default: ""
     t.string "emergency_contact_number", default: ""
+    t.text "others", default: ""
+    t.text "remarks", default: ""
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_employees_on_company_id"
