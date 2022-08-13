@@ -9,10 +9,28 @@ class Employee < ApplicationRecord
       # secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
       attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv_and_salt, insecure_mode: true, algorithm: 'aes-256-cbc', marshal: true
 
-      validates :compensation, numericality: { only_integer: true }
+      validates :first_name, presence: true
+      validates :last_name, presence: true
+      validates :middle_name, presence: true
+      validates :age, presence: true
+      validates :sex, presence: true
+      validates :birthdate, presence: true
+      validates :civil_status, presence: true
+      validates :phone_number, presence: true
+      validates :street, presence: true
+      validates :barangay, presence: true
+      validates :municipality, presence: true
+      validates :province, presence: true
+      validates :highest_educational_attainment, presence: true
+      validates :position, presence: true
+      validates :date_hired, presence: true
+      validates :employment_status, presence: true
+      validates :job_classification, presence: true
+      validates :compensation, numericality: { only_integer: true }, presence: true
       validates :biometric_no, uniqueness: { scope: :company_id }
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       enum status: { A: "A", I: "I"}
+      enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
       
       def attributes
             # don't show this encrypted_columns 
@@ -64,5 +82,6 @@ class Employee < ApplicationRecord
             self.highest_educational_attainment = self.highest_educational_attainment.upcase
             self.institution = self.institution.upcase
             self.emergency_contact_person = self.emergency_contact_person.upcase
+            self.civil_status = self.civil_status.upcase
       end
 end

@@ -45,7 +45,7 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.integer "company_id", null: false
     t.string "employee_id", null: false
     t.string "status", default: "A"
-    t.string "biometric_no", default: ""
+    t.string "biometric_no"
     t.string "first_name", null: false
     t.string "middle_name", null: false
     t.string "last_name", null: false
@@ -55,12 +55,13 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "assigned_area", default: ""
     t.string "job_classification", default: ""
     t.integer "salary_mode_id", null: false
-    t.datetime "date_hired", null: false
-    t.datetime "date_resigned"
+    t.date "date_hired", null: false
+    t.date "date_resigned"
     t.string "employment_status", null: false
     t.string "sex", null: false
-    t.string "birthdate", null: false
+    t.date "birthdate", null: false
     t.integer "age", null: false
+    t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""
     t.string "street", null: false
@@ -81,12 +82,13 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "encrypted_compensation_iv"
     t.string "emergency_contact_person", default: ""
     t.string "emergency_contact_number", default: ""
-    t.text "others", default: ""
     t.text "remarks", default: ""
+    t.text "others", default: ""
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_employees_on_company_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
+    t.index ["date_resigned"], name: "index_employees_on_date_resigned"
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status"], name: "index_employees_on_employment_status"

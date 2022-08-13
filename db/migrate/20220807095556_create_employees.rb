@@ -4,7 +4,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.references :company, null: false, index: true
       t.string :employee_id, null: false, index: true
       t.string :status, :default => "A"
-      t.string :biometric_no, :default => ""
+      t.string :biometric_no, :default => nil
       t.string :first_name, null: false
       t.string :middle_name, null: false
       t.string :last_name, null: false
@@ -15,7 +15,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :job_classification, :default => "", index: true
       t.references :salary_mode, null: false, index: true
       t.date :date_hired, null: false, index: true
-      t.date :date_resigned, :default => ""
+      t.date :date_resigned, index: true
       t.string :employment_status, null: false, index: true
       t.string :sex, null: false, index: true
       t.date :birthdate, null: false

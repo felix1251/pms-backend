@@ -30,7 +30,7 @@ class Api::V1::EmployeesController < ApplicationController
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
     sql_fields += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
     sql_fields += " ,emp.emergency_contact_person, emergency_contact_number"
-    sql_fields += " ,emp.course_major"
+    sql_fields += " ,emp.course_major, emp.civil_status"
     # main column
     sql_from = " FROM employees AS emp"
     # joins
@@ -38,7 +38,7 @@ class Api::V1::EmployeesController < ApplicationController
     sql_join += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
     # conditions
     sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
-    sql_sort = " ORDER BY last_name ASC, first_name ASC"
+    sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
     # paginate
     sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
   
@@ -59,9 +59,10 @@ class Api::V1::EmployeesController < ApplicationController
 
   # POST /employees
   def create
-    @employee = Employee.new(employee_params)
+    @company = Company.find(payload["company_id"])
+    @employee = @company.employees.new(employee_params)
     if @employee.save
-      render json: @employee, status: :created, location: @employee
+      render json: {message: "Successfully created"}, status: :created
     else
       render json: @employee.errors, status: :unprocessable_entity
     end
@@ -109,6 +110,12 @@ class Api::V1::EmployeesController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def employee_params
-      params.fetch(:employee, {})
+      params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position,
+                                      :department_id, :assigned_area, :job_classification, :salary_mode_id,
+                                      :date_hired, :employment_status, :sex, :birthdate, :age, :civil_status, 
+                                      :phone_number, :email, :street, :barangay, :municipality, :province,
+                                      :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
+                                      :institution, :course, :course_major, :graduate_school, :remarks,
+                                      :emergency_contact_number, :emergency_contact_person, :compensation)
     end
 end
