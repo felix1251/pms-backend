@@ -60,6 +60,7 @@ class ApplicationController < ActionController::API
                             .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
                             .select("LOWER(p.page) as route, user_page_action_accesses.status")
                             .where(status: "A")
+                            .limit(1)
                             .first
                             .route
                             .parameterize(separator: '-')        

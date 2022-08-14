@@ -60,7 +60,6 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.string "employment_status", null: false
     t.string "sex", null: false
     t.date "birthdate", null: false
-    t.integer "age", null: false
     t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""

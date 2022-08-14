@@ -5,9 +5,9 @@ class Api::V1::EmployeesController < ApplicationController
 
   # GET /employees
   def index
-    max = 10
-    current_page = params[:page] 
-    per_page = params[:per_page]
+    max = 35
+    current_page = params[:page].to_i 
+    per_page = params[:per_page].to_i
     current_page = current_page || 1
     per_page = per_page || max
     unless per_page <= max
@@ -25,7 +25,7 @@ class Api::V1::EmployeesController < ApplicationController
     sql_fields += " ,emp.position, dp.name AS department_name, sm.description AS salary_mode_desc"
     sql_fields += " ,emp.assigned_area, emp.job_classification"
     sql_fields += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
-    sql_fields += " ,emp.birthdate, emp.status ,emp.age, emp.email, emp.phone_number, emp.street"
+    sql_fields += " ,emp.birthdate, emp.status , emp.email, emp.phone_number, emp.street"
     sql_fields += " ,emp.barangay, emp.municipality, emp.province"
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
     sql_fields += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
@@ -112,7 +112,7 @@ class Api::V1::EmployeesController < ApplicationController
     def employee_params
       params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position,
                                       :department_id, :assigned_area, :job_classification, :salary_mode_id,
-                                      :date_hired, :employment_status, :sex, :birthdate, :age, :civil_status, 
+                                      :date_hired, :employment_status, :sex, :birthdate, :civil_status, 
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks,
