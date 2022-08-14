@@ -26,7 +26,7 @@ class Employee < ApplicationRecord
       validates :employment_status, presence: true
       validates :job_classification, presence: true
       validates :compensation, numericality: { only_integer: true }, presence: true
-      validates :biometric_no, uniqueness: { scope: :company_id }
+      validates :biometric_no, uniqueness: { scope: :company_id }, allow_blank: true
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       enum status: { A: "A", I: "I"}
       enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
@@ -82,5 +82,6 @@ class Employee < ApplicationRecord
             self.institution = self.institution.upcase
             self.emergency_contact_person = self.emergency_contact_person.upcase
             self.civil_status = self.civil_status.upcase
+            self.graduate_school = self.graduate_school.upcase
       end
 end

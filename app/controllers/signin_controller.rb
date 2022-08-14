@@ -10,6 +10,7 @@ class SigninController < ApplicationController
       if @session_records == nil || @session_records.status == "I"
         payload  = {  user_id: @user.id, 
                       company_id: @user.company_id,
+                      admin: @user.admin,
                       aud: user_page_action_access(@user)
                     }
         session = JWTSessions::Session.new(payload: payload,
@@ -24,7 +25,7 @@ class SigninController < ApplicationController
 
         update_user_and_device_session_records(@user)
 
-        render json: { csrf: tokens[:csrf] }
+        render json: { csrf: tokens[:csrf]}
       else
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)
