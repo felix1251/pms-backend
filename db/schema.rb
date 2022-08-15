@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_08_081544) do
+ActiveRecord::Schema.define(version: 2022_08_15_090731) do
 
   create_table "companies", force: :cascade do |t|
     t.string "code", null: false
@@ -45,7 +45,7 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.integer "company_id", null: false
     t.string "employee_id", null: false
     t.string "status", default: "A"
-    t.string "biometric_no"
+    t.string "biometric_no", default: ""
     t.string "first_name", null: false
     t.string "middle_name", null: false
     t.string "last_name", null: false
@@ -133,6 +133,18 @@ ActiveRecord::Schema.define(version: 2022_08_08_081544) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_session_records_on_user_id"
+  end
+
+  create_table "support_chats", force: :cascade do |t|
+    t.text "encrypted_message"
+    t.text "encrypted_message_iv"
+    t.text "encrypted_message_salt"
+    t.integer "user_id_id"
+    t.integer "admin_id_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_id_id"], name: "index_support_chats_on_admin_id_id"
+    t.index ["user_id_id"], name: "index_support_chats_on_user_id_id"
   end
 
   create_table "user_page_action_accesses", force: :cascade do |t|
