@@ -1,0 +1,2 @@
+class SupportChat < ApplicationRecord
+end

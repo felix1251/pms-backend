@@ -124,7 +124,7 @@ SalaryMode.create!(description: "monthly", code: "mnly")
 SalaryMode.create!(description: "hourly", code: "hrly")
 SalaryMode.create!(description: "daily", code: "dly")
 
-Employee.create!(company_id: 1, first_name: "lyra", middle_name: "pacundo", last_name: "espinosa", suffix: "", biometric_no: 100, position: "hr generalist", 
+Employee.create!(company_id: 1, first_name: "lyra", middle_name: "pacundo", last_name: "espinosa", suffix: "", biometric_no: "", position: "hr generalist", 
                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
                   employment_status: "sample", sex: "female", birthdate: "1998-02-26", phone_number: "9079247641", email: "sample@dev.com",
                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
@@ -132,7 +132,7 @@ Employee.create!(company_id: 1, first_name: "lyra", middle_name: "pacundo", last
                   institution: "Agusan Colleges", course: "bachelor of Science in business administration", course_major: "major in marketing management",
                   civil_status: "single",compensation: 30000)
 
-Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", last_name: "abacajen", suffix: "jr", biometric_no: 101, position: "backned developer", 
+Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", last_name: "abacajen", suffix: "jr", biometric_no: "", position: "backned developer", 
                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
                   employment_status: "sample", sex: "male", birthdate: "1998-02-20", phone_number: "9079247641", email: "sample1@dev.com",
                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
@@ -140,7 +140,7 @@ Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", la
                   institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , 
                   civil_status: "single", compensation: 30000)
 
-Employee.create!(company_id: 1, first_name: "john christian", middle_name: "gellermo", last_name: "salazar", suffix: "", biometric_no: 102, position: "crew", 
+Employee.create!(company_id: 1, first_name: "john christian", middle_name: "gellermo", last_name: "salazar", suffix: "", biometric_no: "", position: "crew", 
                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 3, date_hired: Date.today, date_resigned: "", 
                   employment_status: "sample", sex: "male", birthdate: "1992-09-23", phone_number: "9079247641", email: "sample2@dev.com",
                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
