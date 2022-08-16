@@ -1,4 +1,4 @@
-class API::V1::SupportChatsController < ApplicationController
+class API::V2::SupportChatsController < ApplicationController
   before_action :set_support_chat, only: [:show, :update, :destroy]
 
   # GET /support_chats
