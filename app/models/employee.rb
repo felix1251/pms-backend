@@ -24,7 +24,6 @@ class Employee < ApplicationRecord
       validates :position, presence: true
       validates :date_hired, presence: true
       validates :employment_status, presence: true
-      validates :job_classification, presence: true
       validates :compensation, numericality: { only_integer: true }, presence: true
       validates :biometric_no, uniqueness: { scope: :company_id }, allow_blank: true, exclusion: { in: ["", nil]}
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
