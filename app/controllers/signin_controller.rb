@@ -64,7 +64,7 @@ class SigninController < ApplicationController
 
   def set_user
     @company = Company.find_by!(code: params[:company_code])
-    @user = User.find_by!(username: params[:username])
+    @user = @company.users.find_by!(username: params[:username])
   end
 
   def update_user_and_device_session_records(user)

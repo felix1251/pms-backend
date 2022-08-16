@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_15_090731) do
+ActiveRecord::Schema.define(version: 2022_08_16_024845) do
 
   create_table "companies", force: :cascade do |t|
     t.string "code", null: false
@@ -94,6 +94,16 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["job_classification"], name: "index_employees_on_job_classification"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
+  end
+
+  create_table "job_classifications", force: :cascade do |t|
+    t.integer "company_id_id"
+    t.string "description", null: false
+    t.integer "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id_id"], name: "index_job_classifications_on_company_id_id"
+    t.index ["created_by_id"], name: "index_job_classifications_on_created_by_id"
   end
 
   create_table "page_accesses", force: :cascade do |t|

@@ -116,6 +116,7 @@ class Api::V1::EmployeesController < ApplicationController
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks,
-                                      :emergency_contact_number, :emergency_contact_person, :compensation)
+                                      :emergency_contact_number, :emergency_contact_person, :compensation,
+                                      :date_regularized)
     end
 end

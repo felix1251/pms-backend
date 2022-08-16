@@ -11,7 +11,9 @@ PageActionAccess.create(access_code: "D", action: "Delete")
 PageActionAccess.create(access_code: "X", action: "Export")
 
 Company.create(code: 'tavdc', description: 'Two Aces Corporation')
-company = Company.last
+Company.create(code: 'erxil', description: 'Erxil Tech. Soulutions')
+company = Company.first
+company2 = Company.last
 
 User.create(position: "Head", company_id: company.id, admin: true, username: "owner", name: "Head",
             email: "sample@dev.com", password: "password", password_confirmation: "password", system_default: true)
@@ -24,6 +26,18 @@ User.create(position: "HR-Time Keeping", company_id: company.id, admin: false, u
 
 User.create(position: "HR-Payroll", company_id: company.id, admin: false, username: "hrpayroll", name: "Payroll Account",
             email: "sample4@dev.com", password: "password", password_confirmation: "password", system_default: true)
+
+User.create(position: "Head", company_id: company2.id, admin: true, username: "owner", name: "Head",
+                  email: "sample5@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-head", company_id: company2.id, admin: true, username: "hrhead", name: "Hr head",
+                  email: "sample6@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-Time Keeping", company_id: company2.id, admin: false, username: "hrtimekeeping", name: "Time Keeping Account",
+                  email: "sample7@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-Payroll", company_id: company2.id, admin: false, username: "hrpayroll", name: "Payroll Account",
+                  email: "sample7@dev.com", password: "password", password_confirmation: "password", system_default: true)
             
 users = User.where("admin = true")
 
