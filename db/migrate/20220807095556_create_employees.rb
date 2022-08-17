@@ -15,7 +15,8 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :job_classification, :default => "", index: true
       t.references :salary_mode, null: false, index: true
       t.date :date_hired, null: false, index: true
-      t.data :date_regularized, :default => nil
+      t.boolean :allow_ers_attendance, :default => false
+      t.date :date_regularized
       t.date :date_resigned, index: true
       t.string :employment_status, null: false, index: true
       t.string :sex, null: false, index: true

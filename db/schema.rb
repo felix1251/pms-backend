@@ -56,6 +56,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.string "job_classification", default: ""
     t.integer "salary_mode_id", null: false
     t.date "date_hired", null: false
+    t.date "date_regularized"
     t.date "date_resigned"
     t.string "employment_status", null: false
     t.string "sex", null: false
