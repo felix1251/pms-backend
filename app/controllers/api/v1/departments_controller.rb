@@ -5,8 +5,9 @@ class Api::V1::DepartmentsController < ApplicationController
 
   # GET /departments
   def index
-    @departments = Department.select("id as value, name as label").where(company_id: payload["company_id"])
-    render json: @departments
+    query = "SELECT dp.id as value, dp.name as label FROM departments as dp"
+    @salary_modes = execute_sql_query(query)
+    render json: @salary_modes
   end
 
   # # GET /departments/1
