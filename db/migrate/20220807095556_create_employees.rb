@@ -34,16 +34,16 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :phic_no, :default => ""
       t.string :highest_educational_attainment, null: false
       t.string :institution, :default => ""
-      t.text :course, :default => ""
-      t.text :course_major, :default => ""
+      t.string :course, :default => ""
+      t.string :course_major, :default => ""
       t.string :graduate_school, :default => ""
       t.string :encrypted_compensation
       t.string :encrypted_compensation_salt
       t.string :encrypted_compensation_iv
       t.string :emergency_contact_person, :default => ""
       t.string :emergency_contact_number, :default => ""
-      t.text :remarks, :default => ""
-      t.text :others, :default => ""
+      t.text :remarks
+      t.text :others
       t.timestamps
     end
   end
