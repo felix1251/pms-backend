@@ -54,7 +54,6 @@ class Api::V1::EmployeesController < ApplicationController
 
   # GET /employees/1
   def show
-    @employee.compensation = "**sensored**"
     render json: {employee: @employee }.merge!({department: {value: @employee.department_id, label: @employee.department_name}, salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name}})
   end
 
