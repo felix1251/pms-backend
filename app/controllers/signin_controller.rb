@@ -20,7 +20,6 @@ class SigninController < ApplicationController
         response.set_cookie(JWTSessions.access_cookie,
                             value: tokens[:access],
                             httponly: true,
-                            # expires: 1.hour.from_now,
                             secure: Rails.env.production?)
 
         update_user_and_device_session_records(@user)
