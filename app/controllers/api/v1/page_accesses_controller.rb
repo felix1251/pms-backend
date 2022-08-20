@@ -17,19 +17,19 @@ class Api::V1::PageAccessesController < ApplicationController
 
   def get_page_acess_for_selection
     page_tree = []
-    page = PageAccess.select("id, page AS title, access_code AS key, access_code").all
-    action = PageActionAccess.select("id, action AS title, access_code AS key").all
+    page = PageAccess.select("id, page AS title, access_code AS pgKey, access_code").all
+    action = PageActionAccess.select("id, action AS title, access_code AS acKey").all
     page.each do |pg|
       if pg.access_code == "H"
         view_only = {}
         action.each do |ac|
-          if ac.key == "V"
-            view_only = {id: ac.id, title: ac.title, key: "#{pg.key+ac.key}"}
+          if ac.acKey == "V"
+            view_only = {id: ac.id, title: ac.title, key: "#{pg.pgKey+ac.acKey}"}
           end
         end
-        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: [view_only]})
+        page_tree.push({id: pg.id, title: pg.title, key: pg.pgKey, children: [view_only]})
       else
-        page_tree.push({id: pg.id, title: pg.title, key: pg.key, children: get_action_on_selection(action, pg.key)})
+        page_tree.push({id: pg.id, title: pg.title, key: pg.pgKey, children: get_action_on_selection(action, pg.pgKey)})
       end
     end
     render json: page_tree.to_json
@@ -73,7 +73,7 @@ class Api::V1::PageAccessesController < ApplicationController
     def get_action_on_selection(action, key)
       show_action = []
       action.each do |ac|
-        show_action.push({id: ac.id, title: ac.title, key: "#{key+ac.key}"})
+        show_action.push({id: ac.id, title: ac.title, key: "#{key+ac.acKey}"})
       end
       return show_action
     end
