@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_16_024845) do
+ActiveRecord::Schema.define(version: 2022_08_20_154650) do
 
-  create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "code", null: false
     t.text "description", null: false
     t.datetime "created_at", null: false
@@ -20,7 +20,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["code"], name: "index_companies_on_code"
   end
 
-  create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "name", null: false
     t.string "code", null: false
@@ -29,7 +29,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["company_id"], name: "index_departments_on_company_id"
   end
 
-  create_table "device_session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "device_session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "ip_address"
     t.text "os"
     t.string "device_name"
@@ -41,7 +41,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["user_id"], name: "index_device_session_records_on_user_id"
   end
 
-  create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "employee_id", null: false
     t.string "status", default: "A"
@@ -98,7 +98,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["sex"], name: "index_employees_on_sex"
   end
 
-  create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
     t.string "description", null: false
     t.bigint "created_by_id"
@@ -108,7 +108,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["created_by_id"], name: "index_job_classifications_on_created_by_id"
   end
 
-  create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "page", null: false
     t.datetime "created_at", null: false
@@ -116,7 +116,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["access_code"], name: "index_page_accesses_on_access_code"
   end
 
-  create_table "page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "action", null: false
     t.datetime "created_at", null: false
@@ -124,7 +124,17 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
-  create_table "salary_modes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "positions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.string "name"
+    t.string "code"
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_positions_on_company_id"
+  end
+
+  create_table "salary_modes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "description"
     t.string "code"
     t.datetime "created_at", null: false
@@ -132,7 +142,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["code"], name: "index_salary_modes_on_code"
   end
 
-  create_table "session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.datetime "first_logged_in"
     t.datetime "previous_logged_in"
@@ -147,7 +157,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["user_id"], name: "index_session_records_on_user_id"
   end
 
-  create_table "support_chats", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "support_chats", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.text "encrypted_message"
     t.text "encrypted_message_iv"
     t.text "encrypted_message_salt"
@@ -159,7 +169,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["user_id_id"], name: "index_support_chats_on_user_id_id"
   end
 
-  create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "page_access_id", null: false
     t.bigint "page_action_access_id", null: false
@@ -171,7 +181,7 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
     t.index ["user_id"], name: "index_user_page_action_accesses_on_user_id"
   end
 
-  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "email", default: ""
     t.string "password_digest"
     t.string "position", default: "HR-staff"
@@ -192,5 +202,6 @@ ActiveRecord::Schema.define(version: 2022_08_16_024845) do
 
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
+  add_foreign_key "positions", "companies"
   add_foreign_key "users", "companies"
 end

@@ -4,7 +4,7 @@ Sidekiq::Web.use ActionDispatch::Cookies
 Sidekiq::Web.use ActionDispatch::Session::CookieStore, key: '_interslice_session'
 
 Sidekiq::Web.use Rack::Auth::Basic do |username, password|
-  username == 'admin' && password == 'admin'
+  username == ENV['PMS_SIDEKIQ_USERNAME'] && password == ENV['PMS_SIDEKIQ_PASSWORD']
 end
 
 Rails.application.routes.draw do
@@ -26,6 +26,7 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
+      resources :positions
       resources :job_classifications
       resources :salary_modes
       resources :departments
