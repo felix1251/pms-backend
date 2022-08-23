@@ -1,5 +1,5 @@
 require 'json'
-class Api::V1::UsersController < ApplicationController
+class Api::V1::UsersController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_user, only: [:update, :destroy, :retrieve_archived_account]

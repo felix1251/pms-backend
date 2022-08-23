@@ -1,4 +1,4 @@
-class Api::V1::EmployeesController < ApplicationController
+class Api::V1::EmployeesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_employee, only: [:update, :destroy]
@@ -46,7 +46,7 @@ class Api::V1::EmployeesController < ApplicationController
     begin
       employees = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
       employee_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
-      render json: {employees: employees, total_count: employee_count.first["total_count"]}
+      render json: { employees: employees, total_count: employee_count.first["total_count"] }
     rescue Exception => exc
       render json: { error: exc.message }, status: :unprocessable_entity
     end
@@ -54,13 +54,15 @@ class Api::V1::EmployeesController < ApplicationController
 
   # GET /employees/1
   def show
-    render json: {employee: @employee }.merge!({department: {value: @employee.department_id, label: @employee.department_name}, salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name}})
+    render json: { employee: @employee }.merge!({
+      department: {value: @employee.department_id, label: @employee.department_name}, 
+      salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name}},
+    )
   end
 
   # POST /employees
   def create
-    @company = Company.find(payload["company_id"])
-    @employee = @company.employees.new(employee_params)
+    @employee = current_company.employees.new(employee_params)
     if @employee.save
       render json: {message: "Successfully created"}, status: :created
     else
