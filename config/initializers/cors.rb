@@ -9,17 +9,16 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
   allow do
     origins 'http://localhost:8080'
-    resource '*',
+    resource '/api/v1/',
       headers: :any,
       credentials: true,
       methods: [:get, :post, :put, :patch, :delete, :options, :head]
   end
 
   allow do
-    origins 'http://localhost:8081'
-    resource '*',
+    origins 'http://localhost:8085'
+    resource '/api/v2/',
       headers: :any, 
-      credentials: true,
       methods: [:get, :post, :put, :patch, :delete, :options, :head]
   end
 end

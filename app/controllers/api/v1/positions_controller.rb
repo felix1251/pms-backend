@@ -1,4 +1,4 @@
-class Api::V1::PositionsController < ApplicationController
+class Api::V1::PositionsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_position, only: [:show, :update, :destroy]
@@ -21,8 +21,7 @@ class Api::V1::PositionsController < ApplicationController
 
   # POST /positions
   def create
-    @company = Company.find_by!(id: payload['company_id'])
-    @position = @company.position.new(position_params)
+    @position = current_company.positions.new(position_params)
     if @position.save
       render json: @position, status: :created
     else

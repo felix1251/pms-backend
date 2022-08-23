@@ -1,5 +1,5 @@
 require 'json'
-class Api::V1::PageAccessesController < ApplicationController
+class Api::V1::PageAccessesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_page_access, only: [:show, :update, :destroy]

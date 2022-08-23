@@ -1,4 +1,4 @@
-class Api::V1::JobClassificationsController < ApplicationController
+class Api::V1::JobClassificationsController < PmsDesktopController
   before_action :set_job_classification, only: [:show, :update, :destroy]
 
   # GET /job_classifications

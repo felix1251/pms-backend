@@ -1,6 +1,6 @@
 require 'json'
 require 'socket'
-class SigninController < ApplicationController
+class SigninController < PmsDesktopController
   before_action :authorize_access_request!, only: [:logout]
   before_action :set_user, only: [:create]
 

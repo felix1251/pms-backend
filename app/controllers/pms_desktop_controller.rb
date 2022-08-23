@@ -1,5 +1,5 @@
 require 'socket'
-class ApplicationController < ActionController::API
+class PmsDesktopController < ActionController::API
   include JWTSessions::RailsAuthorization
   rescue_from ActionController::ParameterMissing, with: :bad_request
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
@@ -23,6 +23,10 @@ class ApplicationController < ActionController::API
       session.flush_by_access_payload
       render json: {error: "Signed-in in other devices", device: _user_session.current_device, type: "X-DEVICES"}, status: :unauthorized
     end
+  end
+
+  def current_company
+    Company.find_by!(id: payload['company_id'])
   end
 
   def check_page_access(page)

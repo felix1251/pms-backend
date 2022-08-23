@@ -1,4 +1,4 @@
-class WelcomeController < ApplicationController
+class WelcomeController < PmsDesktopController
       def index
             msg = "Welcome :)"
             render json:  {:message => msg}

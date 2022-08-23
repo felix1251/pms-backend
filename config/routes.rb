@@ -23,7 +23,7 @@ Rails.application.routes.draw do
       patch ':token', action: :update
     end
   end
-  
+
   namespace :api do
     namespace :v1 do
       resources :positions
@@ -54,5 +54,4 @@ Rails.application.routes.draw do
       resources :support_chats
     end
   end
-
 end

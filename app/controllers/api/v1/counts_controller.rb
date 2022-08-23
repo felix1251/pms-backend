@@ -1,4 +1,4 @@
-class Api::V1::CountsController < ApplicationController
+class Api::V1::CountsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
 
