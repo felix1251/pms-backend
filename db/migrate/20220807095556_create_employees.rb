@@ -9,7 +9,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :middle_name, null: false
       t.string :last_name, null: false
       t.string :suffix, :default => ""
-      t.string :position, null: false
+      t.references :position, null: false, index: true
       t.references :department, index: true
       t.string :assigned_area, :default => ""
       t.string :job_classification, :default => "", index: true

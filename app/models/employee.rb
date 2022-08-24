@@ -2,6 +2,7 @@ class Employee < ApplicationRecord
       belongs_to :company
       belongs_to :department
       belongs_to :salary_mode
+      belongs_to :position
       before_create :add_custom_column_data
       before_update :on_emp_update
 
@@ -66,7 +67,6 @@ class Employee < ApplicationRecord
             self.middle_name = self.middle_name.upcase
             self.suffix = self.suffix.upcase
             self.job_classification = self.job_classification.upcase
-            self.position = self.position.upcase
             self.assigned_area = self.assigned_area.upcase
             self.employment_status = self.employment_status.upcase
             self.course = self.course.upcase

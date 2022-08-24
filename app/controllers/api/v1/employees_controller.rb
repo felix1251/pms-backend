@@ -22,7 +22,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     # columns
     sql_fields = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
     sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
-    sql_fields += " ,emp.position, dp.name AS department_name, sm.description AS salary_mode_desc"
+    sql_fields += " ,po.name AS position, dp.name AS department_name, sm.description AS salary_mode_desc"
     sql_fields += " ,emp.assigned_area, emp.job_classification"
     sql_fields += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
     sql_fields += " ,emp.birthdate, emp.status , emp.email, emp.phone_number, emp.street"
@@ -36,6 +36,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     # joins
     sql_join = " LEFT JOIN departments AS dp ON dp.id = emp.department_id"
     sql_join += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
+    sql_join += " LEFT JOIN positions AS po ON po.id = emp.position_id"
     # conditions
     sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
     sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
@@ -56,8 +57,9 @@ class Api::V1::EmployeesController < PmsDesktopController
   def show
     render json: { employee: @employee }.merge!({
       department: {value: @employee.department_id, label: @employee.department_name}, 
-      salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name}},
-    )
+      salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name},
+      position: {value: @employee.position_id, label: @employee.position_name}
+      })
   end
 
   # POST /employees
@@ -108,8 +110,10 @@ class Api::V1::EmployeesController < PmsDesktopController
     # Use callbacks to share common setup or constraints between actions.
     def set_employee_show
       @employee = Employee.joins("LEFT JOIN departments AS dp ON dp.id = employees.department_id
-                          LEFT JOIN salary_modes AS sm ON sm.id = employees.salary_mode_id")
-                          .select("employees.*, dp.name as department_name, sm.description as salary_mode_name")
+                          LEFT JOIN salary_modes AS sm ON sm.id = employees.salary_mode_id
+                          LEFT JOIN positions AS po ON po.id = employees.position_id")
+                          .select("employees.*, dp.name as department_name, sm.description as salary_mode_name,
+                          po.name as position_name, po.id as position_id")
                           .find(params[:id])
     end
 
@@ -118,7 +122,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     end
     # Only allow a trusted parameter "white list" through.
     def employee_params
-      params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position,
+      params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position_id,
                                       :department_id, :assigned_area, :job_classification, :salary_mode_id,
                                       :date_hired, :employment_status, :sex, :birthdate, :civil_status, 
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
