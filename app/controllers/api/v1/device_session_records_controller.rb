@@ -1,4 +1,4 @@
-class  Api::V1::DeviceSessionRecordsController < ApplicationController
+class  Api::V1::DeviceSessionRecordsController < PmsDesktopController
   # before_action :set_device_session_record, only: [:show, :update, :destroy]
 
   # # GET /device_session_records

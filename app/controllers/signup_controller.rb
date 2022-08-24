@@ -1,4 +1,4 @@
-class SignupController < ApplicationController
+class SignupController < PmsDesktopController
   KEYS = [:email, :password, :password_confirmation].freeze
 
   def create

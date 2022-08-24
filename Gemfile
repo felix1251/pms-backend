@@ -17,6 +17,10 @@ gem 'bcrypt', '~> 3.1.7'
 # Use JWTSessions to build JWT auth
 gem 'jwt_sessions', '~> 2.4'
 
+gem 'sidekiq'
+
+gem 'sinatra', github: 'sinatra/sinatra'
+
 gem 'will_paginate', '~> 3.1.0'
 
 gem 'dotenv-rails'

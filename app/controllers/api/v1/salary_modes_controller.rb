@@ -1,11 +1,12 @@
-class Api::V1::SalaryModesController < ApplicationController
+class Api::V1::SalaryModesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_salary_mode, only: [:show, :update, :destroy]
 
   # GET /salary_modes
   def index
-    @salary_modes = SalaryMode.select("id as value, description as label").all
+    query = "SELECT sm.id as value, sm.description as label FROM salary_modes as sm"
+    @salary_modes = execute_sql_query(query)
     render json: @salary_modes
   end
 

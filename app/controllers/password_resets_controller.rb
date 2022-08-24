@@ -1,4 +1,4 @@
-class PasswordResetsController < ApplicationController
+class PasswordResetsController < PmsDesktopController
   before_action :set_user, only: [:edit, :update]
   KEYS = [:password, :password_confirmation].freeze
 

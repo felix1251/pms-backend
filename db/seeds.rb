@@ -11,7 +11,9 @@ PageActionAccess.create(access_code: "D", action: "Delete")
 PageActionAccess.create(access_code: "X", action: "Export")
 
 Company.create(code: 'tavdc', description: 'Two Aces Corporation')
-company = Company.last
+Company.create(code: 'erxil', description: 'Erxil Tech. Soulutions')
+company = Company.first
+company2 = Company.last
 
 User.create(position: "Head", company_id: company.id, admin: true, username: "owner", name: "Head",
             email: "sample@dev.com", password: "password", password_confirmation: "password", system_default: true)
@@ -24,6 +26,18 @@ User.create(position: "HR-Time Keeping", company_id: company.id, admin: false, u
 
 User.create(position: "HR-Payroll", company_id: company.id, admin: false, username: "hrpayroll", name: "Payroll Account",
             email: "sample4@dev.com", password: "password", password_confirmation: "password", system_default: true)
+
+User.create(position: "Head", company_id: company2.id, admin: true, username: "owner", name: "Head",
+                  email: "sample5@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-head", company_id: company2.id, admin: true, username: "hrhead", name: "Hr head",
+                  email: "sample6@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-Time Keeping", company_id: company2.id, admin: false, username: "hrtimekeeping", name: "Time Keeping Account",
+                  email: "sample7@dev.com", password: "password", password_confirmation: "password", system_default: true)
+      
+User.create(position: "HR-Payroll", company_id: company2.id, admin: false, username: "hrpayroll", name: "Payroll Account",
+                  email: "sample7@dev.com", password: "password", password_confirmation: "password", system_default: true)
             
 users = User.where("admin = true")
 
@@ -124,26 +138,26 @@ SalaryMode.create!(description: "monthly", code: "mnly")
 SalaryMode.create!(description: "hourly", code: "hrly")
 SalaryMode.create!(description: "daily", code: "dly")
 
-Employee.create!(company_id: 1, first_name: "lyra", middle_name: "pacundo", last_name: "espinosa", suffix: "", biometric_no: "", position: "hr generalist", 
-                  department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
-                  employment_status: "sample", sex: "female", birthdate: "1998-02-26", phone_number: "9079247641", email: "sample@dev.com",
-                  street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
-                  hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
-                  institution: "Agusan Colleges", course: "bachelor of Science in business administration", course_major: "major in marketing management",
-                  civil_status: "single",compensation: 30000)
+# Employee.create!(company_id: 1, first_name: "lyra", middle_name: "pacundo", last_name: "espinosa", suffix: "", biometric_no: "", position_id: 1, 
+#                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
+#                   employment_status: "sample", sex: "female", birthdate: "1998-02-26", phone_number: "9079247641", email: "sample@dev.com",
+#                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
+#                   hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
+#                   institution: "Agusan Colleges", course: "bachelor of Science in business administration", course_major: "major in marketing management",
+#                   civil_status: "single",compensation: 30000)
 
-Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", last_name: "abacajen", suffix: "jr", biometric_no: "", position: "backned developer", 
-                  department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
-                  employment_status: "sample", sex: "male", birthdate: "1998-02-20", phone_number: "9079247641", email: "sample1@dev.com",
-                  street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
-                  hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
-                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , 
-                  civil_status: "single", compensation: 30000)
+# Employee.create!(company_id: 1, first_name: "felix", middle_name: "gallardo", last_name: "abacajen", suffix: "jr", biometric_no: "", position_id: 1, 
+#                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 1, date_hired: Date.today, date_resigned: "", 
+#                   employment_status: "sample", sex: "male", birthdate: "1998-02-20", phone_number: "9079247641", email: "sample1@dev.com",
+#                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
+#                   hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
+#                   institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering" , 
+#                   civil_status: "single", compensation: 30000)
 
-Employee.create!(company_id: 1, first_name: "john christian", middle_name: "gellermo", last_name: "salazar", suffix: "", biometric_no: "", position: "crew", 
-                  department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 3, date_hired: Date.today, date_resigned: "", 
-                  employment_status: "sample", sex: "male", birthdate: "1992-09-23", phone_number: "9079247641", email: "sample2@dev.com",
-                  street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
-                  hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
-                  institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering",
-                  civil_status: "single" ,compensation: 30000)
+# Employee.create!(company_id: 1, first_name: "john christian", middle_name: "gellermo", last_name: "salazar", suffix: "", biometric_no: "", position_id: 1, 
+#                   department_id: 1, assigned_area: "kitcharao", job_classification: "staff", salary_mode_id: 3, date_hired: Date.today, date_resigned: "", 
+#                   employment_status: "sample", sex: "male", birthdate: "1992-09-23", phone_number: "9079247641", email: "sample2@dev.com",
+#                   street: "purok 2", barangay: "crossing", municipality: "kitcharao", province: "agusan del norte", sss_no: "122-2121-212121", 
+#                   hdmf_no: "121-2121-2121-21", tin_no: "212-2121-212", phic_no: "1212-212-2121", highest_educational_attainment: "college graduate",
+#                   institution: "Agusan Colleges", course: "bachelor of science in computer science", course_major: "major in software engineering",
+#                   civil_status: "single" ,compensation: 30000)

@@ -1,6 +1,6 @@
 require 'json'
 require 'socket'
-class SigninController < ApplicationController
+class SigninController < PmsDesktopController
   before_action :authorize_access_request!, only: [:logout]
   before_action :set_user, only: [:create]
 
@@ -20,12 +20,11 @@ class SigninController < ApplicationController
         response.set_cookie(JWTSessions.access_cookie,
                             value: tokens[:access],
                             httponly: true,
-                            # expires: 1.hour.from_now,
                             secure: Rails.env.production?)
 
         update_user_and_device_session_records(@user)
 
-        render json: { csrf: tokens[:csrf]}
+        render json: { csrf: tokens[:csrf], origin: request.referrer}
       else
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)
@@ -64,7 +63,7 @@ class SigninController < ApplicationController
 
   def set_user
     @company = Company.find_by!(code: params[:company_code])
-    @user = User.find_by!(username: params[:username])
+    @user = @company.users.find_by!(username: params[:username])
   end
 
   def update_user_and_device_session_records(user)

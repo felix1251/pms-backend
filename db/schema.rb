@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_15_090731) do
+ActiveRecord::Schema.define(version: 2022_08_20_154650) do
 
-  create_table "companies", force: :cascade do |t|
+  create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "code", null: false
     t.text "description", null: false
     t.datetime "created_at", null: false
@@ -20,8 +20,8 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["code"], name: "index_companies_on_code"
   end
 
-  create_table "departments", force: :cascade do |t|
-    t.integer "company_id", null: false
+  create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.string "name", null: false
     t.string "code", null: false
     t.datetime "created_at", null: false
@@ -29,11 +29,11 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["company_id"], name: "index_departments_on_company_id"
   end
 
-  create_table "device_session_records", force: :cascade do |t|
+  create_table "device_session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "ip_address"
     t.text "os"
     t.string "device_name"
-    t.integer "user_id", null: false
+    t.bigint "user_id", null: false
     t.string "action"
     t.datetime "at"
     t.datetime "created_at", null: false
@@ -41,8 +41,8 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["user_id"], name: "index_device_session_records_on_user_id"
   end
 
-  create_table "employees", force: :cascade do |t|
-    t.integer "company_id", null: false
+  create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.string "employee_id", null: false
     t.string "status", default: "A"
     t.string "biometric_no", default: ""
@@ -50,12 +50,14 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.string "middle_name", null: false
     t.string "last_name", null: false
     t.string "suffix", default: ""
-    t.string "position", null: false
-    t.integer "department_id"
+    t.bigint "position_id", null: false
+    t.bigint "department_id"
     t.string "assigned_area", default: ""
     t.string "job_classification", default: ""
-    t.integer "salary_mode_id", null: false
+    t.bigint "salary_mode_id", null: false
     t.date "date_hired", null: false
+    t.boolean "allow_ers_attendance", default: false
+    t.date "date_regularized"
     t.date "date_resigned"
     t.string "employment_status", null: false
     t.string "sex", null: false
@@ -73,16 +75,16 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.string "phic_no", default: ""
     t.string "highest_educational_attainment", null: false
     t.string "institution", default: ""
-    t.text "course", default: ""
-    t.text "course_major", default: ""
+    t.string "course", default: ""
+    t.string "course_major", default: ""
     t.string "graduate_school", default: ""
     t.string "encrypted_compensation"
     t.string "encrypted_compensation_salt"
     t.string "encrypted_compensation_iv"
     t.string "emergency_contact_person", default: ""
     t.string "emergency_contact_number", default: ""
-    t.text "remarks", default: ""
-    t.text "others", default: ""
+    t.text "remarks"
+    t.text "others"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_employees_on_company_id"
@@ -92,11 +94,22 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status"], name: "index_employees_on_employment_status"
     t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["position_id"], name: "index_employees_on_position_id"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
   end
 
-  create_table "page_accesses", force: :cascade do |t|
+  create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.string "description", null: false
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_job_classifications_on_company_id"
+    t.index ["created_by_id"], name: "index_job_classifications_on_created_by_id"
+  end
+
+  create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "page", null: false
     t.datetime "created_at", null: false
@@ -104,7 +117,7 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["access_code"], name: "index_page_accesses_on_access_code"
   end
 
-  create_table "page_action_accesses", force: :cascade do |t|
+  create_table "page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "action", null: false
     t.datetime "created_at", null: false
@@ -112,7 +125,17 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
-  create_table "salary_modes", force: :cascade do |t|
+  create_table "positions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.string "name"
+    t.string "code"
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_positions_on_company_id"
+  end
+
+  create_table "salary_modes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "description"
     t.string "code"
     t.datetime "created_at", null: false
@@ -120,8 +143,8 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["code"], name: "index_salary_modes_on_code"
   end
 
-  create_table "session_records", force: :cascade do |t|
-    t.integer "user_id", null: false
+  create_table "session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "user_id", null: false
     t.datetime "first_logged_in"
     t.datetime "previous_logged_in"
     t.datetime "recent_logged_in"
@@ -135,22 +158,22 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["user_id"], name: "index_session_records_on_user_id"
   end
 
-  create_table "support_chats", force: :cascade do |t|
+  create_table "support_chats", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.text "encrypted_message"
     t.text "encrypted_message_iv"
     t.text "encrypted_message_salt"
-    t.integer "user_id_id"
-    t.integer "admin_id_id"
+    t.bigint "user_id_id"
+    t.bigint "admin_id_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["admin_id_id"], name: "index_support_chats_on_admin_id_id"
     t.index ["user_id_id"], name: "index_support_chats_on_user_id_id"
   end
 
-  create_table "user_page_action_accesses", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "page_access_id", null: false
-    t.integer "page_action_access_id", null: false
+  create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "page_access_id", null: false
+    t.bigint "page_action_access_id", null: false
     t.string "status", default: "I", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -159,7 +182,7 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.index ["user_id"], name: "index_user_page_action_accesses_on_user_id"
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "email", default: ""
     t.string "password_digest"
     t.string "position", default: "HR-staff"
@@ -172,10 +195,14 @@ ActiveRecord::Schema.define(version: 2022_08_15_090731) do
     t.datetime "updated_at", null: false
     t.string "reset_password_token"
     t.datetime "reset_password_token_expires_at"
-    t.integer "company_id", null: false
+    t.bigint "company_id", null: false
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token"
     t.index ["username"], name: "index_users_on_username"
   end
 
+  add_foreign_key "job_classifications", "companies"
+  add_foreign_key "job_classifications", "users", column: "created_by_id"
+  add_foreign_key "positions", "companies"
+  add_foreign_key "users", "companies"
 end
