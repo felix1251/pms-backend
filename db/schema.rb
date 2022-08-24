@@ -50,7 +50,7 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.string "middle_name", null: false
     t.string "last_name", null: false
     t.string "suffix", default: ""
-    t.string "position", null: false
+    t.bigint "position_id", null: false
     t.bigint "department_id"
     t.string "assigned_area", default: ""
     t.string "job_classification", default: ""
@@ -94,6 +94,7 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status"], name: "index_employees_on_employment_status"
     t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["position_id"], name: "index_employees_on_position_id"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
   end
