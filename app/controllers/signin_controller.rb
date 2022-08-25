@@ -108,8 +108,8 @@ class SigninController < PmsDesktopController
   def session_warning(user)
     info = user.device_session_records.where("action = 'SIGNED IN'").first
     user.device_session_records.build({ip_address: ip_address, 
-                                    device_name: host_name, os: get_operating_system, 
-                                    action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
+                                      device_name: host_name, os: get_operating_system, 
+                                      action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
 
     render json: { error: "You still have pending session", session_pending: true, current_ip_address: ip_address, current_os: get_operating_system,
                   current_device: host_name, recent_activity: {ip: info.ip_address, os: info.os, device_name: info.device_name, action: info.action, at: info.at}, 

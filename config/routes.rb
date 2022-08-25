@@ -26,6 +26,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      resources :employment_statuses
+      resources :employee_action_histories
       resources :positions
       resources :job_classifications
       resources :salary_modes
