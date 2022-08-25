@@ -3,6 +3,8 @@ class Employee < ApplicationRecord
       belongs_to :department
       belongs_to :salary_mode
       belongs_to :position
+      belongs_to :employment_status
+      has_many :employee_action_histories
       before_create :add_custom_column_data
       before_update :on_emp_update
 
@@ -68,7 +70,6 @@ class Employee < ApplicationRecord
             self.suffix = self.suffix.upcase
             self.job_classification = self.job_classification.upcase
             self.assigned_area = self.assigned_area.upcase
-            self.employment_status = self.employment_status.upcase
             self.course = self.course.upcase
             self.course_major = self.course_major.upcase
             self.sex = self.sex.upcase
