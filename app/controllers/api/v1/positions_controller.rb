@@ -7,8 +7,8 @@ class Api::V1::PositionsController < PmsDesktopController
   def index
     sql_start = ""
     sql_start += "SELECT"
-    sql_fields = " ps.id value, ps.name as label, ps.code"
-    sql_from = " FROM positions as ps"
+    sql_fields = " ps.id value, ps.name AS label, ps.code"
+    sql_from = " FROM positions AS ps"
     sql_conditions = " WHERE ps.status = 'A' and company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY ps.name ASC"
     positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
@@ -22,7 +22,7 @@ class Api::V1::PositionsController < PmsDesktopController
 
   # POST /positions
   def create
-    @position = current_company.positions.new(position_params)
+    @position = current_company.positions.new(position_params.merge!({created_by_id: payload['user_id']}))
     if @position.save
       render json: @position, status: :created
     else
