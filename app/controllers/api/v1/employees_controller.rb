@@ -134,6 +134,6 @@ class Api::V1::EmployeesController < PmsDesktopController
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks,
                                       :emergency_contact_number, :emergency_contact_person, :compensation,
-                                      :date_regularized)
+                                      :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type)
     end
 end

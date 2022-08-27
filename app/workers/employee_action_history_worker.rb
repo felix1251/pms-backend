@@ -6,4 +6,3 @@ class EmployeeActionHistoryWorker
                                 employee_id: employee_id, action_type: action_type)
   end
 end
-  
