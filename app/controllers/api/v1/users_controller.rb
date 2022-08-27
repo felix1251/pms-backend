@@ -1,5 +1,5 @@
 require 'json'
-class Api::V1::UsersController < ApplicationController
+class Api::V1::UsersController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_user, only: [:update, :destroy, :retrieve_archived_account]
@@ -35,8 +35,8 @@ class Api::V1::UsersController < ApplicationController
         action = params[:access][:action]
         action.each do |ac|
           info = @user.user_page_action_accesses.find_by!(page_access_id: ac["page_access_id"], 
-                                                            page_action_access_id: ac["page_action_access_id"])
-                                                            .update(status: ac["status"])
+                                                          page_action_access_id: ac["page_action_access_id"])
+                                                          .update(status: ac["status"])
           if info
             action_store.push({page_access_id: ac["page_access_id"], page_action_access_id: ac["page_action_access_id"], status: ac["status"]})
           end
@@ -74,7 +74,7 @@ class Api::V1::UsersController < ApplicationController
 
   def get_account
     @account = User.select("id, company_id, admin, email, position, system_default,
-                          name, status, created_at")
+                          name, status, created_at, username")
                           .find(params[:id])
     
     render json: {account: @account, access: user_page_action_access(@account)}

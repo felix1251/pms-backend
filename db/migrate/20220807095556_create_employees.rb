@@ -9,18 +9,21 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :middle_name, null: false
       t.string :last_name, null: false
       t.string :suffix, :default => ""
-      t.string :position, null: false
+      t.references :position, null: false, index: true
       t.references :department, index: true
       t.string :assigned_area, :default => ""
       t.string :job_classification, :default => "", index: true
       t.references :salary_mode, null: false, index: true
-      t.date :date_hired, null: false, index: true
+      t.datetime :date_hired, null: false, index: true
       t.boolean :allow_ers_attendance, :default => false
-      t.date :date_regularized
-      t.date :date_resigned, index: true
-      t.string :employment_status, null: false, index: true
+      t.datetime :date_regularized
+      t.datetime :date_resigned, index: true
+      t.references :employment_status, null: false
       t.string :sex, null: false, index: true
-      t.date :birthdate, null: false
+      t.datetime :birthdate, null: false
+      t.string :work_sched_type, null: false
+      t.string :work_sched_start, :length => 5
+      t.string :work_sched_end, :length => 5
       t.string :civil_status, :default => ""
       t.string :phone_number, :default => ""
       t.string :email, :default => ""

@@ -2,6 +2,9 @@ class Employee < ApplicationRecord
       belongs_to :company
       belongs_to :department
       belongs_to :salary_mode
+      belongs_to :position
+      belongs_to :employment_status
+      has_many :employee_action_histories
       before_create :add_custom_column_data
       before_update :on_emp_update
 
@@ -27,7 +30,9 @@ class Employee < ApplicationRecord
       validates :compensation, numericality: { only_integer: true }, presence: true
       validates :biometric_no, uniqueness: { scope: :company_id }, allow_blank: true, exclusion: { in: ["", nil]}
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
+      validates :work_sched_type, presence: true
       enum status: { A: "A", I: "I"}
+      enum work_sched_type: { FX: "FX", FL: "FL"}
       enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
       
       def attributes
@@ -66,9 +71,7 @@ class Employee < ApplicationRecord
             self.middle_name = self.middle_name.upcase
             self.suffix = self.suffix.upcase
             self.job_classification = self.job_classification.upcase
-            self.position = self.position.upcase
             self.assigned_area = self.assigned_area.upcase
-            self.employment_status = self.employment_status.upcase
             self.course = self.course.upcase
             self.course_major = self.course_major.upcase
             self.sex = self.sex.upcase
@@ -82,5 +85,7 @@ class Employee < ApplicationRecord
             self.emergency_contact_person = self.emergency_contact_person.upcase
             self.civil_status = self.civil_status.upcase
             self.graduate_school = self.graduate_school.upcase
+            # self.work_sched_start = ActiveSupport::TimeZone['UTC'].parse(self.work_sched_start)
+            # self.work_sched_end =  ActiveSupport::TimeZone['UTC'].parse(self.work_sched_end)
       end
 end

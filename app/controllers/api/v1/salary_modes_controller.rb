@@ -1,4 +1,4 @@
-class Api::V1::SalaryModesController < ApplicationController
+class Api::V1::SalaryModesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
   before_action :set_salary_mode, only: [:show, :update, :destroy]

@@ -1,4 +1,4 @@
-class Api::V1::PhoneIndexesController < ApplicationController
+class Api::V1::PhoneIndexesController < PmsDesktopController
     def index
             @phone_index = [
                 {

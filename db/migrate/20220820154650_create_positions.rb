@@ -1,6 +1,6 @@
-class CreateJobClassifications < ActiveRecord::Migration[5.2]
+class CreatePositions < ActiveRecord::Migration[5.2]
   def change
-    create_table :job_classifications do |t|
+    create_table :positions do |t|
       t.references :company, foreign_key: true
       t.string :name, null: false
       t.string :code, null: false

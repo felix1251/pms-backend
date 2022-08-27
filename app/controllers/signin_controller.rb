@@ -1,6 +1,6 @@
 require 'json'
 require 'socket'
-class SigninController < ApplicationController
+class SigninController < PmsDesktopController
   before_action :authorize_access_request!, only: [:logout]
   before_action :set_user, only: [:create]
 
@@ -24,7 +24,7 @@ class SigninController < ApplicationController
 
         update_user_and_device_session_records(@user)
 
-        render json: { csrf: tokens[:csrf]}
+        render json: { csrf: tokens[:csrf], origin: request.referrer}
       else
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)
@@ -108,8 +108,8 @@ class SigninController < ApplicationController
   def session_warning(user)
     info = user.device_session_records.where("action = 'SIGNED IN'").first
     user.device_session_records.build({ip_address: ip_address, 
-                                    device_name: host_name, os: get_operating_system, 
-                                    action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
+                                      device_name: host_name, os: get_operating_system, 
+                                      action: "SIGN IN ATTEMPT ON PENDING SESSION", at: DateTime.now}).save!
 
     render json: { error: "You still have pending session", session_pending: true, current_ip_address: ip_address, current_os: get_operating_system,
                   current_device: host_name, recent_activity: {ip: info.ip_address, os: info.os, device_name: info.device_name, action: info.action, at: info.at}, 
