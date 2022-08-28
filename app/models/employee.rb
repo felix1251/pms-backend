@@ -70,7 +70,6 @@ class Employee < ApplicationRecord
             self.last_name = self.last_name.upcase
             self.middle_name = self.middle_name.upcase
             self.suffix = self.suffix.upcase
-            self.job_classification = self.job_classification.upcase
             self.assigned_area = self.assigned_area.upcase
             self.course = self.course.upcase
             self.course_major = self.course_major.upcase

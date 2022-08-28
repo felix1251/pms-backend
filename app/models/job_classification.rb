@@ -4,11 +4,13 @@ class JobClassification < ApplicationRecord
   before_create :auto_upcase
   before_update :auto_upcase
 
-  validates :description, presence: true
+  validates :name, presence: true, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}
+  validates :code, presence: true, format: { without: /\s/ , message: 'cannot contain whitespace' }, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}
 
   private
 
   def auto_upcase
-    self.description = self.description.upcase
+    self.name = self.name.upcase
+    self.code = self.code.upcase
   end
 end

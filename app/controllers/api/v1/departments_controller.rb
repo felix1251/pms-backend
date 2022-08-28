@@ -5,9 +5,14 @@ class Api::V1::DepartmentsController < PmsDesktopController
 
   # GET /departments
   def index
-    query = "SELECT dp.id as value, dp.name as label FROM departments as dp"
-    @salary_modes = execute_sql_query(query)
-    render json: @salary_modes
+    sql_start = ""
+    sql_start += "SELECT"
+    sql_fields = " dp.id value, dp.name AS label, dp.code"
+    sql_from = " FROM departments AS dp"
+    sql_conditions = " WHERE dp.status = 'A' and dp.company_id = #{payload['company_id']}"
+    sql_sort = " ORDER BY dp.name ASC"
+    departments = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+    render json:departments
   end
 
   # GET /departments/1
