@@ -67,7 +67,7 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.bigint "position_id", null: false
     t.bigint "department_id"
     t.string "assigned_area", default: ""
-    t.string "job_classification", default: ""
+    t.bigint "job_classification_id"
     t.bigint "salary_mode_id", null: false
     t.datetime "date_hired", null: false
     t.boolean "allow_ers_attendance", default: false
@@ -110,7 +110,7 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status_id"], name: "index_employees_on_employment_status_id"
-    t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["job_classification_id"], name: "index_employees_on_job_classification_id"
     t.index ["position_id"], name: "index_employees_on_position_id"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"

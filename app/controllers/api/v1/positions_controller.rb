@@ -9,7 +9,7 @@ class Api::V1::PositionsController < PmsDesktopController
     sql_start += "SELECT"
     sql_fields = " ps.id value, ps.name AS label, ps.code"
     sql_from = " FROM positions AS ps"
-    sql_conditions = " WHERE ps.status = 'A' and company_id = #{payload['company_id']}"
+    sql_conditions = " WHERE ps.status = 'A' and ps.company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY ps.name ASC"
     positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
     render json: positions

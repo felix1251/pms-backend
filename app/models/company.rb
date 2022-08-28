@@ -3,6 +3,7 @@ class Company < ApplicationRecord
       has_many :employees
       has_many :departments
       has_many :positions
+      has_many :job_classifications
 
       validates :code, format: { without: /\s/ , message: 'cannot contain whitespace' }, presence: true
       validates :description, presence: true
