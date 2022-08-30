@@ -55,17 +55,17 @@ class Api::V1::EmployeesController < PmsDesktopController
   # GET /employees/1
   def show
     render json: { employee: @employee }.merge!({
-      department: {value: @employee.department_id, label: @employee.department_name}, 
-      salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name},
-      position: {value: @employee.position_id, label: @employee.position_name},
-      employment_status: {value: @employee.emp_status_id, label: @employee.emp_status_name},
-      job_classification: {value: @employee.job_classification_id, label: @employee.job_classification_name},
+        department: {value: @employee.department_id, label: @employee.department_name}, 
+        salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name},
+        position: {value: @employee.position_id, label: @employee.position_name},
+        employment_status: {value: @employee.emp_status_id, label: @employee.emp_status_name},
+        job_classification: {value: @employee.job_classification_id, label: @employee.job_classification_name},
       })
   end
 
   # POST /employees
   def create
-    @employee = current_company.employees.new(employee_params)
+    @employee = Employee.new(employee_params.merge!({company_id: payload["company_id"], created_by_id: payload["user_id"]}))
     if @employee.save
       EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.created_at, 'CREATED', @employee.id)
       render json: {message: "Successfully created"}, status: :created
@@ -135,6 +135,7 @@ class Api::V1::EmployeesController < PmsDesktopController
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks,
                                       :emergency_contact_number, :emergency_contact_person, :compensation,
-                                      :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type)
+                                      :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type, 
+                                      :company_email, :date_resigned, :work_sched_days => [])
     end
 end

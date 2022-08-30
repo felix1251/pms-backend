@@ -22,7 +22,7 @@ class Api::V1::DepartmentsController < PmsDesktopController
 
   # POST /departments
   def create
-    @department = current_company.departments.new(department_params.merge!({created_by_id: payload['user_id']}))
+    @department = Department.new(department_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
     if @department.save
       render json: @department, status: :created
     else

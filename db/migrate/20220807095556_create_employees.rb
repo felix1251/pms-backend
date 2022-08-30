@@ -24,9 +24,11 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :work_sched_type, null: false
       t.string :work_sched_start, :length => 5
       t.string :work_sched_end, :length => 5
+      t.string :work_sched_days
       t.string :civil_status, :default => ""
       t.string :phone_number, :default => ""
       t.string :email, :default => ""
+      t.string :company_email, :default => ""
       t.string :street, :null => false
       t.string :barangay, :null => false
       t.string :municipality, :null => false
@@ -47,6 +49,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :emergency_contact_number, :default => ""
       t.text :remarks
       t.text :others
+      t.references :created_by, foreign_key: { to_table: 'users' }, null: false
       t.timestamps
     end
   end

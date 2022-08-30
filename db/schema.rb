@@ -79,9 +79,11 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.string "work_sched_type", null: false
     t.string "work_sched_start"
     t.string "work_sched_end"
+    t.string "work_sched_days"
     t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""
+    t.string "company_email", default: ""
     t.string "street", null: false
     t.string "barangay", null: false
     t.string "municipality", null: false
@@ -102,9 +104,11 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.string "emergency_contact_number", default: ""
     t.text "remarks"
     t.text "others"
+    t.bigint "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_employees_on_company_id"
+    t.index ["created_by_id"], name: "index_employees_on_created_by_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
     t.index ["date_resigned"], name: "index_employees_on_date_resigned"
     t.index ["department_id"], name: "index_employees_on_department_id"
@@ -231,6 +235,7 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
 
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
   add_foreign_key "positions", "companies"
