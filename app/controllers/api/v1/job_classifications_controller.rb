@@ -22,7 +22,7 @@ class Api::V1::JobClassificationsController < PmsDesktopController
 
   # POST /job_classifications
   def create
-    @job_classification = current_company.job_classifications.new(job_classification_params.merge!({created_by_id: payload['user_id']}))
+    @job_classification = JobClassification.new(job_classification_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
     if @job_classification.save
       render json: @job_classification, status: :created
     else
