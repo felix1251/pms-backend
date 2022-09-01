@@ -28,7 +28,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_fields += " ,emp.birthdate, emp.status, emp.phone_number"
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no"
     sql_fields += " ,emp.biometric_no, emp.employee_id"
-    # main column
+    # main table
     sql_from = " FROM employees AS emp"
     # joins
     sql_join = " LEFT JOIN departments AS dp ON dp.id = emp.department_id"
