@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_20_154650) do
+ActiveRecord::Schema.define(version: 2022_09_02_051009) do
+
+  create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.string "name"
+    t.string "code"
+    t.bigint "created_by_id"
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_assigned_areas_on_company_id"
+    t.index ["created_by_id"], name: "index_assigned_areas_on_created_by_id"
+  end
 
   create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "code", null: false
@@ -24,9 +36,12 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.bigint "company_id", null: false
     t.string "name", null: false
     t.string "code", null: false
+    t.bigint "created_by_id"
+    t.string "status", default: "A"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_departments_on_company_id"
+    t.index ["created_by_id"], name: "index_departments_on_created_by_id"
   end
 
   create_table "device_session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -41,6 +56,17 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.index ["user_id"], name: "index_device_session_records_on_user_id"
   end
 
+  create_table "employee_action_histories", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "action_by_id"
+    t.bigint "employee_id"
+    t.string "action_type"
+    t.datetime "action_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_by_id"], name: "index_employee_action_histories_on_action_by_id"
+    t.index ["employee_id"], name: "index_employee_action_histories_on_employee_id"
+  end
+
   create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "employee_id", null: false
@@ -52,19 +78,24 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.string "suffix", default: ""
     t.bigint "position_id", null: false
     t.bigint "department_id"
-    t.string "assigned_area", default: ""
-    t.string "job_classification", default: ""
+    t.bigint "assigned_area_id"
+    t.bigint "job_classification_id"
     t.bigint "salary_mode_id", null: false
-    t.date "date_hired", null: false
+    t.datetime "date_hired", null: false
     t.boolean "allow_ers_attendance", default: false
-    t.date "date_regularized"
-    t.date "date_resigned"
-    t.string "employment_status", null: false
+    t.datetime "date_regularized"
+    t.datetime "date_resigned"
+    t.bigint "employment_status_id", null: false
     t.string "sex", null: false
-    t.date "birthdate", null: false
+    t.datetime "birthdate", null: false
+    t.string "work_sched_type", null: false
+    t.string "work_sched_start"
+    t.string "work_sched_end"
+    t.string "work_sched_days"
     t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""
+    t.string "company_email", default: ""
     t.string "street", null: false
     t.string "barangay", null: false
     t.string "municipality", null: false
@@ -85,24 +116,37 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.string "emergency_contact_number", default: ""
     t.text "remarks"
     t.text "others"
+    t.bigint "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
     t.index ["company_id"], name: "index_employees_on_company_id"
+    t.index ["created_by_id"], name: "index_employees_on_created_by_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
     t.index ["date_resigned"], name: "index_employees_on_date_resigned"
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["employee_id"], name: "index_employees_on_employee_id"
-    t.index ["employment_status"], name: "index_employees_on_employment_status"
-    t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["employment_status_id"], name: "index_employees_on_employment_status_id"
+    t.index ["job_classification_id"], name: "index_employees_on_job_classification_id"
     t.index ["position_id"], name: "index_employees_on_position_id"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
   end
 
+  create_table "employment_statuses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.string "name"
+    t.string "code"
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
-    t.string "description", null: false
+    t.string "name", null: false
+    t.string "code", null: false
     t.bigint "created_by_id"
+    t.string "status", default: "A"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_job_classifications_on_company_id"
@@ -127,12 +171,14 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
 
   create_table "positions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
-    t.string "name"
-    t.string "code"
+    t.string "name", null: false
+    t.string "code", null: false
+    t.bigint "created_by_id"
     t.string "status", default: "A"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_positions_on_company_id"
+    t.index ["created_by_id"], name: "index_positions_on_created_by_id"
   end
 
   create_table "salary_modes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -201,8 +247,14 @@ ActiveRecord::Schema.define(version: 2022_08_20_154650) do
     t.index ["username"], name: "index_users_on_username"
   end
 
+  add_foreign_key "assigned_areas", "companies"
+  add_foreign_key "assigned_areas", "users", column: "created_by_id"
+  add_foreign_key "departments", "users", column: "created_by_id"
+  add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
   add_foreign_key "positions", "companies"
+  add_foreign_key "positions", "users", column: "created_by_id"
   add_foreign_key "users", "companies"
 end

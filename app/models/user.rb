@@ -6,6 +6,9 @@ class User < ApplicationRecord
   has_many :device_session_records
   has_many :user_page_accesses
   has_many :user_page_action_accesses
+  has_many :employee_action_histories
+  has_many :employees, foreign_key: :created_by_id
+  has_many :job_classification, foreign_key: :created_by_id
 
   validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
   validates :username, presence: true, uniqueness: { scope: :company_id }, format: { without: /\s/ , message: 'cannot contain whitespace' }

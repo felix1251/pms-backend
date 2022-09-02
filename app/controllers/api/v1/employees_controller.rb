@@ -23,20 +23,20 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_fields = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
     sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
     sql_fields += " ,po.name AS position, dp.name AS department_name, sm.description AS salary_mode_desc"
-    sql_fields += " ,emp.assigned_area, emp.job_classification"
-    sql_fields += " ,DATE(emp.date_hired) as date_hired, emp.employment_status, emp.sex"
-    sql_fields += " ,emp.birthdate, emp.status , emp.email, emp.phone_number, emp.street"
-    sql_fields += " ,emp.barangay, emp.municipality, emp.province"
-    sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no, emp.course, emp.institution"
-    sql_fields += " ,emp.highest_educational_attainment, emp.biometric_no, emp.employee_id"
-    sql_fields += " ,emp.emergency_contact_person, emergency_contact_number"
-    sql_fields += " ,emp.course_major, emp.civil_status"
-    # main column
+    sql_fields += " ,aa.name AS assigned_area, jc.name AS job_classification"
+    sql_fields += " ,DATE(emp.date_hired) as date_hired, es.name AS employment_status, emp.sex"
+    sql_fields += " ,emp.birthdate, emp.status, emp.phone_number"
+    sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no"
+    sql_fields += " ,emp.biometric_no, emp.employee_id"
+    # main table
     sql_from = " FROM employees AS emp"
     # joins
     sql_join = " LEFT JOIN departments AS dp ON dp.id = emp.department_id"
     sql_join += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
     sql_join += " LEFT JOIN positions AS po ON po.id = emp.position_id"
+    sql_join += " LEFT JOIN employment_statuses AS es ON es.id = emp.employment_status_id"
+    sql_join += " LEFT JOIN job_classifications AS jc ON jc.id = emp.job_classification_id"
+    sql_join += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
     # conditions
     sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
     sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
@@ -56,16 +56,20 @@ class Api::V1::EmployeesController < PmsDesktopController
   # GET /employees/1
   def show
     render json: { employee: @employee }.merge!({
-      department: {value: @employee.department_id, label: @employee.department_name}, 
-      salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name},
-      position: {value: @employee.position_id, label: @employee.position_name}
+        department: {value: @employee.department_id, label: @employee.department_name}, 
+        salary_mode: {value: @employee.salary_mode_id, label: @employee.salary_mode_name},
+        position: {value: @employee.position_id, label: @employee.position_name},
+        employment_status: {value: @employee.emp_status_id, label: @employee.emp_status_name},
+        job_classification: {value: @employee.job_classification_id, label: @employee.job_classification_name},
+        assigned_area: {value: @employee.assigned_area_id, label: @employee.assigned_area_name},
       })
   end
 
   # POST /employees
   def create
-    @employee = current_company.employees.new(employee_params)
+    @employee = Employee.new(employee_params.merge!({company_id: payload["company_id"], created_by_id: payload["user_id"]}))
     if @employee.save
+      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.created_at, 'CREATED', @employee.id)
       render json: {message: "Successfully created"}, status: :created
     else
       render json: @employee.errors, status: :unprocessable_entity
@@ -75,6 +79,7 @@ class Api::V1::EmployeesController < PmsDesktopController
   # PATCH/PUT /employees/1
   def update
     if @employee.update(employee_params)
+      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.updated_at, 'UPDATED', @employee.id)
       render json: {message: "Successfully updated"}
     else
       render json: @employee.errors, status: :unprocessable_entity
@@ -111,9 +116,14 @@ class Api::V1::EmployeesController < PmsDesktopController
     def set_employee_show
       @employee = Employee.joins("LEFT JOIN departments AS dp ON dp.id = employees.department_id
                           LEFT JOIN salary_modes AS sm ON sm.id = employees.salary_mode_id
-                          LEFT JOIN positions AS po ON po.id = employees.position_id")
-                          .select("employees.*, dp.name as department_name, sm.description as salary_mode_name,
-                          po.name as position_name, po.id as position_id")
+                          LEFT JOIN positions AS po ON po.id = employees.position_id
+                          LEFT JOIN employment_statuses AS es ON es.id = employees.employment_status_id
+                          LEFT JOIN job_classifications AS jc ON jc.id = employees.job_classification_id
+                          LEFT JOIN assigned_areas AS aa ON aa.id = employees.assigned_area_id")
+                          .select("employees.*, dp.name AS department_name, sm.description AS salary_mode_name,
+                          po.name AS position_name, po.id as position_id, es.id as emp_status_id, es.name AS emp_status_name,
+                          jc.name AS job_classification_name, jc.id AS job_classification_id, aa.id AS assigned_area_id,
+                          aa.name AS assigned_area_name")
                           .find(params[:id])
     end
 
@@ -123,12 +133,13 @@ class Api::V1::EmployeesController < PmsDesktopController
     # Only allow a trusted parameter "white list" through.
     def employee_params
       params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position_id,
-                                      :department_id, :assigned_area, :job_classification, :salary_mode_id,
-                                      :date_hired, :employment_status, :sex, :birthdate, :civil_status, 
+                                      :department_id, :assigned_area_id, :job_classification_id, :salary_mode_id,
+                                      :date_hired, :employment_status_id, :sex, :birthdate, :civil_status, 
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks,
                                       :emergency_contact_number, :emergency_contact_person, :compensation,
-                                      :date_regularized)
+                                      :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type, 
+                                      :company_email, :date_resigned, :work_sched_days => [])
     end
 end

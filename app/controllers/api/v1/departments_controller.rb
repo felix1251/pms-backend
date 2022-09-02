@@ -5,9 +5,35 @@ class Api::V1::DepartmentsController < PmsDesktopController
 
   # GET /departments
   def index
-    query = "SELECT dp.id as value, dp.name as label FROM departments as dp"
-    @salary_modes = execute_sql_query(query)
-    render json: @salary_modes
+    sql_start = ""
+    sql_start += "SELECT"
+    sql_fields = " dp.id value, dp.name AS label, dp.code"
+    sql_from = " FROM departments AS dp"
+    sql_conditions = " WHERE dp.status = 'A' and dp.company_id = #{payload['company_id']}"
+    sql_sort = " ORDER BY dp.name ASC"
+
+    if params[:page].present? && params[:per_page].present?
+      max = 20
+      current_page = params[:page].to_i 
+      per_page = params[:per_page].to_i
+      current_page = current_page || 1
+      per_page = per_page || max
+      unless per_page <= max
+        per_page = max
+      end
+      records_fetch_point = (current_page - 1) * per_page
+
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_count = " COUNT(*) as total_count"
+
+      departments = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
+
+      render json: {results: departments, total_count: counts.first["total_count"] }
+    else
+      departments = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      render json:departments
+    end
   end
 
   # GET /departments/1
@@ -17,7 +43,7 @@ class Api::V1::DepartmentsController < PmsDesktopController
 
   # POST /departments
   def create
-    @department = current_company.departments.new(department_params)
+    @department = Department.new(department_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
     if @department.save
       render json: @department, status: :created
     else
