@@ -23,7 +23,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_fields = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
     sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
     sql_fields += " ,po.name AS position, dp.name AS department_name, sm.description AS salary_mode_desc"
-    sql_fields += " ,emp.assigned_area, jc.name AS job_classification"
+    sql_fields += " ,aa.name AS assigned_area, jc.name AS job_classification"
     sql_fields += " ,DATE(emp.date_hired) as date_hired, es.name AS employment_status, emp.sex"
     sql_fields += " ,emp.birthdate, emp.status, emp.phone_number"
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no"
@@ -36,6 +36,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_join += " LEFT JOIN positions AS po ON po.id = emp.position_id"
     sql_join += " LEFT JOIN employment_statuses AS es ON es.id = emp.employment_status_id"
     sql_join += " LEFT JOIN job_classifications AS jc ON jc.id = emp.job_classification_id"
+    sql_join += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
     # conditions
     sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
     sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
@@ -60,6 +61,7 @@ class Api::V1::EmployeesController < PmsDesktopController
         position: {value: @employee.position_id, label: @employee.position_name},
         employment_status: {value: @employee.emp_status_id, label: @employee.emp_status_name},
         job_classification: {value: @employee.job_classification_id, label: @employee.job_classification_name},
+        assigned_area: {value: @employee.assigned_area_id, label: @employee.assigned_area_name},
       })
   end
 
@@ -116,10 +118,12 @@ class Api::V1::EmployeesController < PmsDesktopController
                           LEFT JOIN salary_modes AS sm ON sm.id = employees.salary_mode_id
                           LEFT JOIN positions AS po ON po.id = employees.position_id
                           LEFT JOIN employment_statuses AS es ON es.id = employees.employment_status_id
-                          LEFT JOIN job_classifications AS jc ON jc.id = employees.job_classification_id")
+                          LEFT JOIN job_classifications AS jc ON jc.id = employees.job_classification_id
+                          LEFT JOIN assigned_areas AS aa ON aa.id = employees.assigned_area_id")
                           .select("employees.*, dp.name AS department_name, sm.description AS salary_mode_name,
                           po.name AS position_name, po.id as position_id, es.id as emp_status_id, es.name AS emp_status_name,
-                          jc.name AS job_classification_name, jc.id AS job_classification_id")
+                          jc.name AS job_classification_name, jc.id AS job_classification_id, aa.id AS assigned_area_id,
+                          aa.name AS assigned_area_name")
                           .find(params[:id])
     end
 
@@ -129,7 +133,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     # Only allow a trusted parameter "white list" through.
     def employee_params
       params.require(:employee).permit(:first_name, :middle_name, :last_name, :suffix, :biometric_no, :position_id,
-                                      :department_id, :assigned_area, :job_classification_id, :salary_mode_id,
+                                      :department_id, :assigned_area_id, :job_classification_id, :salary_mode_id,
                                       :date_hired, :employment_status_id, :sex, :birthdate, :civil_status, 
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,

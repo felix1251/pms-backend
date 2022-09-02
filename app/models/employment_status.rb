@@ -8,5 +8,6 @@ class EmploymentStatus < ApplicationRecord
 
       def auto_upcase
             self.name = self.name.upcase
+            self.code = self.code.upcase
       end
 end

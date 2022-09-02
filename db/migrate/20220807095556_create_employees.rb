@@ -11,7 +11,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :suffix, :default => ""
       t.references :position, null: false, index: true
       t.references :department, index: true
-      t.string :assigned_area, :default => ""
+      t.references :assigned_area, index: true
       t.references :job_classification, index: true
       t.references :salary_mode, null: false, index: true
       t.datetime :date_hired, null: false, index: true

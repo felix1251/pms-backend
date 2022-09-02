@@ -5,7 +5,7 @@ class Api::V1::SalaryModesController < PmsDesktopController
 
   # GET /salary_modes
   def index
-    query = "SELECT sm.id as value, sm.description as label FROM salary_modes as sm"
+    query = "SELECT sm.id as value, sm.description as label, sm.code  FROM salary_modes as sm"
     @salary_modes = execute_sql_query(query)
     render json: @salary_modes
   end
