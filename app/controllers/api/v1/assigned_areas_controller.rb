@@ -11,8 +11,30 @@ class Api::V1::AssignedAreasController < PmsDesktopController
     sql_from = " FROM assigned_areas AS aa"
     sql_conditions = " WHERE aa.status = 'A' and aa.company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY aa.name ASC"
-    assigned_areas = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
-    render json: assigned_areas
+
+    if params[:page].present? && params[:per_page].present?
+      max = 20
+      current_page = params[:page].to_i 
+      per_page = params[:per_page].to_i
+      current_page = current_page || 1
+      per_page = per_page || max
+      unless per_page <= max
+        per_page = max
+      end
+      records_fetch_point = (current_page - 1) * per_page
+
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_count = " COUNT(*) as total_count"
+
+      assigned_areas = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
+
+      render json: {results: assigned_areas, total_count: counts.first["total_count"] }
+    else
+      assigned_areas = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      render json: assigned_areas
+    end
+    
   end
 
   # GET /assigned_areas/1

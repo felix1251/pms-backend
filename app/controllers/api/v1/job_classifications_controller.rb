@@ -11,8 +11,29 @@ class Api::V1::JobClassificationsController < PmsDesktopController
     sql_from = " FROM job_classifications AS jc"
     sql_conditions = " WHERE jc.status = 'A' and jc.company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY jc.name ASC"
-    job_classifications = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
-    render json: job_classifications
+
+    if params[:page].present? && params[:per_page].present?
+      max = 20
+      current_page = params[:page].to_i 
+      per_page = params[:per_page].to_i
+      current_page = current_page || 1
+      per_page = per_page || max
+      unless per_page <= max
+        per_page = max
+      end
+      records_fetch_point = (current_page - 1) * per_page
+
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_count = " COUNT(*) as total_count"
+
+      job_classifications = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
+
+      render json: {results: job_classifications, total_count: counts.first["total_count"] }
+    else
+      job_classifications = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      render json: job_classifications
+    end
   end
 
   # GET /job_classifications/1
