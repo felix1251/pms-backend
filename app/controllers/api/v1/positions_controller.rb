@@ -9,10 +9,31 @@ class Api::V1::PositionsController < PmsDesktopController
     sql_start += "SELECT"
     sql_fields = " ps.id value, ps.name AS label, ps.code"
     sql_from = " FROM positions AS ps"
-    sql_conditions = " WHERE ps.status = 'A' and company_id = #{payload['company_id']}"
+    sql_conditions = " WHERE ps.status = 'A' and ps.company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY ps.name ASC"
-    positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
-    render json: positions
+
+    if params[:page].present? && params[:per_page].present?
+      max = 20
+      current_page = params[:page].to_i 
+      per_page = params[:per_page].to_i
+      current_page = current_page || 1
+      per_page = per_page || max
+      unless per_page <= max
+        per_page = max
+      end
+      records_fetch_point = (current_page - 1) * per_page
+
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_count = " COUNT(*) as total_count"
+
+      positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort + sql_paginate)
+      counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
+
+      render json: {results: positions, total_count: counts.first["total_count"] }
+    else
+      positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      render json: positions
+    end
   end
 
   # GET /positions/1
@@ -22,7 +43,7 @@ class Api::V1::PositionsController < PmsDesktopController
 
   # POST /positions
   def create
-    @position = current_company.positions.new(position_params.merge!({created_by_id: payload['user_id']}))
+    @position = Position.new(position_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
     if @position.save
       render json: @position, status: :created
     else

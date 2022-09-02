@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_24_104849) do
+ActiveRecord::Schema.define(version: 2022_09_02_051009) do
+
+  create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.string "name"
+    t.string "code"
+    t.bigint "created_by_id"
+    t.string "status", default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_assigned_areas_on_company_id"
+    t.index ["created_by_id"], name: "index_assigned_areas_on_created_by_id"
+  end
 
   create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "code", null: false
@@ -66,8 +78,8 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.string "suffix", default: ""
     t.bigint "position_id", null: false
     t.bigint "department_id"
-    t.string "assigned_area", default: ""
-    t.string "job_classification", default: ""
+    t.bigint "assigned_area_id"
+    t.bigint "job_classification_id"
     t.bigint "salary_mode_id", null: false
     t.datetime "date_hired", null: false
     t.boolean "allow_ers_attendance", default: false
@@ -79,9 +91,11 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.string "work_sched_type", null: false
     t.string "work_sched_start"
     t.string "work_sched_end"
+    t.string "work_sched_days"
     t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""
+    t.string "company_email", default: ""
     t.string "street", null: false
     t.string "barangay", null: false
     t.string "municipality", null: false
@@ -102,15 +116,18 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.string "emergency_contact_number", default: ""
     t.text "remarks"
     t.text "others"
+    t.bigint "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
     t.index ["company_id"], name: "index_employees_on_company_id"
+    t.index ["created_by_id"], name: "index_employees_on_created_by_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
     t.index ["date_resigned"], name: "index_employees_on_date_resigned"
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["employee_id"], name: "index_employees_on_employee_id"
     t.index ["employment_status_id"], name: "index_employees_on_employment_status_id"
-    t.index ["job_classification"], name: "index_employees_on_job_classification"
+    t.index ["job_classification_id"], name: "index_employees_on_job_classification_id"
     t.index ["position_id"], name: "index_employees_on_position_id"
     t.index ["salary_mode_id"], name: "index_employees_on_salary_mode_id"
     t.index ["sex"], name: "index_employees_on_sex"
@@ -118,6 +135,7 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
 
   create_table "employment_statuses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "name"
+    t.string "code"
     t.string "status", default: "A"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -229,8 +247,11 @@ ActiveRecord::Schema.define(version: 2022_08_24_104849) do
     t.index ["username"], name: "index_users_on_username"
   end
 
+  add_foreign_key "assigned_areas", "companies"
+  add_foreign_key "assigned_areas", "users", column: "created_by_id"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
   add_foreign_key "positions", "companies"
