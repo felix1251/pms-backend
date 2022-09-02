@@ -7,7 +7,7 @@ class Api::V1::EmploymentStatusesController < PmsDesktopController
   def index
     sql_start = ""
     sql_start += "SELECT"
-    sql_fields = " es.id value, es.name as label"
+    sql_fields = " es.id value, es.name as label, es.code"
     sql_from = " FROM employment_statuses as es"
     sql_conditions = " WHERE es.status = 'A'"
     sql_sort = " ORDER BY es.created_at"
