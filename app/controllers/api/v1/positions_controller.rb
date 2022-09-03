@@ -23,10 +23,11 @@ class Api::V1::PositionsController < PmsDesktopController
       end
       records_fetch_point = (current_page - 1) * per_page
 
-      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE ps.id = emp.position_id) AS employee_count" 
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
       sql_count = " COUNT(*) as total_count"
 
-      positions = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort + sql_paginate)
+      positions = execute_sql_query(sql_start + sql_fields + sql_employee_count + sql_from + sql_conditions + sql_sort + sql_paginate)
       counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
 
       render json: {results: positions, total_count: counts.first["total_count"] }

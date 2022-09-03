@@ -237,6 +237,7 @@ ActiveRecord::Schema.define(version: 2022_09_02_051009) do
     t.string "username", null: false
     t.string "status", default: "A"
     t.boolean "system_default", default: false
+    t.boolean "disabled", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "reset_password_token"

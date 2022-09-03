@@ -5,7 +5,7 @@ class SigninController < PmsDesktopController
   before_action :set_user, only: [:create]
 
   def create
-    if @user && @user.authenticate(params[:password]) && @company.id == @user.company_id && @user.status == "A"
+    if @user && @user.authenticate(params[:password]) && @company.id == @user.company_id && @user.status == "A" && !@user.disabled
       @session_records = SessionRecord.find_by!(user_id: @user.id) rescue nil
       if @session_records == nil || @session_records.status == "I"
         payload  = {  user_id: @user.id, 
@@ -33,7 +33,7 @@ class SigninController < PmsDesktopController
         end
       end
     else
-      if @user.status == "I"
+      if @user.disabled
         render json: {error: 'This account is disabled '}, status: :unprocessable_entity
       else
         not_found
