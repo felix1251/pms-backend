@@ -10,9 +10,16 @@ class Api::V1::EmploymentStatusesController < PmsDesktopController
     sql_fields = " es.id value, es.name as label, es.code"
     sql_from = " FROM employment_statuses as es"
     sql_conditions = " WHERE es.status = 'A'"
-    sql_sort = " ORDER BY es.created_at"
-    employment_status = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
-    render json: employment_status
+    sql_sort = " ORDER BY es.name"
+
+    if params[:grouping].present? && params[:grouping]
+      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE es.id = emp.employment_status_id) AS employee_count"
+      employment_status = execute_sql_query(sql_start + sql_fields + sql_employee_count + sql_from + sql_conditions + sql_sort)
+      render json: employment_status
+    else
+      employment_status = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      render json: employment_status
+    end
   end
 
   # GET /employment_statuses/1

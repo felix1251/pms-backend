@@ -5,9 +5,18 @@ class Api::V1::SalaryModesController < PmsDesktopController
 
   # GET /salary_modes
   def index
-    query = "SELECT sm.id as value, sm.description as label, sm.code  FROM salary_modes as sm"
-    @salary_modes = execute_sql_query(query)
-    render json: @salary_modes
+    sql_start = "SELECT" 
+    sql_fields = " sm.id as value, sm.description as label, sm.code"
+    sql_from = " FROM salary_modes as sm"
+
+    if params[:grouping].present? && params[:grouping]
+      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE sm.id = emp.salary_mode_id) AS employee_count"
+      salary_modes = execute_sql_query(sql_start + sql_fields + sql_employee_count + sql_from)
+      render json: salary_modes
+    else
+      salary_modes = execute_sql_query(sql_start + sql_fields + sql_from)
+      render json: salary_modes
+    end
   end
 
   # # GET /salary_modes/1
