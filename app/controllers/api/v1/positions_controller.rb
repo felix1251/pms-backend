@@ -23,7 +23,7 @@ class Api::V1::PositionsController < PmsDesktopController
       end
       records_fetch_point = (current_page - 1) * per_page
 
-      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE ps.id = emp.position_id) AS employee_count" 
+      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE ps.id = emp.position_id and emp.status = 'A') AS employee_count" 
       sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
       sql_count = " COUNT(*) as total_count"
 
@@ -63,7 +63,11 @@ class Api::V1::PositionsController < PmsDesktopController
 
   # DELETE /positions/1
   def destroy
-    @position.destroy
+    if Employee.where(position_id: @position.id).count > 0
+      @position.update(status: "I")
+    else
+      @position.destroy
+    end
   end
 
   private

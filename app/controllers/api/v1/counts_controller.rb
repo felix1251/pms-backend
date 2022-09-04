@@ -5,8 +5,8 @@ class Api::V1::CountsController < PmsDesktopController
   def counts
     com_id = payload["company_id"]
     sql = "SELECT"
-    sql += " (SELECT COUNT(*) FROM users WHERE company_id = #{com_id}) AS company_user_count,"
-    sql += " (SELECT COUNT(*) FROM employees WHERE company_id = #{com_id}) AS employees_count"
+    sql += " (SELECT COUNT(*) FROM users WHERE company_id = #{com_id} and status = 'A') AS company_user_count,"
+    sql += " (SELECT COUNT(*) FROM employees WHERE company_id = #{com_id} and status = 'A') AS employees_count"
     counts = execute_sql_query(sql)
     render json: counts.first
   end
