@@ -23,10 +23,13 @@ class Api::V1::AssignedAreasController < PmsDesktopController
       end
       records_fetch_point = (current_page - 1) * per_page
 
-      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+      sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE aa.id = emp.assigned_area_id and emp.status = 'A') AS employee_count" 
+      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
       sql_count = " COUNT(*) as total_count"
 
-      assigned_areas = execute_sql_query(sql_start + sql_fields + sql_from + sql_conditions + sql_sort)
+      sql_count = " COUNT(*) as total_count"
+
+      assigned_areas = execute_sql_query(sql_start + sql_fields + sql_employee_count + sql_from + sql_conditions + sql_sort + sql_paginate)
       counts = execute_sql_query(sql_start + sql_count + sql_from + sql_conditions)
 
       render json: {results: assigned_areas, total_count: counts.first["total_count"] }
@@ -63,7 +66,11 @@ class Api::V1::AssignedAreasController < PmsDesktopController
 
   # DELETE /assigned_areas/1
   def destroy
-    @assigned_area.destroy
+    if Employee.where(department_id: @department.id).count > 0
+      @assigned_area.update(status: "I")
+    else
+      @assigned_area.destroy
+    end
   end
 
   private

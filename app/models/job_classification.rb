@@ -4,8 +4,8 @@ class JobClassification < ApplicationRecord
   before_create :auto_upcase
   before_update :auto_upcase
 
-  validates :name, presence: true, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}
-  validates :code, presence: true, format: { without: /\s/ , message: 'cannot contain whitespace' }, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}
+  validates :name, presence: true, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}, length: {maximum: 50}
+  validates :code, presence: true, format: { without: /\s/ , message: 'cannot contain whitespace' }, uniqueness: { scope: :company_id, case_sensitive: false, message: "already exist"}, length: {maximum: 15}
 
   private
 
