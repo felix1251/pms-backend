@@ -8,6 +8,7 @@ class CreateSessionRecords < ActiveRecord::Migration[5.2]
       t.string :status, default: "I"
       t.integer :sign_in_count, default: 0
       t.string :current_device, default: ""
+      t.string :current_device_id, null: false
       t.string :current_os, default: ""
       t.string :current_ip_address, default: ""
       t.timestamps
