@@ -44,6 +44,7 @@ Rails.application.routes.draw do
       resources :page_accesses
       resources :user_page_accesses
       resources :companies
+      get 'groupings', controller: :employees, action: :groupings
       get 'counts', controller: :counts, action: :counts
       get 'me', controller: :me, action: :me
       get 'system_accounts', controller: :users, action: :system_accounts

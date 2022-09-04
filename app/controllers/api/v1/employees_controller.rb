@@ -18,7 +18,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_start = ""
     sql_start += "SELECT"
     # only to display count
-    sql_count = " COUNT(*) as total_count"
+    sql_count = " COUNT(*) AS total_count"
     # columns
     sql_fields = " emp.id, emp.company_id, emp.status, emp.biometric_no, emp.first_name"
     sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
@@ -46,11 +46,53 @@ class Api::V1::EmployeesController < PmsDesktopController
     # render json: Employee.all
     begin
       employees = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
-      employee_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
-      render json: { employees: employees, total_count: employee_count.first["total_count"] }
+      employees_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
+      render json: { employees: employees, total_count: employees_count.first["total_count"] }
     rescue Exception => exc
       render json: { error: exc.message }, status: :unprocessable_entity
     end
+  end
+
+  def groupings
+    max = 20
+    current_page = params[:page].to_i 
+    per_page = params[:per_page].to_i
+    current_page = current_page || 1
+    per_page = per_page || max
+    unless per_page <= max
+      per_page = max
+    end
+    records_fetch_point = (current_page - 1) * per_page
+
+    sql = "SELECT"
+    sql += " emp.id, emp.first_name, emp.middle_name, emp.employee_id,"
+    sql += " emp.last_name, emp.suffix, emp.biometric_no, emp.sex, po.name as employee_position"
+    sql += " FROM employees AS emp"
+    sql += " LEFT JOIN positions AS po ON po.id = emp.position_id"
+    sql += " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql += " AND emp.position_id = #{params[:position_id].to_i}" if params[:position_id].present?
+    sql += " AND emp.job_classification_id = #{params[:job_classification_id].to_i}" if params[:job_classification_id].present?
+    sql += " AND emp.department_id = #{params[:department_id].to_i}" if params[:department_id].present?
+    sql += " AND emp.assigned_area_id = #{params[:assigned_area_id].to_i}" if params[:assigned_area_id].present?
+    sql += " AND emp.employment_status_id = #{params[:employment_status_id].to_i}" if params[:employment_status_id].present?
+    sql += " AND emp.salary_mode_id = #{params[:salary_mode_id].to_i}" if params[:salary_mode_id].present?
+    sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
+    sql += " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+
+    sql_count = "SELECT"
+    sql_count += " COUNT(*) AS total_count"
+    sql_count += " FROM employees AS emp"
+    sql_count += " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql_count += " AND emp.position_id = #{params[:position_id].to_i}" if params[:position_id].present?
+    sql_count += " AND emp.job_classification_id = #{params[:job_classification_id].to_i}" if params[:job_classification_id].present?
+    sql_count += " AND emp.department_id = #{params[:department_id].to_i}" if params[:department_id].present?
+    sql_count += " AND emp.assigned_area_id = #{params[:assigned_area_id].to_i}" if params[:assigned_area_id].present?
+    sql_count += " AND emp.employment_status_id = #{params[:employment_status_id].to_i}" if params[:employment_status_id].present?
+    sql_count += " AND emp.salary_mode_id = #{params[:salary_mode_id].to_i}" if params[:salary_mode_id].present?
+
+    employees = execute_sql_query(sql)
+    employees_count = execute_sql_query(sql_count)
+    render json: {employees: employees, total_count: employees_count.first["total_count"]}
   end
 
   # GET /employees/1
@@ -88,7 +130,7 @@ class Api::V1::EmployeesController < PmsDesktopController
 
   # DELETE /employees/1
   def destroy
-    @employee.destroy
+    # @employee.destroy
   end
 
   def token_claims
