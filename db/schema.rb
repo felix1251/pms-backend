@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_02_051009) do
+ActiveRecord::Schema.define(version: 2022_09_04_113830) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 2022_09_02_051009) do
     t.string "ip_address"
     t.text "os"
     t.string "device_name"
+    t.string "device_id", null: false
     t.bigint "user_id", null: false
     t.string "action"
     t.datetime "at"
@@ -169,6 +170,16 @@ ActiveRecord::Schema.define(version: 2022_09_02_051009) do
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
+  create_table "pms_devices", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "device_id", null: false
+    t.string "device_name", null: false
+    t.boolean "allowed", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_pms_devices_on_company_id"
+  end
+
   create_table "positions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
     t.string "name", null: false
@@ -197,6 +208,7 @@ ActiveRecord::Schema.define(version: 2022_09_02_051009) do
     t.string "status", default: "I"
     t.integer "sign_in_count", default: 0
     t.string "current_device", default: ""
+    t.string "current_device_id", null: false
     t.string "current_os", default: ""
     t.string "current_ip_address", default: ""
     t.datetime "created_at", null: false
@@ -255,6 +267,7 @@ ActiveRecord::Schema.define(version: 2022_09_02_051009) do
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
+  add_foreign_key "pms_devices", "companies"
   add_foreign_key "positions", "companies"
   add_foreign_key "positions", "users", column: "created_by_id"
   add_foreign_key "users", "companies"

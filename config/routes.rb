@@ -9,6 +9,7 @@ end
 
 Rails.application.routes.draw do
 
+  resources :pms_devices
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"

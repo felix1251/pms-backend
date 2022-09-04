@@ -25,14 +25,8 @@ class PmsDesktopController < ActionController::API
     end
   end
 
-  def current_company
-    Company.find_by!(id: payload['company_id'])
-  end
-
-  def check_page_access(page)
-    unless payload["page_access"].include?(page)
-      render json: forbidden
-    end
+  def get_device_id
+    request.headers['Device-Id']
   end
 
   def get_operating_system
@@ -105,5 +99,9 @@ class PmsDesktopController < ActionController::API
 
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(' ') }, status: :unprocessable_entity
+  end
+
+  def is_device_allowed
+
   end
 end
