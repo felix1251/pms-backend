@@ -1,4 +1,4 @@
-class RefreshController < PmsDesktopController
+class Api::V1::RefreshController < PmsDesktopController
   before_action :authorize_refresh_by_access_request!
 
   def create
@@ -8,6 +8,7 @@ class RefreshController < PmsDesktopController
     tokens = session.refresh_by_access_payload do
       raise JWTSessions::Errors::Unauthorized, 'Malicious activity detected'
     end
+    
     response.set_cookie(JWTSessions.access_cookie,
                         value: tokens[:access],
                         httponly: true,
