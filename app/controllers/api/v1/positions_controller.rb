@@ -7,7 +7,7 @@ class Api::V1::PositionsController < PmsDesktopController
   def index
     sql_start = ""
     sql_start += "SELECT"
-    sql_fields = " ps.id value, ps.name AS label, ps.code"
+    sql_fields = " ps.id value, ps.name AS label, ps.code, ps.created_at"
     sql_from = " FROM positions AS ps"
     sql_conditions = " WHERE ps.status = 'A' and ps.company_id = #{payload['company_id']}"
     sql_sort = " ORDER BY ps.name ASC"

@@ -9,24 +9,23 @@ end
 
 Rails.application.routes.draw do
 
-  resources :pms_devices
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
 
-  post 'refresh', controller: :refresh, action: :create
-  post 'signin', controller: :signin, action: :create
-  delete 'signin', controller: :signin, action: :logout
-  
-  resources :password_resets, only: [:create] do
-    collection do
-      get ':token', action: :edit, as: :edit
-      patch ':token', action: :update
-    end
-  end
-
   namespace :api do
     namespace :v1 do
+      #auths
+      post 'refresh', controller: :refresh, action: :create
+      post 'signin', controller: :signin, action: :create
+      delete 'signin', controller: :signin, action: :logout
+      resources :password_resets, only: [:create] do
+        collection do
+          get ':token', action: :edit, as: :edit
+          patch ':token', action: :update
+        end
+      end
+      #------
       resources :assigned_areas
       resources :employment_statuses
       resources :employee_action_histories
@@ -57,6 +56,12 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v2 do
       resources :support_chats
+    end
+  end
+
+  namespace :api do
+    namespace :admin do
+      resources :pms_devices
     end
   end
 end
