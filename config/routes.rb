@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      mount ActionCable.server => '/cable'
       #auths
       post 'refresh', controller: :refresh, action: :create
       post 'signin', controller: :signin, action: :create
@@ -26,6 +27,10 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :time_keepings
+      resources :failed_time_keepings
+      post 'time_bulk_create', controller: :time_keepings, action: :bulk_create
+      get 'time_keeping_counts', controller: :time_keepings, action: :time_keeping_counts
       resources :assigned_areas
       resources :employment_statuses
       resources :employee_action_histories

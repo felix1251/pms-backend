@@ -24,7 +24,7 @@ class Api::V1::SigninController < PmsDesktopController
 
         update_user_and_device_session_records(@user)
 
-        render json: { csrf: tokens[:csrf], origin: request.referrer}
+        render json: { csrf: tokens[:csrf]}
       else
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_04_113830) do
+ActiveRecord::Schema.define(version: 2022_09_07_162454) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -27,6 +27,7 @@ ActiveRecord::Schema.define(version: 2022_09_04_113830) do
   create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "code", null: false
     t.text "description", null: false
+    t.integer "pending_time_keeping", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_companies_on_code"
@@ -72,7 +73,7 @@ ActiveRecord::Schema.define(version: 2022_09_04_113830) do
     t.bigint "company_id", null: false
     t.string "employee_id", null: false
     t.string "status", default: "A"
-    t.string "biometric_no", default: ""
+    t.integer "biometric_no"
     t.string "first_name", null: false
     t.string "middle_name", null: false
     t.string "last_name", null: false
@@ -140,6 +141,15 @@ ActiveRecord::Schema.define(version: 2022_09_04_113830) do
     t.string "status", default: "A"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "failed_time_keepings", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.text "details"
+    t.integer "emp_bio_no"
+    t.bigint "company_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_failed_time_keepings_on_company_id"
   end
 
   create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -226,6 +236,20 @@ ActiveRecord::Schema.define(version: 2022_09_04_113830) do
     t.datetime "updated_at", null: false
     t.index ["admin_id_id"], name: "index_support_chats_on_admin_id_id"
     t.index ["user_id_id"], name: "index_support_chats_on_user_id_id"
+  end
+
+  create_table "time_keepings", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.integer "biometric_no", null: false
+    t.datetime "date", null: false
+    t.integer "status", null: false
+    t.integer "verified", default: 1, null: false
+    t.integer "work_code", default: 0, null: false
+    t.integer "record_type", default: 1, null: false
+    t.integer "device_id", null: false
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_time_keepings_on_company_id"
   end
 
   create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|

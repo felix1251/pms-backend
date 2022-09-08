@@ -87,7 +87,5 @@ class Employee < ApplicationRecord
             self.emergency_contact_person = self.emergency_contact_person.upcase
             self.civil_status = self.civil_status.upcase
             self.graduate_school = self.graduate_school.upcase
-            # self.work_sched_start = ActiveSupport::TimeZone['UTC'].parse(self.work_sched_start)
-            # self.work_sched_end =  ActiveSupport::TimeZone['UTC'].parse(self.work_sched_end)
       end
 end
