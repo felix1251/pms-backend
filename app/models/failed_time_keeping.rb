@@ -1,0 +1,2 @@
+class FailedTimeKeeping < ApplicationRecord
+end
