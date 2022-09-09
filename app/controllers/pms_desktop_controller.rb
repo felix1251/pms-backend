@@ -18,10 +18,19 @@ class PmsDesktopController < ActionController::API
   def check_backend_session
     account = User.find(payload['user_id'])
     _user_session = account.session_record
-    unless account.status == "A" &&  Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A" 
+    unless account.status == "A" &&  Socket.gethostname == _user_session.current_device && get_operating_system == _user_session.current_os && _user_session.status == "A" && is_device_allowed
       session = JWTSessions::Session.new(payload: payload, namespace: "user_#{payload['user_id']}")
       session.flush_by_access_payload
       render json: {error: "Signed-in in other devices", device: _user_session.current_device, type: "X-DEVICES"}, status: :unauthorized
+    end
+  end
+
+  def is_device_allowed
+    device = PmsDevice.find_by!(device_id: get_device_id) rescue nil
+    if device
+      true
+    else
+      false
     end
   end
 
@@ -99,9 +108,5 @@ class PmsDesktopController < ActionController::API
 
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(' ') }, status: :unprocessable_entity
-  end
-
-  def is_device_allowed
-
   end
 end

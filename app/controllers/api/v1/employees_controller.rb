@@ -47,7 +47,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     begin
       employees = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
       employees_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
-      render json: { employees: employees, total_count: employees_count.first["total_count"] }
+      render json: { employees: employees, total_count: employees_count.first["total_count"]}
     rescue Exception => exc
       render json: { error: exc.message }, status: :unprocessable_entity
     end

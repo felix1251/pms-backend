@@ -1,6 +1,6 @@
 require 'json'
 require 'socket'
-class SigninController < PmsDesktopController
+class Api::V1::SigninController < PmsDesktopController
   before_action :authorize_access_request!, only: [:logout]
   before_action :set_user, only: [:create]
 
@@ -24,7 +24,7 @@ class SigninController < PmsDesktopController
 
         update_user_and_device_session_records(@user)
 
-        render json: { csrf: tokens[:csrf], origin: request.referrer}
+        render json: { csrf: tokens[:csrf], access: tokens[:access]}
       else
         if params[:cleared].present? && params[:cleared] == true
           clear_session(@user)

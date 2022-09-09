@@ -133,11 +133,11 @@ payroll.each do |pr|
       UserPageActionAccess.create(user_id: pr.id, page_access_id: 6, page_action_access_id: 5, status: "I")      
 end
 
-Department.create!(company_id: 1, name: "store 1", code: "s1", created_by_id: 1)
-SalaryMode.create!(description: "monthly", code: "mnly")
-SalaryMode.create!(description: "hourly", code: "hrly")
-SalaryMode.create!(description: "daily", code: "dly")
+Department.create(company_id: 1, name: "store 1", code: "s1", created_by_id: 1)
+SalaryMode.create(description: "monthly", code: "mnly")
+SalaryMode.create(description: "hourly", code: "hrly")
+SalaryMode.create(description: "daily", code: "dly")
 
-EmploymentStatus.create!(name: "probitionary", code: "prob")
-EmploymentStatus.create!(name: "regular", code: "reg")
-EmploymentStatus.create!(name: "seasonal", code: "ses")
+EmploymentStatus.create(name: "probitionary", code: "prob")
+EmploymentStatus.create(name: "regular", code: "reg")
+EmploymentStatus.create(name: "seasonal", code: "ses")
