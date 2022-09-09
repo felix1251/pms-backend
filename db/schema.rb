@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_07_162454) do
+ActiveRecord::Schema.define(version: 2022_09_09_045516) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -279,6 +279,7 @@ ActiveRecord::Schema.define(version: 2022_09_07_162454) do
     t.string "reset_password_token"
     t.datetime "reset_password_token_expires_at"
     t.bigint "company_id", null: false
+    t.boolean "online", default: false
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token"
     t.index ["username"], name: "index_users_on_username"

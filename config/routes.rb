@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      #cable
       mount ActionCable.server => '/cable'
       #auths
       post 'refresh', controller: :refresh, action: :create
