@@ -16,8 +16,9 @@ class TimeKeepingWorker
                   end
             end
             send_cable(company_id)
-            puts "time keeping worker success"
       end
+
+      private
 
       def send_cable(company_id)
             sql = "SELECT"

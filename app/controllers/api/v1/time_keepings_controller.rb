@@ -5,8 +5,19 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
 
   # GET /time_keepings
   def index
-    @time_keepings = TimeKeeping.all
-    render json: @time_keepings
+    sql = "SELECT"
+    sql += " tk.id, tk.biometric_no, tk.verified,tk.status, tk.date, tk.work_code, tk.device_id,"
+    sql += " emp.first_name, emp.last_name, SUBSTR(emp.middle_name, 1, 1) AS middle_name, emp.suffix,"
+    sql += " CASE WHEN tk.record_type = 1 THEN 'BIOMETRIC' ELSE 'ERS' END AS record_type,"
+    sql += " IFNULL(emp.employee_id, '-------------------') AS employee_id"
+    sql += " FROM time_keepings AS tk"
+    sql += " LEFT JOIN employees AS emp ON emp.biometric_no = tk.biometric_no"
+    sql += " WHERE tk.company_id = #{payload['company_id']}"
+    sql += " ORDER BY tk.date ASC"
+    sql += " LIMIT #{20} OFFSET 1"
+
+    time_keepings = execute_sql_query(sql)
+    render json: time_keepings
   end
 
   # GET /time_keepings/1
