@@ -5,19 +5,28 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
 
   # GET /time_keepings
   def index
-    sql = "SELECT"
-    sql += " tk.id, tk.biometric_no, tk.verified,tk.status, tk.date, tk.work_code, tk.device_id,"
-    sql += " emp.first_name, emp.last_name, SUBSTR(emp.middle_name, 1, 1) AS middle_name, emp.suffix,"
-    sql += " CASE WHEN tk.record_type = 1 THEN 'BIOMETRIC' ELSE 'ERS' END AS record_type,"
-    sql += " IFNULL(emp.employee_id, '-------------------') AS employee_id"
-    sql += " FROM time_keepings AS tk"
-    sql += " LEFT JOIN employees AS emp ON emp.biometric_no = tk.biometric_no"
-    sql += " WHERE tk.company_id = #{payload['company_id']}"
-    sql += " ORDER BY tk.date ASC"
-    sql += " LIMIT #{20} OFFSET 1"
+    max = 35
+    current_page = params[:page].to_i || 1
+    per_page = params[:per_page].to_i || max
+    per_page = max unless per_page <= max
+    records_fetch_point = (current_page - 1) * per_page
 
-    time_keepings = execute_sql_query(sql)
-    render json: time_keepings
+    sql_start = "SELECT"
+    sql_count = " COUNT(*) AS total_count"
+    sql_fields = " tk.id, tk.biometric_no, tk.verified,tk.status, tk.date, tk.work_code, tk.device_id,"
+    sql_fields += " emp.first_name, emp.last_name, SUBSTR(emp.middle_name, 1, 1) AS middle_name, emp.suffix,"
+    sql_fields += " CASE WHEN tk.record_type = 1 THEN 'BIOMETRIC' ELSE 'ERS' END AS record_type,"
+    sql_fields += " IFNULL(emp.employee_id, '-------------------') AS employee_id"
+    sql_from = " FROM time_keepings AS tk"
+    sql_join = " LEFT JOIN employees AS emp ON emp.biometric_no = tk.biometric_no"
+    sql_condition = " WHERE tk.company_id = #{payload['company_id']}"
+    sql_sort = " ORDER BY tk.date ASC"
+    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+
+    time_keepings = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
+    time_keeping_count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
+
+    render json: {time_keeping: time_keepings, total_count: time_keeping_count.first["total_count"]}
   end
 
   # GET /time_keepings/1

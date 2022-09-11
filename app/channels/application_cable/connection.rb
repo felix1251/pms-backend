@@ -7,13 +7,22 @@ module ApplicationCable
     end
 
     private
+
       def find_verified_user
-        user = JWTSessions::Token.decode(request.params["token"]).first rescue nil
-        if verified_user = User.find(user["user_id"]) rescue nil
+        if verified_user = User.find(user_id) rescue nil
           verified_user
         else
           reject_unauthorized_connection
         end
+      end
+
+      def user_id
+        user = JWTSessions::Token.decode(token).first rescue nil
+        return user["user_id"]
+      end
+
+      def token
+        request.params["token"]
       end
   end
 end

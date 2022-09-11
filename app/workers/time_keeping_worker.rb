@@ -4,17 +4,19 @@ class TimeKeepingWorker
 
       def perform(record, company_id)
             company = Company.find(company_id)
+            failed = []
             record.each do |r|
                   rec = TimeKeeping.new(r.merge!({company_id: company_id, record_type: 1}))
                   unless rec.save
                         details = { errors: rec.errors, record: r }.to_json
-                        FailedTimeKeeping.create({emp_bio_no: r["biometric_no"], details: details.to_s, company_id: company_id})
+                        failed.push({emp_bio_no: r["biometric_no"], details: details.to_s, company_id: company_id})
                   end
                   count = company.pending_time_keeping - 1
                   unless count < 0
                         company.update(pending_time_keeping: count)
                   end
             end
+            FailedTimeKeeping.create(failed)
             send_cable(company_id)
       end
 
