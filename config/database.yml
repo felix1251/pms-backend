@@ -1,16 +1,16 @@
 default: &default
   adapter: mysql2
-  port: <%= ENV['PMS_DB_PORT'] %>
+  port: <%= ENV['DB_PORT'] %>
   encoding: utf8
-  username: <%= ENV['PMS_DB_USERNAME'] %>
-  password: <%= ENV['PMS_DB_PASSWORD'] %>
-  host: <%= ENV['PMS_DB_HOST'] %>
+  username: <%= ENV['DB_USERNAME'] %>
+  password: <%= ENV['DB_PASSWORD'] %>
+  host: <%= ENV['DB_HOST'] %>
 
 development:
   <<: *default
-  database: <%= ENV['PMS_DB_DATABASE'] %>
+  database: <%= ENV['DB_DATABASE'] %>
   wait_timeout: 300
 
 production:
   <<: *default
-  database: <%= ENV['PMS_DB_DATABASE'] %>
+  database: <%= ENV['DB_DATABASE'] %>

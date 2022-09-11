@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_09_045516) do
+ActiveRecord::Schema.define(version: 2022_09_10_093059) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -249,6 +249,8 @@ ActiveRecord::Schema.define(version: 2022_09_09_045516) do
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "file_uid", default: ""
+    t.string "from_file", default: ""
     t.index ["company_id"], name: "index_time_keepings_on_company_id"
   end
 
