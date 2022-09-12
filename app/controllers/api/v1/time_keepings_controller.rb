@@ -29,6 +29,36 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     render json: {time_keeping: time_keepings, total_count: time_keeping_count.first["total_count"]}
   end
 
+  def time_records
+    max = 30
+    current_page = params[:page].to_i || 1
+    per_page = params[:per_page].to_i || max
+    per_page = max unless per_page <= max
+    records_fetch_point = (current_page - 1) * per_page
+
+    sql = "SELECT tk_filtered.biometric_no, COAlESCE(tk_filtered.fullname, 'UNSPECIFIED') AS fullname, tk_filtered.only_date,"
+    sql += " TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 2) AS detailed_hours,"
+    sql += " GROUP_CONCAT(date) AS time_in, GROUP_CONCAT(next_date) AS time_out,"
+    sql += " GROUP_CONCAT(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)) as in_out_hours" 
+    sql += " FROM ("
+    sql += " SELECT tk.*, CONCAT(e.first_name, ', ',e.middle_name, ' ', e.last_name, ' ', e.suffix) as fullname,"
+    sql += " LEAD(tk.date) OVER () AS next_date,"
+    sql += " LEAD(tk.status) OVER () AS next_status"
+    sql += " FROM ("
+    sql += " SELECT biometric_no, date, status, DATE(date) AS only_date" 
+    sql += " FROM time_keepings as t"
+    sql += " WHERE biometric_no = #{params[:biometric_no]}"
+    sql += " ORDER BY biometric_no, date) tk"
+    sql += " LEFT JOIN employees AS e ON tk.biometric_no = e.biometric_no )tk_filtered"
+    sql += " WHERE status = 0 AND next_status = 1"
+    sql += " GROUP BY biometric_no, fullname, only_date"
+    sql += " ORDER BY only_date"
+    sql += " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+
+    records = execute_sql_query(sql)
+    render json: {time_records: records}
+  end
+
   # GET /time_keepings/1
   def show
     render json: @time_keeping

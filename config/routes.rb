@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       resources :time_keepings
       resources :failed_time_keepings
       post 'time_bulk_create', controller: :time_keepings, action: :bulk_create
+      get 'time_records', controller: :time_keepings, action: :time_records
       get 'time_keeping_counts', controller: :time_keepings, action: :time_keeping_counts
       resources :assigned_areas
       resources :employment_statuses
