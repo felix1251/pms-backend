@@ -35,11 +35,11 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     per_page = params[:per_page].to_i || max
     per_page = max unless per_page <= max
     records_fetch_point = (current_page - 1) * per_page
-
+      
     sql = "SELECT tk_filtered.biometric_no, COAlESCE(tk_filtered.fullname, 'UNSPECIFIED') AS fullname, tk_filtered.only_date,"
     sql += " TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 2) AS detailed_hours,"
-    sql += " GROUP_CONCAT(date) AS time_in, GROUP_CONCAT(next_date) AS time_out,"
-    sql += " GROUP_CONCAT(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)) as in_out_hours" 
+    sql += " GROUP_CONCAT(date ORDER BY date ASC) AS time_in, GROUP_CONCAT(next_date ORDER BY date ASC) AS time_out,"
+    sql += " GROUP_CONCAT(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600) ORDER BY date ASC) as in_out_hours" 
     sql += " FROM ("
     sql += " SELECT tk.*, CONCAT(e.first_name, ', ',e.middle_name, ' ', e.last_name, ' ', e.suffix) as fullname,"
     sql += " LEAD(tk.date) OVER () AS next_date,"
@@ -47,16 +47,70 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     sql += " FROM ("
     sql += " SELECT biometric_no, date, status, DATE(date) AS only_date" 
     sql += " FROM time_keepings as t"
-    sql += " WHERE biometric_no = #{params[:biometric_no]}"
+    sql += " WHERE biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
+    sql += " and company_id = #{payload['company_id']}"
+    sql += " and DATE(date) BETWEEN '#{params[:from]}' AND '#{params[:to]}'" if params[:from].present? && params[:to].present?
     sql += " ORDER BY biometric_no, date) tk"
     sql += " LEFT JOIN employees AS e ON tk.biometric_no = e.biometric_no )tk_filtered"
     sql += " WHERE status = 0 AND next_status = 1"
     sql += " GROUP BY biometric_no, fullname, only_date"
-    sql += " ORDER BY only_date"
     sql += " LIMIT #{per_page} OFFSET #{records_fetch_point};"
 
+    sql_count = "SELECT COUNT(*) as total_count"
+    sql_count += " FROM ("
+    sql_count += " SELECT biometric_no, only_date"
+    sql_count += " FROM("
+    sql_count += " SELECT tk.*, lead(tk.date) over () as next_date, lead(tk.status) over () as next_status"
+    sql_count += " FROM ("
+    sql_count += " SELECT biometric_no, date, status, DATE(date) as only_date" 
+    sql_count += " from time_keepings as t"
+    sql_count += " WHERE biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
+    sql_count += " AND company_id = #{payload['company_id']}"
+    sql_count += " AND DATE(date) BETWEEN '#{params[:from]}' AND '#{params[:to]}'" if params[:from].present? && params[:to].present?
+    sql_count += " ORDER BY biometric_no, date"
+    sql_count += " ) tk"
+    sql_count += " )tk_filtered"
+    sql_count += " WHERE status = 0 AND next_status = 1"
+    sql_count += " GROUP BY biometric_no, only_date ) cnt;"
+
     records = execute_sql_query(sql)
-    render json: {time_records: records}
+    total_count = execute_sql_query(sql_count)
+    render json: {time_records: records, total_count: total_count.first["total_count"]}
+  end
+
+  def time_keeping_calendar 
+    if params[:mode].present? && params[:mode] == "month"
+      sql = "SELECT SUM(detailed_hours) hours_monthly, only_date, YEAR(only_date) as year, MONTH(only_date) as month, DAY(only_date) as day"
+      sql += " FROM ("
+      sql += " SELECT only_date," 
+      sql += " CASE WHEN SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)) > 8" 
+      sql += " THEN 8 ELSE TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 0)" 
+      sql += " END AS detailed_hours"
+      sql += " FROM("
+      sql += " SELECT tk.*,"
+      sql += " lead(tk.date) over () as next_date,"
+      sql += " lead(tk.status) over () as next_status"
+      sql += " FROM ("
+      sql += " SELECT biometric_no, date, status, DATE(date) as only_date" 
+      sql += " from time_keepings as t"
+      sql += " WHERE company_id = #{payload['company_id']}"
+      sql += " AND YEAR(date) = '#{params[:year]}' AND MONTH(date) = '#{params[:month]}'" if params[:year].present? && params[:month].present?
+      sql += " order by biometric_no, date"
+      sql += " ) tk"
+      sql += " )tk_filtered"
+      sql += " where status = 0 and next_status = 1"
+      sql += " group by biometric_no, only_date"
+      sql += " order by only_date"
+      sql += " )final"
+      sql += " group by only_date;"
+      calendar = execute_sql_query(sql)
+      render json: calendar
+    elsif params[:mode].present? && params[:mode] == "year"
+      #make query later
+      render json: []
+    else
+      render json: []
+    end
   end
 
   # GET /time_keepings/1
