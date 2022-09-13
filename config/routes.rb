@@ -31,7 +31,9 @@ Rails.application.routes.draw do
       resources :time_keepings
       resources :failed_time_keepings
       post 'time_bulk_create', controller: :time_keepings, action: :bulk_create
+      get 'time_records', controller: :time_keepings, action: :time_records
       get 'time_keeping_counts', controller: :time_keepings, action: :time_keeping_counts
+      get 'time_keeping_calendar', controller: :time_keepings, action: :time_keeping_calendar
       resources :assigned_areas
       resources :employment_statuses
       resources :employee_action_histories
@@ -51,6 +53,7 @@ Rails.application.routes.draw do
       resources :user_page_accesses
       resources :companies
       get 'groupings', controller: :employees, action: :groupings
+      get 'search_employee', controller: :employees, action: :search_employee
       get 'counts', controller: :counts, action: :counts
       get 'me', controller: :me, action: :me
       get 'system_accounts', controller: :users, action: :system_accounts
