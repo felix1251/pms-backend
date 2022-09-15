@@ -28,6 +28,8 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :payrolls
+      get 'approver_list', controller: :payrolls, action: :approver_list
       resources :time_keepings
       resources :failed_time_keepings
       post 'time_bulk_create', controller: :time_keepings, action: :bulk_create
