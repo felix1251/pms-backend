@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_10_093059) do
+ActiveRecord::Schema.define(version: 2022_09_15_051323) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -180,6 +180,23 @@ ActiveRecord::Schema.define(version: 2022_09_10_093059) do
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
+  create_table "payrolls", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.date "from", null: false
+    t.date "to", null: false
+    t.bigint "company_id", null: false
+    t.bigint "approver_id"
+    t.boolean "require_approver", default: false
+    t.string "status", limit: 1, default: "P"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "remarks"
+    t.date "pay_date"
+    t.index ["approver_id"], name: "index_payrolls_on_approver_id"
+    t.index ["company_id"], name: "index_payrolls_on_company_id"
+    t.index ["from"], name: "index_payrolls_on_from"
+    t.index ["to"], name: "index_payrolls_on_to"
+  end
+
   create_table "pms_devices", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "device_id", null: false
@@ -294,6 +311,8 @@ ActiveRecord::Schema.define(version: 2022_09_10_093059) do
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
+  add_foreign_key "payrolls", "companies"
+  add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
   add_foreign_key "positions", "companies"
   add_foreign_key "positions", "users", column: "created_by_id"

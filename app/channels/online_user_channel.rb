@@ -25,8 +25,4 @@ class OnlineUserChannel < ApplicationCable::Channel
   def total_online
     User.where(company_id: current_user.company_id, status: "A", online: true).count
   end
-
-  def check_if_have_acccess_to_page
-
-  end
 end
