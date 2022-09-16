@@ -42,9 +42,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :course, :default => ""
       t.string :course_major, :default => ""
       t.string :graduate_school, :default => ""
-      t.string :encrypted_compensation
-      t.string :encrypted_compensation_salt
-      t.string :encrypted_compensation_iv
+      t.decimal :compensation, :precision => 8, :scale => 2, null: false
       t.string :emergency_contact_person, :default => ""
       t.string :emergency_contact_number, :default => ""
       t.text :remarks
