@@ -29,6 +29,7 @@ Rails.application.routes.draw do
       end
       #------
       resources :payrolls
+      get 'payroll_data', controller: :payrolls, action: :payroll_data
       get 'approver_list', controller: :payrolls, action: :approver_list
       resources :time_keepings
       resources :failed_time_keepings
