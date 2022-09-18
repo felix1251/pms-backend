@@ -19,7 +19,7 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     sql_fields += " IFNULL(emp.employee_id, '-------------------') AS employee_id"
     sql_from = " FROM time_keepings AS tk"
     sql_join = " LEFT JOIN employees AS emp ON emp.biometric_no = tk.biometric_no"
-    sql_condition = " WHERE tk.company_id = #{payload['company_id']}"
+    sql_condition = " WHERE tk.company_id = #{payload['company_id']} AND tk.status = 0 OR tk.status = 1"
     sql_sort = " ORDER BY tk.date ASC"
     sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
 
@@ -47,7 +47,8 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     sql += " FROM ("
     sql += " SELECT biometric_no, date, status, DATE(date) AS only_date" 
     sql += " FROM time_keepings as t"
-    sql += " WHERE biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
+    sql += " WHERE company_id = #{payload['company_id']} AND status = 0 OR status = 1"
+    sql += " AND biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
     sql += " and company_id = #{payload['company_id']}"
     sql += " and DATE(date) BETWEEN '#{params[:from]}' AND '#{params[:to]}'" if params[:from].present? && params[:to].present?
     sql += " ORDER BY biometric_no, date) tk"
@@ -64,8 +65,8 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     sql_count += " FROM ("
     sql_count += " SELECT biometric_no, date, status, DATE(date) as only_date" 
     sql_count += " from time_keepings as t"
-    sql_count += " WHERE biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
-    sql_count += " AND company_id = #{payload['company_id']}"
+    sql_count += " WHERE company_id = #{payload['company_id']} AND status = 0 OR status = 1"
+    sql_count += " AND biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
     sql_count += " AND DATE(date) BETWEEN '#{params[:from]}' AND '#{params[:to]}'" if params[:from].present? && params[:to].present?
     sql_count += " ORDER BY biometric_no, date"
     sql_count += " ) tk"
@@ -93,7 +94,7 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
       sql += " FROM ("
       sql += " SELECT biometric_no, date, status, DATE(date) as only_date" 
       sql += " from time_keepings as t"
-      sql += " WHERE company_id = #{payload['company_id']}"
+      sql += " WHERE company_id = #{payload['company_id']} AND status = 0 OR status = 1"
       sql += " AND YEAR(date) = '#{params[:year]}' AND MONTH(date) = '#{params[:month]}'" if params[:year].present? && params[:month].present?
       sql += " order by biometric_no, date"
       sql += " ) tk"
