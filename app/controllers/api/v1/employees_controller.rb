@@ -96,23 +96,19 @@ class Api::V1::EmployeesController < PmsDesktopController
   end
 
   def search_employee
-    if params[:search].present? && params[:search_by].present?
-      search = params[:search]
-      search_by = params[:search_by]
-      sql = "SELECT CONCAT(emp.last_name,', ',emp.middle_name,' ',emp.first_name,' ',emp.suffix,' (',emp.biometric_no,')') AS label,"
-      sql += " emp.biometric_no AS value"
-      sql += " FROM employees AS emp"
-      sql ++ " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
-      sql += " WHERE emp.first_name LIKE '%#{search}%' OR emp.middle_name LIKE '%#{search}%' OR emp.last_name LIKE '%#{search}%'" if search_by == "name" 
-      sql += " WHERE emp.biometric_no LIKE '%#{search.to_i}%'" if search_by == "biometric_no" 
-      sql += " WHERE emp.employee_id LIKE '%#{search}%'" if search_by == "employee_uid"
-      sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
-      sql += " LIMIT 10"
-      results = execute_sql_query(sql)
-      render json: results
-    else
-      render json: []
-    end
+    search = params[:search]
+    search_by = params[:search_by]
+    sql = "SELECT CONCAT(emp.last_name,', ',emp.middle_name,' ',emp.first_name,' ',emp.suffix,' (',emp.biometric_no,')') AS label,"
+    sql += " emp.biometric_no AS value"
+    sql += " FROM employees AS emp"
+    sql ++ " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql += " WHERE emp.first_name LIKE '%#{search}%' OR emp.middle_name LIKE '%#{search}%' OR emp.last_name LIKE '%#{search}%'" if search_by.present? && search_by == "name" 
+    sql += " WHERE emp.biometric_no LIKE '%#{search.to_i}%'" if search_by.present? && search_by == "biometric_no" 
+    sql += " WHERE emp.employee_id LIKE '%#{search}%'" if search_by.present? && search_by == "employee_uid"
+    sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
+    sql += " LIMIT 10"
+    results = execute_sql_query(sql)
+    render json: results
   end
 
   # GET /employees/1
@@ -131,7 +127,7 @@ class Api::V1::EmployeesController < PmsDesktopController
   def create
     @employee = Employee.new(employee_params.merge!({company_id: payload["company_id"], created_by_id: payload["user_id"]}))
     if @employee.save
-      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.created_at, 'CREATED', @employee.id)
+      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.created_at, 'CREATED', @employee.id, @employee.compensation)
       render json: {message: "Successfully created"}, status: :created
     else
       render json: @employee.errors, status: :unprocessable_entity
@@ -141,7 +137,7 @@ class Api::V1::EmployeesController < PmsDesktopController
   # PATCH/PUT /employees/1
   def update
     if @employee.update(employee_params)
-      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.updated_at, 'UPDATED', @employee.id)
+      EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.updated_at, 'UPDATED', @employee.id, nil)
       render json: {message: "Successfully updated"}
     else
       render json: @employee.errors, status: :unprocessable_entity

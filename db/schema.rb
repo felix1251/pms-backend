@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_15_051323) do
+ActiveRecord::Schema.define(version: 2022_09_18_130141) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -31,6 +31,15 @@ ActiveRecord::Schema.define(version: 2022_09_15_051323) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_companies_on_code"
+  end
+
+  create_table "compensation_histories", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "compensation", precision: 8, scale: 2, null: false
+    t.index ["employee_id"], name: "index_compensation_histories_on_employee_id"
   end
 
   create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -162,6 +171,18 @@ ActiveRecord::Schema.define(version: 2022_09_15_051323) do
     t.index ["created_by_id"], name: "index_job_classifications_on_created_by_id"
   end
 
+  create_table "leaves", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.date "start_date"
+    t.date "end_date"
+    t.string "leave_type"
+    t.text "reason"
+    t.string "status", limit: 1, default: "P"
+    t.bigint "approve_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approve_by_id"], name: "index_leaves_on_approve_by_id"
+  end
+
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "page", null: false
@@ -269,6 +290,14 @@ ActiveRecord::Schema.define(version: 2022_09_15_051323) do
     t.index ["company_id"], name: "index_time_keepings_on_company_id"
   end
 
+  create_table "type_of_leaves", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.string "name"
+    t.string "status", default: "A"
+    t.boolean "with_pay", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "page_access_id", null: false
@@ -309,6 +338,7 @@ ActiveRecord::Schema.define(version: 2022_09_15_051323) do
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
+  add_foreign_key "leaves", "users", column: "approve_by_id"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"

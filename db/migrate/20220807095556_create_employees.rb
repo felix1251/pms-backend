@@ -6,7 +6,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :status, :default => "A"
       t.integer :biometric_no
       t.string :first_name, null: false
-      t.string :middle_name, null: false
+      t.string :middle_name, :default => ""
       t.string :last_name, null: false
       t.string :suffix, :default => ""
       t.references :position, null: false, index: true

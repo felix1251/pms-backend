@@ -6,9 +6,10 @@ class Employee < ApplicationRecord
       belongs_to :position
       belongs_to :employment_status
       has_many :employee_action_histories
+      has_many :compensation_histories
       belongs_to :created_by, class_name: "User"
 
-      before_create :add_custom_column_data
+      before_create :on_emp_create
       before_update :on_emp_update
 
       # secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
@@ -20,10 +21,6 @@ class Employee < ApplicationRecord
       validates :sex, presence: true
       validates :birthdate, presence: true
       validates :phone_number, presence: true
-      validates :street, presence: true
-      validates :barangay, presence: true
-      validates :municipality, presence: true
-      validates :province, presence: true
       validates :highest_educational_attainment, presence: true
       validates :position, presence: true
       validates :date_hired, presence: true
@@ -44,7 +41,7 @@ class Employee < ApplicationRecord
 
       private
 
-      def add_custom_column_data
+      def on_emp_create
             auto_upcase
             self.company.code = self.company.code.upcase
             self.employee_id = generate_emp_id
@@ -52,6 +49,7 @@ class Employee < ApplicationRecord
 
       def on_emp_update
             auto_upcase
+            set_compensation_history('update') if self.compensation_changed?
       end
 
       def generate_emp_id
@@ -60,7 +58,7 @@ class Employee < ApplicationRecord
             m_init = self.middle_name[0, 1]
             s_init = self.suffix || ""
             final_init = l_init + f_init + m_init + s_init
-            final_init = final_init
+            final_init = final_init.split.join
             loop do
                   id = "#{self.company.code}-#{final_init}-#{SecureRandom.hex(3).upcase}"
                   break id unless Employee.where(company_id: self.company.id, employee_id: id).exists?
@@ -85,5 +83,9 @@ class Employee < ApplicationRecord
             self.emergency_contact_person = self.emergency_contact_person.upcase
             self.civil_status = self.civil_status.upcase
             self.graduate_school = self.graduate_school.upcase
+      end
+
+      def set_compensation_history(description)
+            CompensationHistory.new(compensation: self.compensation, employee_id: self.id, description: description).save
       end
 end
