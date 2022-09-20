@@ -7,6 +7,8 @@ class Employee < ApplicationRecord
       belongs_to :employment_status
       has_many :employee_action_histories
       has_many :compensation_histories
+      has_many :leaves
+      
       belongs_to :created_by, class_name: "User"
 
       before_create :on_emp_create

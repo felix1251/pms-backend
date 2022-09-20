@@ -111,6 +111,22 @@ class Api::V1::EmployeesController < PmsDesktopController
     render json: results
   end
 
+  def search_employee_id
+    search = params[:search]
+    search_by = params[:search_by]
+    sql = "SELECT CONCAT(emp.last_name,', ',emp.middle_name,' ',emp.first_name,' ',emp.suffix,' (',emp.biometric_no,')') AS label,"
+    sql += " emp.id AS value"
+    sql += " FROM employees AS emp"
+    sql ++ " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql += " WHERE emp.first_name LIKE '%#{search}%' OR emp.middle_name LIKE '%#{search}%' OR emp.last_name LIKE '%#{search}%'" if search_by.present? && search_by == "name" 
+    sql += " WHERE emp.biometric_no LIKE '%#{search.to_i}%'" if search_by.present? && search_by == "biometric_no" 
+    sql += " WHERE emp.employee_id LIKE '%#{search}%'" if search_by.present? && search_by == "employee_uid"
+    sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
+    sql += " LIMIT 10"
+    results = execute_sql_query(sql)
+    render json: results
+  end
+
   # GET /employees/1
   def show
     render json: { employee: @employee }.merge!({
