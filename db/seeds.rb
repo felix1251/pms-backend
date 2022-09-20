@@ -142,8 +142,8 @@
 # EmploymentStatus.create(name: "regular", code: "reg")
 # EmploymentStatus.create(name: "seasonal", code: "ses")
 
-TypeOfLeave.create(name: 'Leave with pay', with_pay: true)
-TypeOfLeave.create(name: 'Leave w/o pay', with_pay: false)
+TypeOfLeave.create(name: 'Sick leave with pay', with_pay: true)
+TypeOfLeave.create(name: 'Sick leave w/o pay', with_pay: false)
 TypeOfLeave.create(name: 'Vacation leave with pay', with_pay: true)
 TypeOfLeave.create(name: 'Vacation leave w/o pay', with_pay: false)
 TypeOfLeave.create(name: 'Emergency leave with pay', with_pay: true)

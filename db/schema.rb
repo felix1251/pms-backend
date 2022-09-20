@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_18_130141) do
+ActiveRecord::Schema.define(version: 2022_09_19_133825) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -177,10 +177,16 @@ ActiveRecord::Schema.define(version: 2022_09_18_130141) do
     t.string "leave_type"
     t.text "reason"
     t.string "status", limit: 1, default: "P"
-    t.bigint "approve_by_id"
+    t.bigint "actioned_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["approve_by_id"], name: "index_leaves_on_approve_by_id"
+    t.boolean "half_day", default: false
+    t.bigint "employee_id"
+    t.bigint "company_id"
+    t.integer "origin", limit: 1, default: 0
+    t.index ["actioned_by_id"], name: "index_leaves_on_actioned_by_id"
+    t.index ["company_id"], name: "index_leaves_on_company_id"
+    t.index ["employee_id"], name: "index_leaves_on_employee_id"
   end
 
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -338,7 +344,9 @@ ActiveRecord::Schema.define(version: 2022_09_18_130141) do
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
-  add_foreign_key "leaves", "users", column: "approve_by_id"
+  add_foreign_key "leaves", "companies"
+  add_foreign_key "leaves", "employees"
+  add_foreign_key "leaves", "users", column: "actioned_by_id"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
