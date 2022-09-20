@@ -28,7 +28,13 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :type_of_leaves
+      resources :leaves
+      get 'pending_leaves', controller: :leaves, action: :pending_leaves
+      put 'leave_action', controller: :leaves, action: :leave_action
+      resources :compensation_histories
       resources :payrolls
+      get 'payroll_data', controller: :payrolls, action: :payroll_data
       get 'approver_list', controller: :payrolls, action: :approver_list
       resources :time_keepings
       resources :failed_time_keepings
@@ -56,6 +62,7 @@ Rails.application.routes.draw do
       resources :companies
       get 'groupings', controller: :employees, action: :groupings
       get 'search_employee', controller: :employees, action: :search_employee
+      get 'search_employee_id', controller: :employees, action: :search_employee_id
       get 'counts', controller: :counts, action: :counts
       get 'me', controller: :me, action: :me
       get 'system_accounts', controller: :users, action: :system_accounts

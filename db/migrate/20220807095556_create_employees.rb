@@ -6,7 +6,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :status, :default => "A"
       t.integer :biometric_no
       t.string :first_name, null: false
-      t.string :middle_name, null: false
+      t.string :middle_name, :default => ""
       t.string :last_name, null: false
       t.string :suffix, :default => ""
       t.references :position, null: false, index: true
@@ -42,9 +42,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :course, :default => ""
       t.string :course_major, :default => ""
       t.string :graduate_school, :default => ""
-      t.string :encrypted_compensation
-      t.string :encrypted_compensation_salt
-      t.string :encrypted_compensation_iv
+      t.decimal :compensation, :precision => 8, :scale => 2, null: false
       t.string :emergency_contact_person, :default => ""
       t.string :emergency_contact_number, :default => ""
       t.text :remarks

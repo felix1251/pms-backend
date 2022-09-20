@@ -1,11 +1,11 @@
 class Api::V1::PayrollsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_payroll, only: [:show, :update, :destroy]
+  before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data]
 
   # GET /payrolls
   def index
-    sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to,"
+    sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date,"
     sql += " CASE WHEN py.status = 'P' THEN 'pending' WHEN py.status = 'V' THEN 'voided' ELSE 'approved' END as status,"
     sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver" 
     sql += " FROM payrolls as py"
@@ -23,6 +23,87 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " WHERE admin = true AND company_id = #{payload['company_id']}"
     approver = execute_sql_query(sql)
     render json: approver
+  end
+
+  def payroll_data
+    sql_time_keeping = " SELECT biometric_no, date, status, DATE(date) AS only_date"
+    sql_time_keeping += " FROM time_keepings AS t"
+    sql_time_keeping += " WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
+    sql_time_keeping += " AND status = 0 OR status = 1 AND company_id = #{payload['company_id']}"
+    sql_time_keeping += " ORDER BY biometric_no, date"
+
+    sql_time_keeping_lead = " SELECT *,"
+    sql_time_keeping_lead += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
+    sql_time_keeping_lead += " LEAD(status) OVER (ORDER BY biometric_no, date) AS next_status"
+    sql_time_keeping_lead += " FROM ("
+    sql_time_keeping_lead += sql_time_keeping
+    sql_time_keeping_lead += " ) tk"
+
+    sql_time_keeping_time = " SELECT biometric_no,"
+    sql_time_keeping_time += " CASE WHEN SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)) > 8 THEN 8"
+    sql_time_keeping_time += " ELSE TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 0) END AS rendered_hrs_per_day"
+    sql_time_keeping_time += " FROM("
+    sql_time_keeping_time += sql_time_keeping_lead
+    sql_time_keeping_time += " ) tk_filtered"
+    sql_time_keeping_time += " WHERE status = 0 AND next_status = 1"
+    sql_time_keeping_time += " GROUP BY biometric_no, only_date"
+
+    sql_time_keeping_hours_sum = " COALESCE(("
+    sql_time_keeping_hours_sum += " SELECT SUM(rendered_hrs_per_day)"
+    sql_time_keeping_hours_sum += " FROM ("
+    sql_time_keeping_hours_sum += sql_time_keeping_time
+    sql_time_keeping_hours_sum += " ) final"
+    sql_time_keeping_hours_sum += " GROUP BY biometric_no"
+    sql_time_keeping_hours_sum += " ), 0) AS total_hours_earned"
+
+    sql_payed_leave_hours_sum = " COALESCE((SELECT "
+    sql_payed_leave_hours_sum += " SUM(CASE le.half_day WHEN 0 " 
+    sql_payed_leave_hours_sum += " THEN (DATEDIFF("
+    sql_payed_leave_hours_sum += " CASE WHEN le.end_date > '#{@payroll.to}' THEN '#{@payroll.to}' ELSE le.end_date  END,"
+    sql_payed_leave_hours_sum += " CASE WHEN le.start_date < '#{@payroll.from}' THEN '#{@payroll.from}' ELSE le.start_date END) + 1) ELSE 0.5 END)"
+    sql_payed_leave_hours_sum += " FROM leaves le"
+    sql_payed_leave_hours_sum += " LEFT JOIN type_of_leaves as tol ON tol.id = le.leave_type"
+    sql_payed_leave_hours_sum += " WHERE tol.with_pay = 1 and le.status = 'A' and le.employee_id = emp.id"
+    sql_payed_leave_hours_sum += " AND (le.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR le.end_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_payed_leave_hours_sum += " GROUP BY employee_id"
+    sql_payed_leave_hours_sum += " ), 0) AS total_payed_leave_hours,"
+    
+    sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
+    sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
+    sql_employee += " pos.name AS position, aa.name AS assigned_area, sm.description AS salary_mode, sm.id AS salary_id, emp.employee_id,"
+    sql_employee += " dep.name AS department_name, emp.id,"
+    sql_employee += " IFNULL((SELECT compensation FROM compensation_histories WHERE employee_id = emp.id"
+    sql_employee += " ORDER BY ABS(TIME_TO_SEC(TIMEDIFF('#{@payroll.to} 00:00:00', created_at))),"
+    sql_employee += " ABS(TIME_TO_SEC(TIMEDIFF('#{@payroll.from} 00:00:00', created_at))) LIMIT 1), emp.compensation) AS rate,"
+    sql_employee += sql_payed_leave_hours_sum
+    sql_employee += sql_time_keeping_hours_sum
+    sql_employee += " FROM employees AS emp"
+    sql_employee += " LEFT JOIN positions AS pos ON pos.id = emp.position_id"
+    sql_employee += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
+    sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
+    sql_employee += " LEFT JOIN departments AS dep ON dep.id = emp.department_id"
+    sql_employee += " WHERE emp.status = 'A' and emp.company_id = #{payload['company_id']}"
+    sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+    sql_employee += " ORDER BY fullname"
+
+    sql = "SELECT"
+    sql += " emp_data.*,"
+    sql += " CASE salary_id"
+    sql += " WHEN 2 THEN CONCAT(emp_data.total_hours_earned, ' hours')"
+    sql += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 0), ' days')"
+    sql += " END AS total_time,"
+    sql += " TRUNCATE(CASE salary_id"
+    sql += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_hours_earned/8), 0)) + TRUNCATE((total_payed_leave_hours * rate), 2)"
+    sql += " WHEN 2 THEN (emp_data.rate * total_hours_earned) + TRUNCATE((total_payed_leave_hours * rate), 2)"
+    sql += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_hours_earned/8), 0)) + TRUNCATE((total_payed_leave_hours * rate), 2)"
+    sql += " END, 2) AS total_regular_pay,"
+    sql += " TRUNCATE((total_payed_leave_hours * rate), 2) payed_leave_amount"
+    sql += " FROM ("
+    sql += sql_employee
+    sql += " ) emp_data;"
+
+    payroll = execute_sql_query(sql)
+    render json: payroll
   end
 
   # GET /payrolls/1
