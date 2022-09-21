@@ -8,7 +8,7 @@ class Api::V1::LeavesController < PmsDesktopController
   def index
     sql = "SELECT CASE WHEN le.end_date = le.start_date THEN end_date"
     sql += " ELSE CONCAT(le.start_date,',',le.end_date)" 
-    sql += " END AS inclusive_date, le.created_at, le.id,"
+    sql += " END AS inclusive_date, le.id, le.created_at AS date_filed,"
     sql += " tol.name as type, reason, le.status, tol.with_pay,"
     sql += " CASE le.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
     sql += " (CASE le.half_day WHEN 0 THEN (DATEDIFF(le.end_date, le.start_date) + 1) ELSE 0.5 END) AS days,"
@@ -18,7 +18,7 @@ class Api::V1::LeavesController < PmsDesktopController
     sql += " LEFT JOIN type_of_leaves AS tol ON tol.id = le.leave_type"
     sql += " LEFT JOIN employees as emp ON emp.id = le.employee_id"
     sql += " WHERE le.company_id = #{payload['company_id']} AND (le.status = 'A' OR le.status = 'D' OR le.status = 'V')"
-    sql += " ORDER BY le.created_at ASC"
+    sql += " ORDER BY le.created_at DESC"
     leaves = execute_sql_query(sql)
     render json: leaves
   end
@@ -26,8 +26,8 @@ class Api::V1::LeavesController < PmsDesktopController
   def pending_leaves
     sql = "SELECT CASE WHEN le.end_date = le.start_date THEN end_date"
     sql += " ELSE CONCAT(le.start_date,',',le.end_date)" 
-    sql += " END AS inclusive_date, le.created_at, tol.with_pay,"
-    sql += " tol.name as type, reason, le.status, le.id,"
+    sql += " END AS inclusive_date, tol.with_pay,"
+    sql += " tol.name as type, reason, le.status, le.id, le.created_at AS date_filed,"
     sql += " CASE le.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
     sql += " (CASE le.half_day WHEN 0 THEN (DATEDIFF(le.end_date, le.start_date) + 1) ELSE 0.5 END) AS days,"
     sql += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
@@ -36,7 +36,7 @@ class Api::V1::LeavesController < PmsDesktopController
     sql += " LEFT JOIN type_of_leaves AS tol ON tol.id = le.leave_type"
     sql += " LEFT JOIN employees as emp ON emp.id = le.employee_id"
     sql += " WHERE le.company_id = #{payload['company_id']} AND le.status = 'P'"
-    sql += " ORDER BY le.created_at ASC"
+    sql += " ORDER BY le.created_at DESC"
     pending_leaves = execute_sql_query(sql)
     render json: pending_leaves
   end

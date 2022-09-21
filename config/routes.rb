@@ -28,6 +28,7 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :official_businesses
       resources :type_of_leaves
       resources :leaves
       get 'pending_leaves', controller: :leaves, action: :pending_leaves

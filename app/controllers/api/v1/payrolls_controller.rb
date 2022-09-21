@@ -5,8 +5,7 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # GET /payrolls
   def index
-    sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date,"
-    sql += " CASE WHEN py.status = 'P' THEN 'pending' WHEN py.status = 'V' THEN 'voided' ELSE 'approved' END as status,"
+    sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
     sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver" 
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
@@ -57,10 +56,10 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += " ), 0) AS total_hours_earned"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
-    sql_payed_leave_hours_sum += " SUM(CASE le.half_day WHEN 0 " 
+    sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0 " 
     sql_payed_leave_hours_sum += " THEN (DATEDIFF("
     sql_payed_leave_hours_sum += " CASE WHEN le.end_date > '#{@payroll.to}' THEN '#{@payroll.to}' ELSE le.end_date  END,"
-    sql_payed_leave_hours_sum += " CASE WHEN le.start_date < '#{@payroll.from}' THEN '#{@payroll.from}' ELSE le.start_date END) + 1) ELSE 0.5 END)"
+    sql_payed_leave_hours_sum += " CASE WHEN le.start_date < '#{@payroll.from}' THEN '#{@payroll.from}' ELSE le.start_date END) + 1) ELSE 0.5 END)*8)"
     sql_payed_leave_hours_sum += " FROM leaves le"
     sql_payed_leave_hours_sum += " LEFT JOIN type_of_leaves as tol ON tol.id = le.leave_type"
     sql_payed_leave_hours_sum += " WHERE tol.with_pay = 1 and le.status = 'A' and le.employee_id = emp.id"
@@ -82,27 +81,37 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
     sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
     sql_employee += " LEFT JOIN departments AS dep ON dep.id = emp.department_id"
-    sql_employee += " WHERE emp.status = 'A' and emp.company_id = #{payload['company_id']}"
+    sql_employee += " WHERE (emp.status = 'A' OR DATE(emp.date_resigned) < '#{@payroll.to}') and emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
     sql_employee += " ORDER BY fullname"
 
-    sql = "SELECT"
-    sql += " emp_data.*,"
-    sql += " CASE salary_id"
-    sql += " WHEN 2 THEN CONCAT(emp_data.total_hours_earned, ' hours')"
-    sql += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 0), ' days')"
-    sql += " END AS total_time,"
-    sql += " TRUNCATE(CASE salary_id"
-    sql += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_hours_earned/8), 0)) + TRUNCATE((total_payed_leave_hours * rate), 2)"
-    sql += " WHEN 2 THEN (emp_data.rate * total_hours_earned) + TRUNCATE((total_payed_leave_hours * rate), 2)"
-    sql += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_hours_earned/8), 0)) + TRUNCATE((total_payed_leave_hours * rate), 2)"
-    sql += " END, 2) AS total_regular_pay,"
-    sql += " TRUNCATE((total_payed_leave_hours * rate), 2) payed_leave_amount"
-    sql += " FROM ("
-    sql += sql_employee
-    sql += " ) emp_data;"
+    sql_gather_fields = " SELECT"
+    sql_gather_fields += " emp_data.*,"
+    sql_gather_fields += " CASE salary_id"
+    sql_gather_fields += " WHEN 2 THEN CONCAT(emp_data.total_hours_earned, ' hours')"
+    sql_gather_fields += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 0), ' days')"
+    sql_gather_fields += " END AS total_time,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_hours_earned/8), 0))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * total_hours_earned)"
+    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_hours_earned/8), 0))"
+    sql_gather_fields += " END, 2) AS payed_hours_amount,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_leave_hours/8), 0))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_leave_hours)"
+    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_payed_leave_hours/8), 0))"
+    sql_gather_fields += " END, 2) AS payed_leave_amount"
+    sql_gather_fields += " FROM ("
+    sql_gather_fields += sql_employee
+    sql_gather_fields += " ) emp_data"
 
-    payroll = execute_sql_query(sql)
+    sql_total = "SELECT"
+    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount) AS total_regular_pay" 
+    sql_total += " from ("
+    sql_total += sql_gather_fields
+    sql_total += " ) with_total;"
+
+    payroll = execute_sql_query(sql_total)
     render json: payroll
   end
 
