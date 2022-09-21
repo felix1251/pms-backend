@@ -8,6 +8,7 @@ class Employee < ApplicationRecord
       has_many :employee_action_histories
       has_many :compensation_histories
       has_many :leaves
+      has_many :official_businesses
       
       belongs_to :created_by, class_name: "User"
 

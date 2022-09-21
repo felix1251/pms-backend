@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_19_133825) do
+ActiveRecord::Schema.define(version: 2022_09_20_185537) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -189,6 +189,23 @@ ActiveRecord::Schema.define(version: 2022_09_19_133825) do
     t.index ["employee_id"], name: "index_leaves_on_employee_id"
   end
 
+  create_table "official_businesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.date "start_date"
+    t.date "end_date"
+    t.string "client"
+    t.text "reason"
+    t.string "status", limit: 1, default: "P"
+    t.bigint "actioned_by_id"
+    t.integer "origin"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.bigint "employee_id"
+    t.index ["actioned_by_id"], name: "index_official_businesses_on_actioned_by_id"
+    t.index ["company_id"], name: "index_official_businesses_on_company_id"
+    t.index ["employee_id"], name: "index_official_businesses_on_employee_id"
+  end
+
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "page", null: false
@@ -347,6 +364,9 @@ ActiveRecord::Schema.define(version: 2022_09_19_133825) do
   add_foreign_key "leaves", "companies"
   add_foreign_key "leaves", "employees"
   add_foreign_key "leaves", "users", column: "actioned_by_id"
+  add_foreign_key "official_businesses", "companies"
+  add_foreign_key "official_businesses", "employees"
+  add_foreign_key "official_businesses", "users", column: "actioned_by_id"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
