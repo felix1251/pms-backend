@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_21_171337) do
+ActiveRecord::Schema.define(version: 2022_09_22_161911) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -31,6 +31,18 @@ ActiveRecord::Schema.define(version: 2022_09_21_171337) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_companies_on_code"
+  end
+
+  create_table "company_accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.string "name"
+    t.bigint "company_id"
+    t.string "status", limit: 1, default: "A"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "code"
+    t.bigint "created_by_id"
+    t.index ["company_id"], name: "index_company_accounts_on_company_id"
+    t.index ["created_by_id"], name: "index_company_accounts_on_created_by_id"
   end
 
   create_table "compensation_histories", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -129,7 +141,10 @@ ActiveRecord::Schema.define(version: 2022_09_21_171337) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "leave_credit", precision: 8, scale: 2, default: "10.0", null: false
+    t.bigint "company_account_id"
+    t.string "emergency_contact_relationship", default: ""
     t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
+    t.index ["company_account_id"], name: "index_employees_on_company_account_id"
     t.index ["company_id"], name: "index_employees_on_company_id"
     t.index ["created_by_id"], name: "index_employees_on_created_by_id"
     t.index ["date_hired"], name: "index_employees_on_date_hired"
@@ -213,6 +228,8 @@ ActiveRecord::Schema.define(version: 2022_09_21_171337) do
     t.bigint "payroll_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_account_id"
+    t.index ["company_account_id"], name: "index_on_payroll_compensations_on_company_account_id"
     t.index ["employee_id"], name: "index_on_payroll_compensations_on_employee_id"
     t.index ["payroll_id"], name: "index_on_payroll_compensations_on_payroll_id"
   end
@@ -367,8 +384,11 @@ ActiveRecord::Schema.define(version: 2022_09_21_171337) do
 
   add_foreign_key "assigned_areas", "companies"
   add_foreign_key "assigned_areas", "users", column: "created_by_id"
+  add_foreign_key "company_accounts", "companies"
+  add_foreign_key "company_accounts", "users", column: "created_by_id"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employees", "company_accounts"
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
@@ -378,6 +398,7 @@ ActiveRecord::Schema.define(version: 2022_09_21_171337) do
   add_foreign_key "official_businesses", "companies"
   add_foreign_key "official_businesses", "employees"
   add_foreign_key "official_businesses", "users", column: "actioned_by_id"
+  add_foreign_key "on_payroll_compensations", "company_accounts"
   add_foreign_key "on_payroll_compensations", "employees"
   add_foreign_key "on_payroll_compensations", "payrolls"
   add_foreign_key "payrolls", "companies"

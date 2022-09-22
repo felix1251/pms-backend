@@ -8,7 +8,6 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
@@ -28,6 +27,7 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :company_accounts
       resources :on_payroll_compensations
       resources :official_businesses
       resources :type_of_leaves
