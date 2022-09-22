@@ -151,4 +151,3 @@ TypeOfLeave.create(name: 'Emergency leave w/o pay', with_pay: false)
 TypeOfLeave.create(name: 'Maternity/Paternity Leave with pay', with_pay: true)
 TypeOfLeave.create(name: 'Maternity/Paternity Leave w/o pay', with_pay: false)
 TypeOfLeave.create(name: 'Birthday leave', with_pay: true)
-
