@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_20_185537) do
+ActiveRecord::Schema.define(version: 2022_09_21_171337) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -128,6 +128,7 @@ ActiveRecord::Schema.define(version: 2022_09_20_185537) do
     t.bigint "created_by_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "leave_credit", precision: 8, scale: 2, default: "10.0", null: false
     t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
     t.index ["company_id"], name: "index_employees_on_company_id"
     t.index ["created_by_id"], name: "index_employees_on_created_by_id"
@@ -196,7 +197,7 @@ ActiveRecord::Schema.define(version: 2022_09_20_185537) do
     t.text "reason"
     t.string "status", limit: 1, default: "P"
     t.bigint "actioned_by_id"
-    t.integer "origin"
+    t.integer "origin", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_id"
@@ -204,6 +205,16 @@ ActiveRecord::Schema.define(version: 2022_09_20_185537) do
     t.index ["actioned_by_id"], name: "index_official_businesses_on_actioned_by_id"
     t.index ["company_id"], name: "index_official_businesses_on_company_id"
     t.index ["employee_id"], name: "index_official_businesses_on_employee_id"
+  end
+
+  create_table "on_payroll_compensations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id"
+    t.decimal "compensation", precision: 8, scale: 2
+    t.bigint "payroll_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_on_payroll_compensations_on_employee_id"
+    t.index ["payroll_id"], name: "index_on_payroll_compensations_on_payroll_id"
   end
 
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -367,6 +378,8 @@ ActiveRecord::Schema.define(version: 2022_09_20_185537) do
   add_foreign_key "official_businesses", "companies"
   add_foreign_key "official_businesses", "employees"
   add_foreign_key "official_businesses", "users", column: "actioned_by_id"
+  add_foreign_key "on_payroll_compensations", "employees"
+  add_foreign_key "on_payroll_compensations", "payrolls"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
