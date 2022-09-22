@@ -8,7 +8,6 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
@@ -28,10 +27,17 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :company_accounts
+      resources :on_payroll_compensations
+      resources :official_businesses
       resources :type_of_leaves
       resources :leaves
       get 'pending_leaves', controller: :leaves, action: :pending_leaves
+      get 'leaves_count', controller: :leaves, action: :leaves_count
+      get 'ob_count', controller: :official_businesses, action: :ob_count
+      get 'pending_ob', controller: :official_businesses, action: :pending_ob
       put 'leave_action', controller: :leaves, action: :leave_action
+      put 'ob_action', controller: :official_businesses, action: :ob_action
       resources :compensation_histories
       resources :payrolls
       get 'payroll_data', controller: :payrolls, action: :payroll_data

@@ -8,6 +8,7 @@ class Employee < ApplicationRecord
       has_many :employee_action_histories
       has_many :compensation_histories
       has_many :leaves
+      has_many :official_businesses
       
       belongs_to :created_by, class_name: "User"
 
@@ -83,6 +84,7 @@ class Employee < ApplicationRecord
             self.highest_educational_attainment = self.highest_educational_attainment.upcase
             self.institution = self.institution.upcase
             self.emergency_contact_person = self.emergency_contact_person.upcase
+            self.emergency_contact_relationship = self.emergency_contact_relationship.upcase
             self.civil_status = self.civil_status.upcase
             self.graduate_school = self.graduate_school.upcase
       end
