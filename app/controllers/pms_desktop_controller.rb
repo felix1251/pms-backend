@@ -24,7 +24,7 @@ class PmsDesktopController < ActionController::API
       render json: {error: "Signed-in in other devices", device: _user_session.current_device, type: "X-DEVICES"}, status: :unauthorized
     end
   end
-
+  
   def is_device_allowed
     device = PmsDevice.find_by!(device_id: get_device_id) rescue nil
     if device

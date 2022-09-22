@@ -1,5 +1,6 @@
 class Payroll < ApplicationRecord
   belongs_to :company
+  has_many :on_payroll_compensations
   # belongs_to :approver, class_name: "User"
   enum status: { P: "P", A: "A", V: "V"}
 
