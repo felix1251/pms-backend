@@ -76,6 +76,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql += " AND emp.assigned_area_id = #{params[:assigned_area_id].to_i}" if params[:assigned_area_id].present?
     sql += " AND emp.employment_status_id = #{params[:employment_status_id].to_i}" if params[:employment_status_id].present?
     sql += " AND emp.salary_mode_id = #{params[:salary_mode_id].to_i}" if params[:salary_mode_id].present?
+    sql += " AND emp.company_account_id = #{params[:company_account_id].to_i}" if params[:company_account_id].present?
     sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
     sql += " LIMIT #{per_page} OFFSET #{records_fetch_point}"
 
@@ -89,6 +90,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_count += " AND emp.assigned_area_id = #{params[:assigned_area_id].to_i}" if params[:assigned_area_id].present?
     sql_count += " AND emp.employment_status_id = #{params[:employment_status_id].to_i}" if params[:employment_status_id].present?
     sql_count += " AND emp.salary_mode_id = #{params[:salary_mode_id].to_i}" if params[:salary_mode_id].present?
+    sql_count += " AND emp.company_account_id = #{params[:company_account_id].to_i}" if params[:company_account_id].present?
 
     employees = execute_sql_query(sql)
     employees_count = execute_sql_query(sql_count)
@@ -136,6 +138,7 @@ class Api::V1::EmployeesController < PmsDesktopController
         employment_status: {value: @employee.emp_status_id, label: @employee.emp_status_name},
         job_classification: {value: @employee.job_classification_id, label: @employee.job_classification_name},
         assigned_area: {value: @employee.assigned_area_id, label: @employee.assigned_area_name},
+        company_account: {value: @employee.company_account_id, label: @employee.company_account_name},
       })
   end
 
@@ -193,11 +196,12 @@ class Api::V1::EmployeesController < PmsDesktopController
                           LEFT JOIN positions AS po ON po.id = employees.position_id
                           LEFT JOIN employment_statuses AS es ON es.id = employees.employment_status_id
                           LEFT JOIN job_classifications AS jc ON jc.id = employees.job_classification_id
-                          LEFT JOIN assigned_areas AS aa ON aa.id = employees.assigned_area_id")
+                          LEFT JOIN assigned_areas AS aa ON aa.id = employees.assigned_area_id
+                          LEFT JOIN company_accounts AS ca ON ca.id = employees.company_account_id")
                           .select("employees.*, dp.name AS department_name, sm.description AS salary_mode_name,
                           po.name AS position_name, po.id as position_id, es.id as emp_status_id, es.name AS emp_status_name,
                           jc.name AS job_classification_name, jc.id AS job_classification_id, aa.id AS assigned_area_id,
-                          aa.name AS assigned_area_name")
+                          aa.name AS assigned_area_name, ca.id as company_account_id, ca.name as company_account_name")
                           .find(params[:id])
     end
 
@@ -211,9 +215,9 @@ class Api::V1::EmployeesController < PmsDesktopController
                                       :date_hired, :employment_status_id, :sex, :birthdate, :civil_status, 
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
-                                      :institution, :course, :course_major, :graduate_school, :remarks,
+                                      :institution, :course, :course_major, :graduate_school, :remarks, :company_account_id,
                                       :emergency_contact_number, :emergency_contact_person, :compensation,
                                       :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type, 
-                                      :company_email, :date_resigned, :work_sched_days => [])
+                                      :company_email, :date_resigned, :emergency_contact_relationship, :work_sched_days => [])
     end
 end
