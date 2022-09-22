@@ -8,24 +8,46 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
 
-  post 'refresh', controller: :refresh, action: :create
-  post 'signin', controller: :signin, action: :create
-  delete 'signin', controller: :signin, action: :logout
-  
-  resources :password_resets, only: [:create] do
-    collection do
-      get ':token', action: :edit, as: :edit
-      patch ':token', action: :update
-    end
-  end
-
   namespace :api do
     namespace :v1 do
+      #cable
+      mount ActionCable.server => '/cable'
+      #auths
+      post 'refresh', controller: :refresh, action: :create
+      post 'signin', controller: :signin, action: :create
+      delete 'signin', controller: :signin, action: :logout
+      resources :password_resets, only: [:create] do
+        collection do
+          get ':token', action: :edit, as: :edit
+          patch ':token', action: :update
+        end
+      end
+      #------
+      resources :company_accounts
+      resources :on_payroll_compensations
+      resources :official_businesses
+      resources :type_of_leaves
+      resources :leaves
+      get 'pending_leaves', controller: :leaves, action: :pending_leaves
+      get 'leaves_count', controller: :leaves, action: :leaves_count
+      get 'ob_count', controller: :official_businesses, action: :ob_count
+      get 'pending_ob', controller: :official_businesses, action: :pending_ob
+      put 'leave_action', controller: :leaves, action: :leave_action
+      put 'ob_action', controller: :official_businesses, action: :ob_action
+      resources :compensation_histories
+      resources :payrolls
+      get 'payroll_data', controller: :payrolls, action: :payroll_data
+      get 'approver_list', controller: :payrolls, action: :approver_list
+      resources :time_keepings
+      resources :failed_time_keepings
+      post 'time_bulk_create', controller: :time_keepings, action: :bulk_create
+      get 'time_records', controller: :time_keepings, action: :time_records
+      get 'time_keeping_counts', controller: :time_keepings, action: :time_keeping_counts
+      get 'time_keeping_calendar', controller: :time_keepings, action: :time_keeping_calendar
       resources :assigned_areas
       resources :employment_statuses
       resources :employee_action_histories
@@ -45,6 +67,8 @@ Rails.application.routes.draw do
       resources :user_page_accesses
       resources :companies
       get 'groupings', controller: :employees, action: :groupings
+      get 'search_employee', controller: :employees, action: :search_employee
+      get 'search_employee_id', controller: :employees, action: :search_employee_id
       get 'counts', controller: :counts, action: :counts
       get 'me', controller: :me, action: :me
       get 'system_accounts', controller: :users, action: :system_accounts
@@ -56,6 +80,12 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v2 do
       resources :support_chats
+    end
+  end
+
+  namespace :api do
+    namespace :admin do
+      resources :pms_devices
     end
   end
 end

@@ -6,32 +6,30 @@ class Employee < ApplicationRecord
       belongs_to :position
       belongs_to :employment_status
       has_many :employee_action_histories
+      has_many :compensation_histories
+      has_many :leaves
+      has_many :official_businesses
+      
       belongs_to :created_by, class_name: "User"
 
-      before_create :add_custom_column_data
+      before_create :on_emp_create
       before_update :on_emp_update
 
-      secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
-      # secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
-      attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv_and_salt, insecure_mode: true, algorithm: 'aes-256-cbc', marshal: true
+      # secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
+      # # secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
+      # attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv_and_salt, insecure_mode: true, algorithm: 'aes-256-cbc', marshal: true
 
       validates :first_name, presence: true
       validates :last_name, presence: true
-      validates :middle_name, presence: true
       validates :sex, presence: true
       validates :birthdate, presence: true
-      validates :civil_status, presence: true
       validates :phone_number, presence: true
-      validates :street, presence: true
-      validates :barangay, presence: true
-      validates :municipality, presence: true
-      validates :province, presence: true
       validates :highest_educational_attainment, presence: true
       validates :position, presence: true
       validates :date_hired, presence: true
       validates :employment_status, presence: true
-      validates :compensation, numericality: { only_integer: true }, presence: true
-      validates :biometric_no, uniqueness: { scope: :company_id }, allow_blank: true, exclusion: { in: ["", nil]}
+      validates :compensation, presence: true
+      validates :biometric_no, uniqueness: { scope: :company_id }
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       validates :company_email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       validates :work_sched_type, presence: true
@@ -39,14 +37,14 @@ class Employee < ApplicationRecord
       enum work_sched_type: { FX: "FX", FL: "FL"}
       enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
       
-      def attributes
-            # don't show this encrypted_columns 
-            super.except('encrypted_compensation', 'encrypted_compensation_salt', 'encrypted_compensation_iv')
-      end
+      # def attributes
+      #       # don't show this encrypted_columns 
+      #       super.except('encrypted_compensation', 'encrypted_compensation_salt', 'encrypted_compensation_iv')
+      # end
 
       private
 
-      def add_custom_column_data
+      def on_emp_create
             auto_upcase
             self.company.code = self.company.code.upcase
             self.employee_id = generate_emp_id
@@ -54,6 +52,7 @@ class Employee < ApplicationRecord
 
       def on_emp_update
             auto_upcase
+            set_compensation_history('update') if self.compensation_changed?
       end
 
       def generate_emp_id
@@ -62,7 +61,7 @@ class Employee < ApplicationRecord
             m_init = self.middle_name[0, 1]
             s_init = self.suffix || ""
             final_init = l_init + f_init + m_init + s_init
-            final_init = final_init
+            final_init = final_init.split.join
             loop do
                   id = "#{self.company.code}-#{final_init}-#{SecureRandom.hex(3).upcase}"
                   break id unless Employee.where(company_id: self.company.id, employee_id: id).exists?
@@ -85,9 +84,12 @@ class Employee < ApplicationRecord
             self.highest_educational_attainment = self.highest_educational_attainment.upcase
             self.institution = self.institution.upcase
             self.emergency_contact_person = self.emergency_contact_person.upcase
+            self.emergency_contact_relationship = self.emergency_contact_relationship.upcase
             self.civil_status = self.civil_status.upcase
             self.graduate_school = self.graduate_school.upcase
-            # self.work_sched_start = ActiveSupport::TimeZone['UTC'].parse(self.work_sched_start)
-            # self.work_sched_end =  ActiveSupport::TimeZone['UTC'].parse(self.work_sched_end)
+      end
+
+      def set_compensation_history(description)
+            CompensationHistory.new(compensation: self.compensation, employee_id: self.id, description: description).save
       end
 end
