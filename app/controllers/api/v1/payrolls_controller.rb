@@ -10,6 +10,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
+    sql += " ORDER BY py.to DESC"
   
     payrolls = execute_sql_query(sql)
     render json: payrolls
@@ -19,7 +20,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql = "SELECT"
     sql += " id as value, CONCAT(name, ' (',position,')') as label"
     sql += " FROM users"
-    sql += " WHERE admin = true AND company_id = #{payload['company_id']}"
+    sql += " WHERE admin = true AND company_id = #{payload['company_id']} AND status = 'A'"
     approver = execute_sql_query(sql)
     render json: approver
   end
@@ -75,6 +76,16 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_ob_hours_sum += " AND (ob.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR ob.end_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
 		sql_payed_ob_hours_sum += " GROUP BY ob.employee_id"
 		sql_payed_ob_hours_sum += " ), 0) AS total_payed_ob_hours,"
+
+    sql_payed_overtime_hours_sum = " COALESCE((SELECT "
+    sql_payed_overtime_hours_sum += " SUM(TIMESTAMPDIFF(HOUR, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i')"
+    sql_payed_overtime_hours_sum += " ELSE DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i') END,"
+		sql_payed_overtime_hours_sum += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END))"
+		sql_payed_overtime_hours_sum += " FROM overtimes ov"
+		sql_payed_overtime_hours_sum += " WHERE ov.status = 'A' AND ov.employee_id = emp.id AND ov.billable = 1"
+		sql_payed_overtime_hours_sum += " AND (DATE(ov.start_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR DATE(ov.end_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_payed_overtime_hours_sum += " GROUP BY ov.employee_id"
+    sql_payed_overtime_hours_sum += " ), 0) total_payed_overtime_hours,"
     
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
@@ -83,6 +94,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
     sql_employee += sql_payed_leave_hours_sum
     sql_employee += sql_payed_ob_hours_sum
+    sql_employee += sql_payed_overtime_hours_sum
     sql_employee += sql_time_keeping_hours_sum
     sql_employee += " FROM employees AS emp"
     sql_employee += " LEFT JOIN positions AS pos ON pos.id = emp.position_id"
@@ -93,6 +105,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+    sql_employee += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
+    sql_employee += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
     sql_employee += " ORDER BY fullname"
 
     sql_gather_fields = " SELECT"
@@ -106,6 +120,11 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * total_hours_earned)"
     sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_hours_earned/8), 0) + IF((emp_data.total_hours_earned/8) > 2, (emp_data.rate/26) * 2, 0))"
     sql_gather_fields += " END, 2) AS payed_hours_amount,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_overtime_hours/8), 0))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_overtime_hours)"
+    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_payed_overtime_hours/8), 0))"
+    sql_gather_fields += " END, 2) AS payed_overtime_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_leave_hours/8), 0))"
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_leave_hours)"
@@ -121,7 +140,9 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
-    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount + payed_ob_amount) AS total_regular_pay" 
+    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount + payed_ob_amount ) AS total_regular_pay,"
+    sql_total += " (payed_overtime_amount) AS premium_pay_total,"
+    sql_total += " (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount) gross_pay"
     sql_total += " from ("
     sql_total += sql_gather_fields
     sql_total += " ) with_total;"

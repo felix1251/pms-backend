@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_22_161911) do
+ActiveRecord::Schema.define(version: 2022_09_23_112557) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -234,6 +234,23 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
     t.index ["payroll_id"], name: "index_on_payroll_compensations_on_payroll_id"
   end
 
+  create_table "overtimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id"
+    t.bigint "company_id"
+    t.integer "origin", default: 0
+    t.text "output"
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.bigint "actioned_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "status", default: "P"
+    t.boolean "billable", default: true
+    t.index ["actioned_by_id"], name: "index_overtimes_on_actioned_by_id"
+    t.index ["company_id"], name: "index_overtimes_on_company_id"
+    t.index ["employee_id"], name: "index_overtimes_on_employee_id"
+  end
+
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "access_code", null: false
     t.string "page", null: false
@@ -401,6 +418,9 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
   add_foreign_key "on_payroll_compensations", "company_accounts"
   add_foreign_key "on_payroll_compensations", "employees"
   add_foreign_key "on_payroll_compensations", "payrolls"
+  add_foreign_key "overtimes", "companies"
+  add_foreign_key "overtimes", "employees"
+  add_foreign_key "overtimes", "users", column: "actioned_by_id"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"

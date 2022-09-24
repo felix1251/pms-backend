@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :overtimes
       resources :company_accounts
       resources :on_payroll_compensations
       resources :official_businesses
@@ -34,9 +35,13 @@ Rails.application.routes.draw do
       resources :leaves
       get 'pending_leaves', controller: :leaves, action: :pending_leaves
       get 'leaves_count', controller: :leaves, action: :leaves_count
+      get 'overtime_count', controller: :overtimes, action: :overtime_count
       get 'ob_count', controller: :official_businesses, action: :ob_count
+      get 'overtime_count', controller: :overtimes, action: :overtime_count
       get 'pending_ob', controller: :official_businesses, action: :pending_ob
+      get 'pending_overtimes', controller: :overtimes, action: :pending_overtimes
       put 'leave_action', controller: :leaves, action: :leave_action
+      put 'overtime_action', controller: :overtimes, action: :overtime_action
       put 'ob_action', controller: :official_businesses, action: :ob_action
       resources :compensation_histories
       resources :payrolls
