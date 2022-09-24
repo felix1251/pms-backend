@@ -60,7 +60,7 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
     sql_sort = " ORDER BY ob.created_at DESC"
     sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
 
-    ob = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
+    ob = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate )
     count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
     render json: {data: ob, total_count: count.first["total_count"]}
   end
