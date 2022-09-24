@@ -77,6 +77,16 @@ class Api::V1::OvertimesController < PmsDesktopController
     render json: counts.first
   end
 
+  def emp_overtime
+    sql = " SELECT CONCAT(DATE_FORMAT(start_date, '%b %d, %Y %h:%i %p'), ' to ', DATE_FORMAT(end_date, '%b %d, %Y %h:%i %p'), ' (',"
+    sql += " TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i')), ' hours)') AS label,"
+    sql += " id as value, TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i')) hours"
+    sql += " FROM overtimes"
+    sql += " WHERE employee_id = #{params[:emp_id]} AND status = 'A' AND offset_id IS NULL"
+    emp_ov = execute_sql_query(sql)
+    render json: emp_ov
+  end
+
   # POST /overtimes
   def create
     @overtime = Overtime.new(overtime_params.merge!({company_id: payload['company_id']}))
