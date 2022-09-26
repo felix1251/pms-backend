@@ -24,10 +24,10 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_fields += " ,emp.middle_name, emp.last_name, emp.suffix"
     sql_fields += " ,po.name AS position, dp.name AS department_name, sm.description AS salary_mode_desc"
     sql_fields += " ,aa.name AS assigned_area, jc.name AS job_classification"
-    sql_fields += " ,DATE(emp.date_hired) as date_hired, es.name AS employment_status, emp.sex"
+    sql_fields += " ,DATE_FORMAT(date_hired, '%b %d, %Y') as date_hired, es.name AS employment_status, emp.sex"
     sql_fields += " ,emp.birthdate, emp.status, emp.phone_number"
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no"
-    sql_fields += " ,emp.biometric_no, emp.employee_id"
+    sql_fields += " ,emp.biometric_no, emp.employee_id, emp.work_sched_type"
     # main table
     sql_from = " FROM employees AS emp"
     # joins
