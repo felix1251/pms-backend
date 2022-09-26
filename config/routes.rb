@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :employee_schedules
       resources :offsets
       resources :overtimes
       get 'emp_overtime', controller: :overtimes, action: :emp_overtime

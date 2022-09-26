@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_24_041409) do
+ActiveRecord::Schema.define(version: 2022_09_26_083808) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -88,6 +88,15 @@ ActiveRecord::Schema.define(version: 2022_09_24_041409) do
     t.datetime "updated_at", null: false
     t.index ["action_by_id"], name: "index_employee_action_histories_on_action_by_id"
     t.index ["employee_id"], name: "index_employee_action_histories_on_employee_id"
+  end
+
+  create_table "employee_schedules", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.bigint "employee_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_employee_schedules_on_employee_id"
   end
 
   create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -431,6 +440,7 @@ ActiveRecord::Schema.define(version: 2022_09_24_041409) do
   add_foreign_key "company_accounts", "users", column: "created_by_id"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employee_schedules", "employees"
   add_foreign_key "employees", "company_accounts"
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
