@@ -7,7 +7,7 @@ ruby '2.6.3'
 gem 'rails', '~> 5.2.7', '>= 5.2.7.1'
 gem 'mysql2'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+# gem 'sqlite3'
 # Use Puma as the app server
 gem 'puma', '~> 3.12'
 # Use Redis adapter to run Action Cable in production
