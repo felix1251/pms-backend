@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_26_083808) do
+ActiveRecord::Schema.define(version: 2022_09_27_073408) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -262,9 +262,16 @@ ActiveRecord::Schema.define(version: 2022_09_26_083808) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_account_id"
+    t.bigint "position_id"
+    t.bigint "department_id"
+    t.bigint "salary_mode_id"
+    t.string "work_sched_type"
     t.index ["company_account_id"], name: "index_on_payroll_compensations_on_company_account_id"
+    t.index ["department_id"], name: "index_on_payroll_compensations_on_department_id"
     t.index ["employee_id"], name: "index_on_payroll_compensations_on_employee_id"
     t.index ["payroll_id"], name: "index_on_payroll_compensations_on_payroll_id"
+    t.index ["position_id"], name: "index_on_payroll_compensations_on_position_id"
+    t.index ["salary_mode_id"], name: "index_on_payroll_compensations_on_salary_mode_id"
   end
 
   create_table "overtimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -457,8 +464,11 @@ ActiveRecord::Schema.define(version: 2022_09_26_083808) do
   add_foreign_key "offsets", "employees"
   add_foreign_key "offsets", "users", column: "actioned_by_id"
   add_foreign_key "on_payroll_compensations", "company_accounts"
+  add_foreign_key "on_payroll_compensations", "departments"
   add_foreign_key "on_payroll_compensations", "employees"
   add_foreign_key "on_payroll_compensations", "payrolls"
+  add_foreign_key "on_payroll_compensations", "positions"
+  add_foreign_key "on_payroll_compensations", "salary_modes"
   add_foreign_key "overtimes", "companies"
   add_foreign_key "overtimes", "employees"
   add_foreign_key "overtimes", "offsets"
