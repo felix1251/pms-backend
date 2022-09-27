@@ -10,6 +10,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
+    sql += " ORDER BY py.to DESC"
   
     payrolls = execute_sql_query(sql)
     render json: payrolls
@@ -19,7 +20,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql = "SELECT"
     sql += " id as value, CONCAT(name, ' (',position,')') as label"
     sql += " FROM users"
-    sql += " WHERE admin = true AND company_id = #{payload['company_id']}"
+    sql += " WHERE admin = true AND company_id = #{payload['company_id']} AND status = 'A'"
     approver = execute_sql_query(sql)
     render json: approver
   end
@@ -53,7 +54,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += sql_time_keeping_time
     sql_time_keeping_hours_sum += " ) final"
     sql_time_keeping_hours_sum += " GROUP BY biometric_no"
-    sql_time_keeping_hours_sum += " ), 0) AS total_hours_earned"
+    sql_time_keeping_hours_sum += " ), 0.0) AS total_hours_earned"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
     sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0 " 
@@ -74,54 +75,86 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_ob_hours_sum += " WHERE ob.status = 'A' and ob.employee_id = emp.id"
 		sql_payed_ob_hours_sum += " AND (ob.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR ob.end_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
 		sql_payed_ob_hours_sum += " GROUP BY ob.employee_id"
-		sql_payed_ob_hours_sum += " ), 0) AS total_payed_ob_hours,"
-    
+		sql_payed_ob_hours_sum += " ), 0.0) AS total_payed_ob_hours,"
+
+    sql_payed_overtime_hours_sum = " COALESCE((SELECT "
+    sql_payed_overtime_hours_sum += " SUM(TIMESTAMPDIFF(HOUR, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i')"
+    sql_payed_overtime_hours_sum += " ELSE DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i') END,"
+		sql_payed_overtime_hours_sum += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END))"
+		sql_payed_overtime_hours_sum += " FROM overtimes ov"
+		sql_payed_overtime_hours_sum += " WHERE ov.status = 'A' AND ov.employee_id = emp.id AND ov.billable = 1 AND ov.offset_id IS NULL"
+		sql_payed_overtime_hours_sum += " AND (DATE(ov.start_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR DATE(ov.end_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_payed_overtime_hours_sum += " GROUP BY ov.employee_id"
+    sql_payed_overtime_hours_sum += " ), 0.0) total_payed_overtime_hours,"
+
+    sql_payed_offset_hours_sum = " COALESCE((SELECT" 
+		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
+		sql_payed_offset_hours_sum += " DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))), 0) FROM overtimes WHERE status = 'A' AND offset_id = ofs.id))"
+		sql_payed_offset_hours_sum += " FROM offsets as ofs"
+    sql_payed_offset_hours_sum += " WHERE ofs.status = 'A' AND ofs.employee_id = emp.id AND ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
+		sql_payed_offset_hours_sum += " ), 0.0) AS total_payed_offset_hours,"
+
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
-    sql_employee += " pos.name AS position, aa.name AS assigned_area, sm.description AS salary_mode, sm.id AS salary_id, emp.employee_id,"
+    sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
     sql_employee += " dep.name AS department_name, emp.id,"
     sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
+    sql_employee += sql_payed_offset_hours_sum
     sql_employee += sql_payed_leave_hours_sum
     sql_employee += sql_payed_ob_hours_sum
+    sql_employee += sql_payed_overtime_hours_sum
     sql_employee += sql_time_keeping_hours_sum
     sql_employee += " FROM employees AS emp"
-    sql_employee += " LEFT JOIN positions AS pos ON pos.id = emp.position_id"
-    sql_employee += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
-    sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
-    sql_employee += " LEFT JOIN departments AS dep ON dep.id = emp.department_id"
-    sql_employee += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id} "
+    sql_employee += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
+    sql_employee += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
+    sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = IFNULL(opc.salary_mode_id, emp.salary_mode_id)"
+    sql_employee += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+    sql_employee += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
+    sql_employee += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
     sql_employee += " ORDER BY fullname"
 
     sql_gather_fields = " SELECT"
     sql_gather_fields += " emp_data.*,"
     sql_gather_fields += " CASE salary_id"
     sql_gather_fields += " WHEN 2 THEN CONCAT(emp_data.total_hours_earned, ' hours')"
-    sql_gather_fields += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 0), ' days')"
+    sql_gather_fields += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 1), ' days')"
     sql_gather_fields += " END AS total_time,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_hours_earned/8), 0))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_hours_earned), 1))"
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * total_hours_earned)"
-    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_hours_earned/8), 0) + IF((emp_data.total_hours_earned/8) > 2, (emp_data.rate/26) * 2, 0))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_hours_earned), 1) + IF((emp_data.total_hours_earned/8) > 2, (emp_data.rate/26) * 2, 0))"
     sql_gather_fields += " END, 2) AS payed_hours_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_leave_hours/8), 0))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_overtime_hours)"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
+    sql_gather_fields += " END, 2) AS payed_overtime_amount,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
+    sql_gather_fields += " END, 2) AS payed_offset_amount,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_leave_hours)"
-    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_payed_leave_hours/8), 0))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_leave_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_ob_hours/8), 0))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8)* TRUNCATE((emp_data.total_payed_ob_hours), 1))"
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_ob_hours)"
-    sql_gather_fields += " ELSE ((emp_data.rate/26) * TRUNCATE((emp_data.total_payed_ob_hours/8), 0))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_ob_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_ob_amount"
     sql_gather_fields += " FROM ("
     sql_gather_fields += sql_employee
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
-    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount + payed_ob_amount) AS total_regular_pay" 
+    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
+    sql_total += " (payed_overtime_amount) AS premium_pay_total,"
+    sql_total += " (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount) gross_pay"
     sql_total += " from ("
     sql_total += sql_gather_fields
     sql_total += " ) with_total;"

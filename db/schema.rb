@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_22_161911) do
+ActiveRecord::Schema.define(version: 2022_09_27_073408) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -88,6 +88,15 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
     t.datetime "updated_at", null: false
     t.index ["action_by_id"], name: "index_employee_action_histories_on_action_by_id"
     t.index ["employee_id"], name: "index_employee_action_histories_on_employee_id"
+  end
+
+  create_table "employee_schedules", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.bigint "employee_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_employee_schedules_on_employee_id"
   end
 
   create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -222,6 +231,30 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
     t.index ["employee_id"], name: "index_official_businesses_on_employee_id"
   end
 
+  create_table "offset_overtimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "overtime_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "offset_id"
+    t.index ["offset_id"], name: "index_offset_overtimes_on_offset_id"
+    t.index ["overtime_id"], name: "index_offset_overtimes_on_overtime_id"
+  end
+
+  create_table "offsets", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.bigint "employee_id"
+    t.date "offset_date"
+    t.integer "origin", default: 0
+    t.text "reason"
+    t.bigint "actioned_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "status", default: "P"
+    t.index ["actioned_by_id"], name: "index_offsets_on_actioned_by_id"
+    t.index ["company_id"], name: "index_offsets_on_company_id"
+    t.index ["employee_id"], name: "index_offsets_on_employee_id"
+  end
+
   create_table "on_payroll_compensations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "employee_id"
     t.decimal "compensation", precision: 8, scale: 2
@@ -229,9 +262,35 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_account_id"
+    t.bigint "position_id"
+    t.bigint "department_id"
+    t.bigint "salary_mode_id"
+    t.string "work_sched_type"
     t.index ["company_account_id"], name: "index_on_payroll_compensations_on_company_account_id"
+    t.index ["department_id"], name: "index_on_payroll_compensations_on_department_id"
     t.index ["employee_id"], name: "index_on_payroll_compensations_on_employee_id"
     t.index ["payroll_id"], name: "index_on_payroll_compensations_on_payroll_id"
+    t.index ["position_id"], name: "index_on_payroll_compensations_on_position_id"
+    t.index ["salary_mode_id"], name: "index_on_payroll_compensations_on_salary_mode_id"
+  end
+
+  create_table "overtimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id"
+    t.bigint "company_id"
+    t.integer "origin", default: 0
+    t.text "output"
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.bigint "actioned_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "status", default: "P"
+    t.boolean "billable", default: true
+    t.bigint "offset_id"
+    t.index ["actioned_by_id"], name: "index_overtimes_on_actioned_by_id"
+    t.index ["company_id"], name: "index_overtimes_on_company_id"
+    t.index ["employee_id"], name: "index_overtimes_on_employee_id"
+    t.index ["offset_id"], name: "index_overtimes_on_offset_id"
   end
 
   create_table "page_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -388,6 +447,7 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
   add_foreign_key "company_accounts", "users", column: "created_by_id"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employee_schedules", "employees"
   add_foreign_key "employees", "company_accounts"
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "job_classifications", "companies"
@@ -398,9 +458,21 @@ ActiveRecord::Schema.define(version: 2022_09_22_161911) do
   add_foreign_key "official_businesses", "companies"
   add_foreign_key "official_businesses", "employees"
   add_foreign_key "official_businesses", "users", column: "actioned_by_id"
+  add_foreign_key "offset_overtimes", "offsets"
+  add_foreign_key "offset_overtimes", "overtimes"
+  add_foreign_key "offsets", "companies"
+  add_foreign_key "offsets", "employees"
+  add_foreign_key "offsets", "users", column: "actioned_by_id"
   add_foreign_key "on_payroll_compensations", "company_accounts"
+  add_foreign_key "on_payroll_compensations", "departments"
   add_foreign_key "on_payroll_compensations", "employees"
   add_foreign_key "on_payroll_compensations", "payrolls"
+  add_foreign_key "on_payroll_compensations", "positions"
+  add_foreign_key "on_payroll_compensations", "salary_modes"
+  add_foreign_key "overtimes", "companies"
+  add_foreign_key "overtimes", "employees"
+  add_foreign_key "overtimes", "offsets"
+  add_foreign_key "overtimes", "users", column: "actioned_by_id"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
