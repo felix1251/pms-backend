@@ -96,7 +96,7 @@ class Api::V1::PayrollsController < PmsDesktopController
 
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
-    sql_employee += " pos.name AS position, aa.name AS assigned_area, sm.description AS salary_mode, sm.id AS salary_id, emp.employee_id,"
+    sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
     sql_employee += " dep.name AS department_name, emp.id,"
     sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
     sql_employee += sql_payed_offset_hours_sum
@@ -105,11 +105,10 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += sql_payed_overtime_hours_sum
     sql_employee += sql_time_keeping_hours_sum
     sql_employee += " FROM employees AS emp"
-    sql_employee += " LEFT JOIN positions AS pos ON pos.id = emp.position_id"
-    sql_employee += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
-    sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = emp.salary_mode_id"
-    sql_employee += " LEFT JOIN departments AS dep ON dep.id = emp.department_id"
     sql_employee += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
+    sql_employee += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
+    sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = IFNULL(opc.salary_mode_id, emp.salary_mode_id)"
+    sql_employee += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
