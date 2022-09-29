@@ -53,7 +53,6 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += " FROM ("
     sql_time_keeping_hours_sum += sql_time_keeping_time
     sql_time_keeping_hours_sum += " ) final"
-    sql_time_keeping_hours_sum += " GROUP BY biometric_no"
     sql_time_keeping_hours_sum += " ), 0.0) AS total_hours_earned"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
@@ -88,8 +87,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_payed_overtime_hours_sum += " ), 0.0) total_payed_overtime_hours,"
 
     sql_payed_offset_hours_sum = " COALESCE((SELECT" 
-		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
-		sql_payed_offset_hours_sum += " DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))), 0) FROM overtimes WHERE status = 'A' AND offset_id = ofs.id))"
+		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(IF(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
+		sql_payed_offset_hours_sum += " DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))) >= 8 , 8, 0), 0) FROM overtimes WHERE status = 'A' AND offset_id = ofs.id))"
 		sql_payed_offset_hours_sum += " FROM offsets as ofs"
     sql_payed_offset_hours_sum += " WHERE ofs.status = 'A' AND ofs.employee_id = emp.id AND ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
 		sql_payed_offset_hours_sum += " ), 0.0) AS total_payed_offset_hours,"
@@ -133,9 +132,9 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_overtime_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
-    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_offset_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
