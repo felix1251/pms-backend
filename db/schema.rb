@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_29_125142) do
+ActiveRecord::Schema.define(version: 2022_10_01_072039) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -96,7 +96,9 @@ ActiveRecord::Schema.define(version: 2022_09_29_125142) do
     t.bigint "employee_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "schedule_id"
     t.index ["employee_id"], name: "index_employee_schedules_on_employee_id"
+    t.index ["schedule_id"], name: "index_employee_schedules_on_schedule_id"
   end
 
   create_table "employees", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -374,6 +376,17 @@ ActiveRecord::Schema.define(version: 2022_09_29_125142) do
     t.index ["code"], name: "index_salary_modes_on_code"
   end
 
+  create_table "schedules", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.string "title", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.text "remarks"
+    t.bigint "company_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_schedules_on_company_id"
+  end
+
   create_table "session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.datetime "first_logged_in"
@@ -466,6 +479,7 @@ ActiveRecord::Schema.define(version: 2022_09_29_125142) do
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
   add_foreign_key "employee_schedules", "employees"
+  add_foreign_key "employee_schedules", "schedules"
   add_foreign_key "employees", "company_accounts"
   add_foreign_key "employees", "users", column: "created_by_id"
   add_foreign_key "holidays", "companies"
@@ -499,5 +513,6 @@ ActiveRecord::Schema.define(version: 2022_09_29_125142) do
   add_foreign_key "pms_devices", "companies"
   add_foreign_key "positions", "companies"
   add_foreign_key "positions", "users", column: "created_by_id"
+  add_foreign_key "schedules", "companies"
   add_foreign_key "users", "companies"
 end
