@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_09_27_073408) do
+ActiveRecord::Schema.define(version: 2022_09_29_125142) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -184,6 +184,15 @@ ActiveRecord::Schema.define(version: 2022_09_27_073408) do
     t.index ["company_id"], name: "index_failed_time_keepings_on_company_id"
   end
 
+  create_table "holidays", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.string "type_of_holiday", null: false
+    t.date "date", null: false
+    t.bigint "company_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_holidays_on_company_id"
+  end
+
   create_table "job_classifications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
     t.string "name", null: false
@@ -307,6 +316,15 @@ ActiveRecord::Schema.define(version: 2022_09_27_073408) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
+  end
+
+  create_table "payroll_accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "payroll_id"
+    t.bigint "company_account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_account_id"], name: "index_payroll_accounts_on_company_account_id"
+    t.index ["payroll_id"], name: "index_payroll_accounts_on_payroll_id"
   end
 
   create_table "payrolls", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -450,6 +468,7 @@ ActiveRecord::Schema.define(version: 2022_09_27_073408) do
   add_foreign_key "employee_schedules", "employees"
   add_foreign_key "employees", "company_accounts"
   add_foreign_key "employees", "users", column: "created_by_id"
+  add_foreign_key "holidays", "companies"
   add_foreign_key "job_classifications", "companies"
   add_foreign_key "job_classifications", "users", column: "created_by_id"
   add_foreign_key "leaves", "companies"
@@ -473,6 +492,8 @@ ActiveRecord::Schema.define(version: 2022_09_27_073408) do
   add_foreign_key "overtimes", "employees"
   add_foreign_key "overtimes", "offsets"
   add_foreign_key "overtimes", "users", column: "actioned_by_id"
+  add_foreign_key "payroll_accounts", "company_accounts"
+  add_foreign_key "payroll_accounts", "payrolls"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
