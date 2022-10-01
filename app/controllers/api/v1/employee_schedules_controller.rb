@@ -7,8 +7,9 @@ class Api::V1::EmployeeSchedulesController < PmsDesktopController
   def index
     sql = "SELECT"
     sql += " es.id,"
-    sql += " DATE_FORMAT(es.start_time, '%b %d, %Y %h:%i %p') as start_time, DATE_FORMAT(es.end_time, '%b %d, %Y %h:%i %p') as end_time" if params[:day].present?
-    sql += " CONCAT(DATE_FORMAT(es.start_time, '%h:%i %p'), ' - ', DATE_FORMAT(es.end_time, '%h:%i %p'), ' (', TIMESTAMPDIFF(HOUR, es.start_time, es.end_time), 'hrs)') AS time_range, " if params[:month].present?
+    sql += " DATE_FORMAT(es.start_time, '%b %d, %Y %h:%i %p') as start_time, DATE_FORMAT(es.end_time, '%b %d, %Y %h:%i %p') as end_time," if params[:day].present?
+    sql += " TRUNCATE(TIMESTAMPDIFF(MINUTE, es.start_time, es.end_time)/60, 1) AS hours" if params[:day].present?
+    sql += " CONCAT(DATE_FORMAT(es.start_time, '%h:%i %p'), ' - ', DATE_FORMAT(es.end_time, '%h:%i %p'), ' (', TRUNCATE(TIMESTAMPDIFF(MINUTE, es.start_time, es.end_time)/60, 1), ' hrs)') AS time_range, " if params[:month].present?
     sql += " DATE(es.start_time) AS only_date" if params[:month].present?
     sql += " FROM employee_schedules es"
     sql += " WHERE"
