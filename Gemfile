@@ -7,7 +7,7 @@ ruby '2.6.3'
 gem 'rails', '~> 5.2.7', '>= 5.2.7.1'
 gem 'mysql2'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+# gem 'sqlite3'
 # Use Puma as the app server
 gem 'puma', '~> 3.12'
 # Use Redis adapter to run Action Cable in production
@@ -25,7 +25,7 @@ gem 'will_paginate', '~> 3.1.0'
 
 gem 'dotenv-rails'
 
-gem 'attr_encrypted', '~> 3.1.0'
+# gem 'attr_encrypted', '~> 3.1.0'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false

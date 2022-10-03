@@ -27,6 +27,10 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :schedules
+      get 'schedule_listing', controller: :schedules, action: :schedule_listing
+      resources :payroll_accounts
+      resources :holidays
       resources :employee_schedules
       resources :offsets
       resources :overtimes
@@ -51,6 +55,7 @@ Rails.application.routes.draw do
       put 'offset_action', controller: :offsets, action: :offset_action
       resources :compensation_histories
       resources :payrolls
+      get 'payroll_details', controller: :payrolls, action: :payroll_details
       get 'payroll_data', controller: :payrolls, action: :payroll_data
       get 'approver_list', controller: :payrolls, action: :approver_list
       resources :time_keepings
