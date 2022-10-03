@@ -2,7 +2,7 @@ class EmployeeSchedule < ApplicationRecord
   belongs_to :employee
   validates :start_time, presence: true
   validates :end_time, presence: true
-  validate :no_date_overlap
+  validate :no_date_overlap, :if => [:start_time_changed?, :end_time_changed?]
 
   private
 
