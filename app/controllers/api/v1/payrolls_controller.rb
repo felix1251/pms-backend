@@ -5,8 +5,17 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # GET /payrolls
   def index
+    value = '"value"'
+    label = '"label"'
+    ats = '"'
+
     sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
-    sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver" 
+    sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver,"
+    sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
+    sql += " (SELECT cac.id as id, cac.name  FROM payroll_accounts pa"
+    sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql += " WHERE payroll_id = py.id)"
+    sql += " AS pa) AS payroll_account_json" 
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
@@ -53,7 +62,6 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += " FROM ("
     sql_time_keeping_hours_sum += sql_time_keeping_time
     sql_time_keeping_hours_sum += " ) final"
-    sql_time_keeping_hours_sum += " GROUP BY biometric_no"
     sql_time_keeping_hours_sum += " ), 0.0) AS total_hours_earned"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
@@ -88,8 +96,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_payed_overtime_hours_sum += " ), 0.0) total_payed_overtime_hours,"
 
     sql_payed_offset_hours_sum = " COALESCE((SELECT" 
-		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
-		sql_payed_offset_hours_sum += " DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))), 0) FROM overtimes WHERE status = 'A' AND offset_id = ofs.id))"
+		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(IF(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
+		sql_payed_offset_hours_sum += " DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))) >= 8 , 8, 0), 0) FROM overtimes WHERE status = 'A' AND offset_id = ofs.id))"
 		sql_payed_offset_hours_sum += " FROM offsets as ofs"
     sql_payed_offset_hours_sum += " WHERE ofs.status = 'A' AND ofs.employee_id = emp.id AND ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
 		sql_payed_offset_hours_sum += " ), 0.0) AS total_payed_offset_hours,"
@@ -133,9 +141,9 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_overtime_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
-    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE(IF(emp_data.total_payed_offset_hours >= 8, 8, 0), 1))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_offset_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
@@ -168,10 +176,32 @@ class Api::V1::PayrollsController < PmsDesktopController
     render json: @payroll
   end
 
+  def payroll_details
+    value = '"value"'
+    label = '"label"'
+    ats = '"'
+    sql = "SELECT *, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
+    sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
+    sql += " (SELECT cac.id as id, cac.name FROM payroll_accounts pa"
+    sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC)"
+    sql += " AS pa) AS payroll_account_json"
+    sql += " FROM payrolls AS py"
+    sql += " LEFT JOIN users as usr ON usr.id = py.approver_id"
+    sql += " WHERE py.id = #{params[:id]}"
+    sql += " LIMIT 1;"
+    execute_sql_query("SET SESSION group_concat_max_len = 10000;")
+    details = execute_sql_query(sql).first
+    render json: details
+  end
+
   # POST /payrolls
   def create
     @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"]}))
     if @payroll.save
+      store = []
+      request.params[:payroll][:company_account_ids].each { |id| store.push({company_account_id: id})}
+      @payroll.payroll_accounts.create(store) if store.length > 0
       OnPayrollCompensationWorker.perform_async(@payroll.id, payload["company_id"])
       render json: @payroll, status: :created
     else
@@ -182,6 +212,13 @@ class Api::V1::PayrollsController < PmsDesktopController
   # PATCH/PUT /payrolls/1
   def update
     if @payroll.update(payroll_params)
+      store = []
+      param_ids = request.params[:payroll][:company_account_ids]
+      param_ids.each {|id| store.push({company_account_id: id})}
+      if @payroll.payroll_accounts.create(store)
+        remove_ids = @payroll.payroll_accounts.pluck(:company_account_id) - param_ids
+        @payroll.payroll_accounts.where(company_account_id: remove_ids).delete_all if remove_ids.length > 0
+      end
       render json: @payroll
     else
       render json: @payroll.errors, status: :unprocessable_entity
@@ -201,7 +238,6 @@ class Api::V1::PayrollsController < PmsDesktopController
   end
 
   private
-
     def allowed_aud
       case action_name 
       when 'create'

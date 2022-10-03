@@ -1,6 +1,7 @@
 class CompanyAccount < ApplicationRecord
   belongs_to :company
   has_many :employees
+  has_many :schedules
   before_create :auto_upcase
   before_update :auto_upcase
   
