@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_01_072039) do
+ActiveRecord::Schema.define(version: 2022_10_01_150609) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -384,7 +384,9 @@ ActiveRecord::Schema.define(version: 2022_10_01_072039) do
     t.bigint "company_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "department_id"
     t.index ["company_id"], name: "index_schedules_on_company_id"
+    t.index ["department_id"], name: "index_schedules_on_department_id"
   end
 
   create_table "session_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -514,5 +516,6 @@ ActiveRecord::Schema.define(version: 2022_10_01_072039) do
   add_foreign_key "positions", "companies"
   add_foreign_key "positions", "users", column: "created_by_id"
   add_foreign_key "schedules", "companies"
+  add_foreign_key "schedules", "departments"
   add_foreign_key "users", "companies"
 end

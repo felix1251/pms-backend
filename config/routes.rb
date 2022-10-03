@@ -8,7 +8,6 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-  resources :schedules
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
@@ -28,6 +27,8 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :schedules
+      get 'schedule_listing', controller: :schedules, action: :schedule_listing
       resources :payroll_accounts
       resources :holidays
       resources :employee_schedules
