@@ -8,6 +8,7 @@ class Api::V1::PayrollAccountsController < PmsDesktopController
     sql = "SELECT pa.id, cac.name, cac.code, pa.company_account_id"
     sql += " FROM payroll_accounts as pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql += " WHERE pa.payroll_id = #{params[:payroll_id]}"
     sql += " ORDER BY cac.name"
     payroll_accounts = execute_sql_query(sql)
     render json: payroll_accounts
