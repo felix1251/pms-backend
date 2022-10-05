@@ -7,9 +7,29 @@ class Api::V1::CountsController < PmsDesktopController
     sql = "SELECT"
     sql += " (SELECT COUNT(*) FROM users WHERE company_id = #{com_id} and status = 'A') AS accounts,"
     sql += " (SELECT COUNT(*) FROM employees WHERE company_id = #{com_id} and status = 'A') AS employees,"
-    sql += " (SELECT COUNT(*) FROM users WHERE company_id = #{com_id} and status = 'A' and online = true) AS online"
+    sql += " (SELECT COUNT(*) FROM users WHERE company_id = #{com_id} and status = 'A' and online = true) AS online,"
+    sql += " (SELECT COUNT(*) FROM payrolls WHERE company_id = #{com_id} and (status = 'P' OR status = 'A')) AS payrolls"
+
+    start_month_of_the_year = Date.today.beginning_of_year.strftime("%Y-%m")
+    end_month_of_the_year = Date.today.strftime("%Y-%m")
+    result = (start_month_of_the_year..end_month_of_the_year).map(&:to_s)
+
+    hired_graph_sql = "SELECT"
+    result.each do |s|
+      hired_graph_sql += "(SELECT COUNT(*) FROM employees WHERE company_id = #{com_id} and DATE_FORMAT(date_hired, '%Y-%m') = '#{s}') AS '#{s}'"
+      hired_graph_sql += "," if s != end_month_of_the_year
+    end
+
+    separated_graph_sql = "SELECT"
+    result.each do |s|
+      separated_graph_sql += "(SELECT COUNT(*) FROM employees WHERE company_id = #{com_id} and DATE_FORMAT(date_resigned, '%Y-%m') = '#{s}') AS '#{s}'"
+      separated_graph_sql += "," if s != end_month_of_the_year
+    end
+
+    hired_graph = execute_sql_query(hired_graph_sql)
+    separated_graph = execute_sql_query(separated_graph_sql)
     counts = execute_sql_query(sql)
-    render json: counts.first
+    render json: counts.first.merge!({hired_graph: hired_graph.first.values, separated_graph: separated_graph.first.values})
   end
 
   def token_claims

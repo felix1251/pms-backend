@@ -107,7 +107,7 @@ ActiveRecord::Schema.define(version: 2022_10_01_150609) do
     t.string "status", default: "A"
     t.integer "biometric_no"
     t.string "first_name", null: false
-    t.string "middle_name", null: false
+    t.string "middle_name", default: ""
     t.string "last_name", null: false
     t.string "suffix", default: ""
     t.bigint "position_id", null: false

@@ -35,34 +35,55 @@ class Api::V1::PayrollsController < PmsDesktopController
   end
 
   def payroll_data
-    sql_time_keeping = " SELECT biometric_no, date, status, DATE(date) AS only_date"
-    sql_time_keeping += " FROM time_keepings AS t"
-    sql_time_keeping += " WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
-    sql_time_keeping += " AND status = 0 OR status = 1 AND company_id = #{payload['company_id']}"
-    sql_time_keeping += " ORDER BY biometric_no, date"
-
-    sql_time_keeping_lead = " SELECT *,"
-    sql_time_keeping_lead += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
-    sql_time_keeping_lead += " LEAD(status) OVER (ORDER BY biometric_no, date) AS next_status"
-    sql_time_keeping_lead += " FROM ("
-    sql_time_keeping_lead += sql_time_keeping
-    sql_time_keeping_lead += " ) tk"
-
-    sql_time_keeping_time = " SELECT biometric_no,"
-    sql_time_keeping_time += " CASE WHEN SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)) > 8 THEN 8"
-    sql_time_keeping_time += " ELSE TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 0) END AS rendered_hrs_per_day"
-    sql_time_keeping_time += " FROM("
-    sql_time_keeping_time += sql_time_keeping_lead
-    sql_time_keeping_time += " ) tk_filtered"
-    sql_time_keeping_time += " WHERE status = 0 AND next_status = 1"
-    sql_time_keeping_time += " GROUP BY biometric_no, only_date"
-
-    sql_time_keeping_hours_sum = " COALESCE(("
-    sql_time_keeping_hours_sum += " SELECT SUM(rendered_hrs_per_day)"
+    sql_time_keeping_hours_sum = " COALESCE("
+    sql_time_keeping_hours_sum += " (SELECT"
+    sql_time_keeping_hours_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
+    sql_time_keeping_hours_sum += " THEN SUM(COALESCE((SELECT SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))/60, 1))"
+    sql_time_keeping_hours_sum += " FROM employee_schedules"
+    sql_time_keeping_hours_sum += " WHERE employee_id = emp.id AND date(start_time) = only_date LIMIT 1), 1))"
+    sql_time_keeping_hours_sum += " ELSE SUM(8) END"
+    sql_time_keeping_hours_sum += " AS total_hours"
     sql_time_keeping_hours_sum += " FROM ("
-    sql_time_keeping_hours_sum += sql_time_keeping_time
-    sql_time_keeping_hours_sum += " ) final"
-    sql_time_keeping_hours_sum += " ), 0.0) AS total_hours_earned"
+    sql_time_keeping_hours_sum += " SELECT only_date"
+    sql_time_keeping_hours_sum += " FROM ("
+    sql_time_keeping_hours_sum += " SELECT id, date, status, biometric_no, DATE(date) AS only_date,"
+    sql_time_keeping_hours_sum += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
+    sql_time_keeping_hours_sum += " LEAD(status) OVER (ORDER BY biometric_no, date) AS next_status"
+    sql_time_keeping_hours_sum += " FROM time_keepings"
+    sql_time_keeping_hours_sum += " WHERE biometric_no = emp.biometric_no AND company_id = #{payload['company_id']} AND"
+    sql_time_keeping_hours_sum += " DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' AND (status = 0 OR status = 1)"
+    sql_time_keeping_hours_sum += " ) from_bio"
+    sql_time_keeping_hours_sum += " WHERE status = 0 and next_status = 1"
+    sql_time_keeping_hours_sum += " GROUP BY only_date"
+    sql_time_keeping_hours_sum += " ) fixed_hours)"
+    sql_time_keeping_hours_sum += " , 0) total_hours_earned"
+
+    sql_time_undertime_sum = " COALESCE("
+    sql_time_undertime_sum += " (SELECT SUM(IF(hours_in_date - expected_hours > 0 , 0 , (hours_in_date - expected_hours)*-1)) AS undertime"
+    sql_time_undertime_sum += " FROM ("
+    sql_time_undertime_sum += " SELECT *,"
+    sql_time_undertime_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
+    sql_time_undertime_sum += " THEN (SELECT TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))/60, 1)"
+    sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1)"
+    sql_time_undertime_sum += " ELSE 8 END"
+    sql_time_undertime_sum += " AS expected_hours"
+    sql_time_undertime_sum += " FROM ("
+    sql_time_undertime_sum += " SELECT only_date,"
+    sql_time_undertime_sum += " SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(date, '%Y-%m-%d %H:%i'), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'))/60, 1)) as hours_in_date"
+    sql_time_undertime_sum += " FROM ("
+    sql_time_undertime_sum += " SELECT id, date, status, biometric_no, DATE(date) AS only_date,"
+    sql_time_undertime_sum += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
+    sql_time_undertime_sum += " LEAD(status) OVER (ORDER BY biometric_no, date) AS next_status"
+    sql_time_undertime_sum += " FROM time_keepings"
+    sql_time_undertime_sum += " WHERE biometric_no = emp.biometric_no AND"
+    sql_time_undertime_sum += " DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
+    sql_time_undertime_sum += " AND (status = 0 OR status = 1) AND company_id = #{payload['company_id']}"
+    sql_time_undertime_sum += " ) from_bio"
+    sql_time_undertime_sum += " WHERE status = 0 and next_status = 1"
+    sql_time_undertime_sum += " GROUP BY only_date"
+    sql_time_undertime_sum += " ) fixed_hours"
+    sql_time_undertime_sum += " ) final)"
+    sql_time_undertime_sum += " , 0) as undertime_hours,"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
     sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0 " 
@@ -75,7 +96,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_payed_leave_hours_sum += " AND (le.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR le.end_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
     sql_payed_leave_hours_sum += " GROUP BY employee_id"
     sql_payed_leave_hours_sum += " ), 0) AS total_payed_leave_hours,"
-
+    
     sql_payed_ob_hours_sum = " COALESCE((SELECT"
 		sql_payed_ob_hours_sum += " SUM((DATEDIFF(CASE WHEN ob.end_date > '#{@payroll.to}' THEN  '#{@payroll.to}' ELSE ob.end_date END,"
     sql_payed_ob_hours_sum += " CASE WHEN ob.start_date < '#{@payroll.from}' THEN '#{@payroll.from}' ELSE  ob.start_date  END) + 1)*8)"
@@ -111,6 +132,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += sql_payed_leave_hours_sum
     sql_employee += sql_payed_ob_hours_sum
     sql_employee += sql_payed_overtime_hours_sum
+    sql_employee += sql_time_undertime_sum
     sql_employee += sql_time_keeping_hours_sum
     sql_employee += " FROM employees AS emp"
     sql_employee += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
@@ -154,13 +176,18 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8)* TRUNCATE((emp_data.total_payed_ob_hours), 1))"
     sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_ob_hours)"
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_ob_hours), 1))"
-    sql_gather_fields += " END, 2) AS payed_ob_amount"
+    sql_gather_fields += " END, 2) AS payed_ob_amount,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.undertime_hours), 1))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.undertime_hours)"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.undertime_hours), 1))"
+    sql_gather_fields += " END, 2) AS undertime_amount"
     sql_gather_fields += " FROM ("
     sql_gather_fields += sql_employee
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
-    sql_total += " with_total.*, (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
+    sql_total += " with_total.*, ((payed_hours_amount-undertime_amount) + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
     sql_total += " (payed_overtime_amount) AS premium_pay_total,"
     sql_total += " (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount) gross_pay"
     sql_total += " from ("
