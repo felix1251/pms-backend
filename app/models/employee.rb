@@ -15,10 +15,6 @@ class Employee < ApplicationRecord
       before_create :on_emp_create
       before_update :on_emp_update
 
-      # secret_key =  [Rails.application.credentials[:DB_COL_ENCRYPTED_KEY]].pack("H*")
-      # # secret_iv =  [Rails.application.credentials[:DB_COL_ENCRYPTED_IV]].pack("H*")
-      # attr_encrypted :compensation, key: secret_key, mode: :per_attribute_iv_and_salt, insecure_mode: true, algorithm: 'aes-256-cbc', marshal: true
-
       validates :first_name, presence: true
       validates :last_name, presence: true
       validates :sex, presence: true
@@ -35,12 +31,7 @@ class Employee < ApplicationRecord
       validates :work_sched_type, presence: true
       enum status: { A: "A", I: "I"}
       enum work_sched_type: { FX: "FX", FL: "FL"}
-      enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
-      
-      # def attributes
-      #       # don't show this encrypted_columns 
-      #       super.except('encrypted_compensation', 'encrypted_compensation_salt', 'encrypted_compensation_iv')
-      # end
+      # enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
 
       private
 

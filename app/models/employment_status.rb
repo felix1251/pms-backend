@@ -3,6 +3,8 @@ class EmploymentStatus < ApplicationRecord
       before_create :auto_upcase
       before_update :auto_upcase
       enum status: { A: "A", I: "I"}
+      validates :name, uniqueness: { case_sensitive: false }
+      validates :code, uniqueness: { case_sensitive: false }
 
       private
 

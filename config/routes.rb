@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       get 'schedule_listing', controller: :schedules, action: :schedule_listing
       resources :payroll_accounts
       resources :holidays
+      get 'holidays_api', controller: :holidays, action: :holidays_api
       resources :employee_schedules
       resources :offsets
       resources :overtimes

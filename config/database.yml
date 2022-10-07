@@ -8,9 +8,9 @@ default: &default
 
 development:
   <<: *default
-  database: <%= ENV['DB_DATABASE'] %>
+  database: <%= ENV['PMS_DB'] %>
   wait_timeout: 300
 
 production:
   <<: *default
-  database: <%= ENV['DB_DATABASE'] %>
+  database: <%= ENV['PMS_DB'] %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_01_150609) do
+ActiveRecord::Schema.define(version: 2022_10_05_143909) do
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "company_id"
@@ -107,7 +107,7 @@ ActiveRecord::Schema.define(version: 2022_10_01_150609) do
     t.string "status", default: "A"
     t.integer "biometric_no"
     t.string "first_name", null: false
-    t.string "middle_name", null: false
+    t.string "middle_name", default: ""
     t.string "last_name", null: false
     t.string "suffix", default: ""
     t.bigint "position_id", null: false
@@ -192,6 +192,7 @@ ActiveRecord::Schema.define(version: 2022_10_01_150609) do
     t.bigint "company_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "title", null: false
     t.index ["company_id"], name: "index_holidays_on_company_id"
   end
 
