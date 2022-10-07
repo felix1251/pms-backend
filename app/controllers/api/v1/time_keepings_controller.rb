@@ -37,9 +37,9 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     records_fetch_point = (current_page - 1) * per_page
       
     sql = "SELECT tk_filtered.biometric_no, COAlESCE(tk_filtered.fullname, 'UNSPECIFIED') AS fullname, tk_filtered.only_date,"
-    sql += " TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 2) AS detailed_hours,"
-    sql += " GROUP_CONCAT(date ORDER BY date ASC) AS time_in, GROUP_CONCAT(next_date ORDER BY date ASC) AS time_out,"
-    sql += " GROUP_CONCAT(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600) ORDER BY date ASC) as in_out_hours" 
+    sql += " TRUNCATE(SUM(ABS(TIME_TO_SEC(TIMEDIFF(next_date, date)) / 3600)), 1) AS detailed_hours,"
+    sql += " GROUP_CONCAT(DATE_FORMAT(date, '%Y-%m-%d %H:%i') ORDER BY date ASC) AS time_in, GROUP_CONCAT(DATE_FORMAT(next_date, '%Y-%m-%d %H:%i') ORDER BY date ASC) AS time_out,"
+    sql += " GROUP_CONCAT(TRUNCATE(TIMESTAMPDIFF(minute,DATE_FORMAT(date, '%Y-%m-%d %H:%i'), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'))/60,1) ORDER BY date ASC) as in_out_hours" 
     sql += " FROM ("
     sql += " SELECT tk.*, CONCAT(e.first_name, ', ',e.middle_name, ' ', e.last_name, ' ', e.suffix) as fullname,"
     sql += " LEAD(tk.date) OVER () AS next_date,"
