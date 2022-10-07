@@ -1,4 +1,3 @@
-require 'json'
 require 'socket'
 class Api::V1::SigninController < PmsDesktopController
   before_action :authorize_access_request!, only: [:logout]

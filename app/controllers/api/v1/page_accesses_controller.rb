@@ -28,6 +28,14 @@ class Api::V1::PageAccessesController < PmsDesktopController
           end
         end
         page_tree.push({id: pg.id, title: pg.title, key: pg.pgKey, children: [view_only]})
+      elsif pg.access_code == "R"
+        export_only = []
+        action.each do |ac|
+          if ac.acKey == "X" || ac.acKey == "V"
+            export_only.push({id: ac.id, title: ac.title, key: "#{pg.pgKey+ac.acKey}"})
+          end
+        end
+        page_tree.push({id: pg.id, title: pg.title, key: pg.pgKey, children: export_only})
       else
         page_tree.push({id: pg.id, title: pg.title, key: pg.pgKey, children: get_action_on_selection(action, pg.pgKey)})
       end
