@@ -1,4 +1,4 @@
-class PmsDevicesController < AdminController
+class Api::Admin::PmsDevicesController < AdminController
   before_action :set_pms_device, only: [:show, :update, :destroy]
 
   # GET /pms_devices

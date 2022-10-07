@@ -126,13 +126,13 @@ class Api::V1::UsersController < PmsDesktopController
   def allowed_aud
     case action_name 
     when 'create'
-      ['SA']
+      ['YA']
     when 'update' , 'retrieve_archived_account'
-      ['SE']
+      ['YE']
     when 'destroy'
-      ['SD']
+      ['YD']
     else
-      ['SV']
+      ['YV']
     end
   end
 
