@@ -1,12 +1,13 @@
 page_access = [
       {access_code: "H", page: "Dashboard"},
       {access_code: "E", page: "Employees"},
+      {access_code: "C", page: "Schedules"},
+      {access_code: "T", page: "Time Keeping"},
       {access_code: "P", page: "Payroll"},
       {access_code: "B", page: "Benefits"},
-      {access_code: "T", page: "Time Keeping"},
-      {access_code: "S", page: "System Accounts"},
-      {access_code: "C", page: "Schedules"},
-      {access_code: "R", page: "Employee Request"},
+      {access_code: "Q", page: "Employee Request"},
+      {access_code: "R", page: "Reports"},
+      {access_code: "Y", page: "System Accounts"},
 ]
 
 PageAccess.create(page_access)
@@ -57,6 +58,21 @@ users.each do |user|
       UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 3, status: "A")
       UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 4, status: "A")
       UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 5, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 1, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 2, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 3, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 4, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 5, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 1, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 2, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 3, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 4, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 5, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 1, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 2, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 3, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 4, status: "A")
+      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 5, status: "A")
 end
 
 SalaryMode.create(description: "monthly", code: "mnly")
