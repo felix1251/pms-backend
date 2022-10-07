@@ -15,10 +15,6 @@ class AdminController < ActionController::API
     ActiveRecord::Base.connection.exec_query(sql)
   end
 
-  def get_device_id
-    request.headers['Device-Id']
-  end
-
   def get_operating_system
     if request.env['HTTP_USER_AGENT'].downcase.match(/mac/i)
       "Mac"
@@ -31,10 +27,6 @@ class AdminController < ActionController::API
     else
       "Unknown: #{request.env['HTTP_USER_AGENT']}"
     end
-  end
-
-  def host_name
-    Socket.gethostname
   end
 
   def bad_request
