@@ -8,7 +8,7 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-  resources :admins
+  resources :contracts
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
@@ -103,7 +103,12 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :admin do
+      post 'refresh', controller: :refresh, action: :create
+      post 'signin', controller: :signin, action: :create
+      delete 'signin', controller: :signin, action: :logout
       resources :pms_devices
+      resources :companies
+      resources :admins
     end
   end
 end

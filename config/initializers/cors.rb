@@ -23,7 +23,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   end
 
   allow do
-    origins 'http://localhost:8082'
+    origins 'app://.'
     resource '/api/admin/',
       headers: :any, 
       methods: [:get, :post, :put, :patch, :delete, :options, :head]

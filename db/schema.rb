@@ -10,16 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_07_100645) do
+ActiveRecord::Schema.define(version: 2022_10_08_090528) do
 
-  create_table "admins", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
     t.string "password_digest"
     t.string "status", default: "A"
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["username"], name: "index_admins_on_username"
+    t.index ["username"], name: "index_administrators_on_username"
   end
 
   create_table "assigned_areas", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(version: 2022_10_07_100645) do
     t.integer "pending_time_keeping", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", default: "A"
     t.index ["code"], name: "index_companies_on_code"
   end
 
@@ -62,6 +63,16 @@ ActiveRecord::Schema.define(version: 2022_10_07_100645) do
     t.datetime "updated_at", null: false
     t.decimal "compensation", precision: 8, scale: 2, null: false
     t.index ["employee_id"], name: "index_compensation_histories_on_employee_id"
+  end
+
+  create_table "contracts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "company_id"
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.string "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_contracts_on_company_id"
   end
 
   create_table "departments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -489,6 +500,7 @@ ActiveRecord::Schema.define(version: 2022_10_07_100645) do
   add_foreign_key "assigned_areas", "users", column: "created_by_id"
   add_foreign_key "company_accounts", "companies"
   add_foreign_key "company_accounts", "users", column: "created_by_id"
+  add_foreign_key "contracts", "companies"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
   add_foreign_key "employee_schedules", "employees"
