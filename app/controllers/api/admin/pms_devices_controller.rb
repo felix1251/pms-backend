@@ -1,10 +1,10 @@
-class Api::Admin::PmsDevicesController < AdminController
+class Api::Admin::PmsDevicesController < AdministratorsController
+  before_action :authorize_access_request!
   before_action :set_pms_device, only: [:show, :update, :destroy]
 
   # GET /pms_devices
   def index
     @pms_devices = PmsDevice.all
-
     render json: @pms_devices
   end
 
@@ -22,6 +22,13 @@ class Api::Admin::PmsDevicesController < AdminController
     else
       render json: @pms_device.errors, status: :unprocessable_entity
     end
+  end
+
+  def token_claims
+    {
+      aud: ['admin'],
+      verify_aud: true
+    }
   end
 
   # PATCH/PUT /pms_devices/1

@@ -1,5 +1,5 @@
 require 'socket'
-class AdminController < ActionController::API
+class AdministratorsController < ActionController::API
   include JWTSessions::RailsAuthorization
   rescue_from ActionController::ParameterMissing, with: :bad_request
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
@@ -52,5 +52,4 @@ class AdminController < ActionController::API
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(' ') }, status: :unprocessable_entity
   end
-
 end
