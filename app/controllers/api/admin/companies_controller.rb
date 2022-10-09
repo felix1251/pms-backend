@@ -7,9 +7,10 @@ class Api::Admin::CompaniesController < AdministratorsController
     sql = "SELECT"
     sql += " com.code, IF(com.status = 'A', 'Active', 'Inactive') AS status, com.description, com.id,"
     sql += " DATE_FORMAT(com.created_at, '%b %d, %Y %h:%i %p') AS created_at,"
-    sql += " (SELECT COUNT(id) FROM contracts WHERE company_id = com.id) AS total_contracts"
+    sql += " (SELECT COUNT(*) FROM contracts as ct WHERE ct.company_id = com.id) AS total_contracts,"
+    sql += " (SELECT COUNT(*) FROM employees emp WHERE emp.company_id = com.id AND emp.status = 'A') AS total_active_employees"
     sql += " FROM companies AS com"
-    sql += " ORDER BY created_at DESC"
+    sql += " ORDER BY com.created_at DESC"
     companies = execute_sql_query(sql)
     render json: companies
   end
