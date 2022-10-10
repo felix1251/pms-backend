@@ -137,7 +137,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
     sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
     sql_employee += " dep.name AS department_name, emp.id,"
-    sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
+    sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate, pb.amount AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction,"
     sql_employee += sql_payed_offset_hours_sum
     sql_employee += sql_payed_leave_hours_sum
     sql_employee += sql_payed_ob_hours_sum
@@ -149,6 +149,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
     sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = IFNULL(opc.salary_mode_id, emp.salary_mode_id)"
     sql_employee += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
+    sql_employee += " LEFT JOIN pagibigs AS pb ON pb.id = #{@payroll.pagibig_id}"
+    sql_employee += " LEFT JOIN philhealths AS ph ON ph.id = #{@payroll.philhealth_id}"
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
@@ -210,10 +212,12 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
-    sql_total += " with_total.*, ((payed_hours_amount - undertime_amount) + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
+    sql_total += " with_total.*, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
     sql_total += " (payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS premium_pay_total,"
-    sql_total += " ((payed_hours_amount - undertime_amount) + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS gross_pay,"
-    sql_total += " ((payed_hours_amount - undertime_amount) + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS net_pay"
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS gross_pay,"
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday"
+    sql_total += " - pagibig_deduction - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(phic_percentage_deduction/100), 2)) AS net_pay,"
+    sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(phic_percentage_deduction/100), 2) AS phic_deduction"
     sql_total += " from ("
     sql_total += sql_gather_fields
     sql_total += " ) with_total;"
@@ -231,14 +235,14 @@ class Api::V1::PayrollsController < PmsDesktopController
     value = '"value"'
     label = '"label"'
     ats = '"'
-    sql = "SELECT *, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
+    sql = "SELECT py.id, py.from, py.to, py.status, py.approver_id, py.require_approver, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
     sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
     sql += " (SELECT cac.id as id, cac.name FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
     sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC)"
     sql += " AS pa) AS payroll_account_json"
     sql += " FROM payrolls AS py"
-    sql += " LEFT JOIN users as usr ON usr.id = py.approver_id"
+    sql += " LEFT JOIN users AS usr ON usr.id = py.approver_id"
     sql += " WHERE py.id = #{params[:id]}"
     sql += " LIMIT 1;"
     execute_sql_query("SET SESSION group_concat_max_len = 10000;")
@@ -248,7 +252,15 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # POST /payrolls
   def create
-    @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"]}))
+    philhealth = Philhealth.find_by!(status: "A")
+    pagibig = Pagibig.find_by!(status: "A") 
+    @payroll = Payroll.new(payroll_params.merge!(
+      {
+        company_id: payload["company_id"], 
+        pagibig_id: pagibig.id,
+        philhealth_id: philhealth.id
+      }
+    ))
     if @payroll.save
       store = []
       request.params[:payroll][:company_account_ids].each { |id| store.push({company_account_id: id})}

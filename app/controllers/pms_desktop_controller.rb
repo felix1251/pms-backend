@@ -36,6 +36,14 @@ class PmsDesktopController < ActionController::API
   def get_device_id
     request.headers['Device-Id']
   end
+  
+  def custom_pagination(current_page, per_page)
+    default_page = 1
+    max = 30
+    current_page = default_page if current_page
+    per_page = max if per_page >= max && per_page
+    return {:fetch_point => (current_page - 1) * per_page, :per_page => per_page} 
+  end
 
   def get_operating_system
     if request.env['HTTP_USER_AGENT'].downcase.match(/mac/i)
