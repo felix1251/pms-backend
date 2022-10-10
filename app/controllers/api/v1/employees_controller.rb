@@ -4,16 +4,9 @@ class Api::V1::EmployeesController < PmsDesktopController
   before_action :set_employee, only: [:update, :destroy]
   before_action :set_employee_show, only: [:show]
   # GET /employees
+
   def index
-    max = 35
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    unless per_page <= max
-      per_page = max
-    end
-    records_fetch_point = (current_page - 1) * per_page
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
     sql_start = ""
     sql_start += "SELECT"
@@ -41,7 +34,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
     sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
     # paginate
-    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]};"
   
     # render json: Employee.all
     begin
@@ -54,15 +47,7 @@ class Api::V1::EmployeesController < PmsDesktopController
   end
 
   def groupings
-    max = 20
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    unless per_page <= max
-      per_page = max
-    end
-    records_fetch_point = (current_page - 1) * per_page
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
     sql = "SELECT"
     sql += " emp.id, emp.first_name, emp.middle_name, emp.employee_id,"
@@ -78,7 +63,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql += " AND emp.salary_mode_id = #{params[:salary_mode_id].to_i}" if params[:salary_mode_id].present?
     sql += " AND emp.company_account_id = #{params[:company_account_id].to_i}" if params[:company_account_id].present?
     sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
-    sql += " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+    sql += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
 
     sql_count = "SELECT"
     sql_count += " COUNT(*) AS total_count"

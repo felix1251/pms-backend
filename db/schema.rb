@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_08_090528) do
+ActiveRecord::Schema.define(version: 2022_10_10_063733) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
@@ -41,6 +41,7 @@ ActiveRecord::Schema.define(version: 2022_10_08_090528) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "status", default: "A"
+    t.string "worker_pid_list"
     t.index ["code"], name: "index_companies_on_code"
   end
 
@@ -342,6 +343,14 @@ ActiveRecord::Schema.define(version: 2022_10_08_090528) do
     t.index ["access_code"], name: "index_page_action_accesses_on_access_code"
   end
 
+  create_table "pagibigs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.decimal "amount", precision: 8, scale: 2, null: false
+    t.string "title", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "status", default: "I"
+  end
+
   create_table "payroll_accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "payroll_id"
     t.bigint "company_account_id"
@@ -362,10 +371,22 @@ ActiveRecord::Schema.define(version: 2022_10_08_090528) do
     t.datetime "updated_at", null: false
     t.text "remarks"
     t.date "pay_date"
+    t.bigint "pagibig_id"
+    t.bigint "philhealth_id"
     t.index ["approver_id"], name: "index_payrolls_on_approver_id"
     t.index ["company_id"], name: "index_payrolls_on_company_id"
     t.index ["from"], name: "index_payrolls_on_from"
+    t.index ["pagibig_id"], name: "index_payrolls_on_pagibig_id"
+    t.index ["philhealth_id"], name: "index_payrolls_on_philhealth_id"
     t.index ["to"], name: "index_payrolls_on_to"
+  end
+
+  create_table "philhealths", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.decimal "percentage_deduction", precision: 8, scale: 2, null: false
+    t.string "title", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "status", default: "I"
   end
 
   create_table "pms_devices", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -534,6 +555,8 @@ ActiveRecord::Schema.define(version: 2022_10_08_090528) do
   add_foreign_key "payroll_accounts", "company_accounts"
   add_foreign_key "payroll_accounts", "payrolls"
   add_foreign_key "payrolls", "companies"
+  add_foreign_key "payrolls", "pagibigs"
+  add_foreign_key "payrolls", "philhealths"
   add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
   add_foreign_key "positions", "companies"

@@ -1,0 +1,2 @@
+class Pagibig < ApplicationRecord
+end

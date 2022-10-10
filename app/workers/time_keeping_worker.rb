@@ -11,25 +11,16 @@ class TimeKeepingWorker
                         details = { errors: rec.errors, record: r }.to_json
                         failed.push({emp_bio_no: r["biometric_no"], details: details.to_s, company_id: company_id})
                   end
-                  count = company.pending_time_keeping - 1
-                  unless count < 0
-                        company.update(pending_time_keeping: count)
-                  end
             end
             FailedTimeKeeping.create(failed)
+            pid_list = company.worker_pid_list - [self.jid]
+            company.update(worker_pid_list: pid_list)
             send_cable(company_id)
       end
 
       private
 
       def send_cable(company_id)
-            sql = "SELECT"
-            sql += " com.pending_time_keeping AS pending,"
-            sql += " (SELECT COUNT(*) FROM time_keepings AS tk WHERE tk.company_id = com.id) AS succeeded,"
-            sql += " (SELECT COUNT(*) FROM failed_time_keepings AS ftk WHERE ftk.company_id = com.id) AS rejected"
-            sql += " FROM companies AS com"
-            sql += " WHERE id = #{company_id} LIMIT 1"
-            counts = ActiveRecord::Base.connection.exec_query(sql).first
-            ActionCable.server.broadcast "time_keeping_#{company_id}", counts.merge!({proccesed: counts["succeeded"] + counts["rejected"]})
+            ActionCable.server.broadcast "time_keeping_#{company_id}", { reload_counts: true }
       end
 end

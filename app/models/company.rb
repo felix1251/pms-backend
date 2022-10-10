@@ -1,4 +1,5 @@
 class Company < ApplicationRecord
+      serialize :worker_pid_list, Array
       has_many :users
       has_many :employees
       has_many :departments

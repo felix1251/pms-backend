@@ -13,18 +13,10 @@ class Api::V1::PositionsController < PmsDesktopController
     sql_sort = " ORDER BY ps.name ASC"
 
     if params[:page].present? && params[:per_page].present?
-      max = 20
-      current_page = params[:page].to_i 
-      per_page = params[:per_page].to_i
-      current_page = current_page || 1
-      per_page = per_page || max
-      unless per_page <= max
-        per_page = max
-      end
-      records_fetch_point = (current_page - 1) * per_page
+      pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
       sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE ps.id = emp.position_id and emp.status = 'A') AS employee_count" 
-      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+      sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
       sql_count = " COUNT(*) as total_count"
 
       positions = execute_sql_query(sql_start + sql_fields + sql_employee_count + sql_from + sql_conditions + sql_sort + sql_paginate)
