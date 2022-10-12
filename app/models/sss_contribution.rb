@@ -1,0 +1,2 @@
+class SssContribution < ApplicationRecord
+end
