@@ -19,7 +19,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
-    sql += " ORDER BY py.to DESC"
+    sql += " ORDER BY py.from ASC"
   
     payrolls = execute_sql_query(sql)
     render json: payrolls
@@ -63,13 +63,23 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT *,"
     sql_time_undertime_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
-    sql_time_undertime_sum += " THEN (SELECT TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))/60, 1)"
+    sql_time_undertime_sum += " THEN (SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
     sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1)"
-    sql_time_undertime_sum += " ELSE 8 END"
+    sql_time_undertime_sum += " ELSE 8*60 END"
     sql_time_undertime_sum += " AS expected_hours"
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT only_date,"
-    sql_time_undertime_sum += " SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(date, '%Y-%m-%d %H:%i'), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'))/60, 1)) as hours_in_date"
+    sql_time_undertime_sum += " COALESCE(CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL' THEN"
+    sql_time_undertime_sum += " SUM(TIMESTAMPDIFF(MINUTE,"
+    sql_time_undertime_sum += " IF(date > (SELECT start_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1), DATE_FORMAT(date, '%Y-%m-%d %H:%i'), (SELECT start_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1)),"
+    sql_time_undertime_sum += " IF(next_date < (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1))"
+    sql_time_undertime_sum += " ))"
+    sql_time_undertime_sum += " ELSE"
+    sql_time_undertime_sum += " SUM(TIMESTAMPDIFF(MINUTE,"
+    sql_time_undertime_sum += " IF(date > CONCAT(only_date,' ',emp.work_sched_start), DATE_FORMAT(date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_start)),"
+    sql_time_undertime_sum += " IF(next_date < CONCAT(only_date,' ',emp.work_sched_end), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_end))"
+    sql_time_undertime_sum += " ) - IF(CONCAT(only_date,' 11:00') AND CONCAT(only_date,' 12:00') BETWEEN date AND next_date, 60, 0))"
+    sql_time_undertime_sum += " END, 0) AS hours_in_date"
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT id, date, status, biometric_no, DATE(date) AS only_date,"
     sql_time_undertime_sum += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
@@ -83,7 +93,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " GROUP BY only_date"
     sql_time_undertime_sum += " ) fixed_hours"
     sql_time_undertime_sum += " ) final)"
-    sql_time_undertime_sum += " , 0) as undertime_hours,"
+    sql_time_undertime_sum += " , 0) as undertime_minutes,"
 
     sql_payed_leave_hours_sum = " COALESCE((SELECT "
     sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0 " 
@@ -153,14 +163,19 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 1), ' days')"
     sql_gather_fields += " END AS total_time,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
+    sql_gather_fields += " WHEN 3 THEN emp_data.rate/8"
+    sql_gather_fields += " WHEN 2 THEN emp_data.rate"
+    sql_gather_fields += " ELSE (emp_data.rate/26)"
+    sql_gather_fields += " END, 2) AS daily_rate,"
+    sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_hours_earned), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * total_hours_earned)"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_hours_earned), 1))"
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_hours_earned), 1) + IF((emp_data.total_hours_earned/8) > 2, (emp_data.rate/26) * 2, 0))"
     sql_gather_fields += " END, 2) AS payed_hours_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_overtime_hours)"
-    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 1))"
+    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 2))"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_overtime_hours), 2))"
+    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_overtime_hours), 2))"
     sql_gather_fields += " END, 2) AS payed_overtime_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_offset_hours), 1))"
@@ -169,30 +184,49 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " END, 2) AS payed_offset_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_leave_hours)"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_leave_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_leave_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
     sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8)* TRUNCATE((emp_data.total_payed_ob_hours), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.total_payed_ob_hours)"
+    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * TRUNCATE((emp_data.total_payed_ob_hours), 1))"
     sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.total_payed_ob_hours), 1))"
     sql_gather_fields += " END, 2) AS payed_ob_amount,"
     sql_gather_fields += " TRUNCATE(CASE salary_id"
-    sql_gather_fields += " WHEN 3 THEN ((emp_data.rate/8) * TRUNCATE((emp_data.undertime_hours), 1))"
-    sql_gather_fields += " WHEN 2 THEN (emp_data.rate * emp_data.undertime_hours)"
-    sql_gather_fields += " ELSE (((emp_data.rate/26)/8) * TRUNCATE((emp_data.undertime_hours), 1))"
-    sql_gather_fields += " END, 2) AS undertime_amount"
+    sql_gather_fields += " WHEN 3 THEN (((emp_data.rate/8)/60) * emp_data.undertime_minutes)"
+    sql_gather_fields += " WHEN 2 THEN ((emp_data.rate/60) * emp_data.undertime_minutes)"
+    sql_gather_fields += " ELSE ((((emp_data.rate/26)/8)/60) * emp_data.undertime_minutes)"
+    sql_gather_fields += " END, 2) AS undertime_amount,"
+    sql_gather_fields += " (SELECT"
+    sql_gather_fields += " IFNULL(SUM(IF(type_of_holiday = 'S', TRUNCATE((CASE salary_id WHEN 3 THEN emp_data.rate WHEN 2 THEN emp_data.rate*8 ELSE (emp_data.rate/26) END)*0.30, 2), 0)), 0)"
+    sql_gather_fields += " from holidays WHERE type_of_holiday = 'S' AND (date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_gather_fields += " ) AS payed_special_holiday,"
+    sql_gather_fields += " (SELECT"
+    sql_gather_fields += " IFNULL(SUM(IF(type_of_holiday = 'R', TRUNCATE(CASE salary_id WHEN 3 THEN emp_data.rate WHEN 2 THEN emp_data.rate*8 ELSE (emp_data.rate/26) END, 2), 0)), 0)"
+    sql_gather_fields += " from holidays WHERE type_of_holiday = 'R' AND (date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_gather_fields += " ) AS payed_regular_holiday"
     sql_gather_fields += " FROM ("
     sql_gather_fields += sql_employee
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
-    sql_total += " with_total.*, ((payed_hours_amount-undertime_amount) + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
-    sql_total += " (payed_overtime_amount) AS premium_pay_total,"
-    sql_total += " (payed_hours_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount) gross_pay"
+    sql_total += " with_total.*, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
+    sql_total += " (payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS premium_pay_total,"
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS gross_pay,"
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday"
+    sql_total += " - IFNULL(pb.amount, 0) - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) - IFNULL(sss.total_ee, 0) AS net_pay,"
+    sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2) AS phic_deduction,"
+    sql_total += " IFNULL(sss.total_ee, 0) AS sss_deduction, IFNULL(pb.amount, 0) AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction"
     sql_total += " from ("
     sql_total += sql_gather_fields
-    sql_total += " ) with_total;"
+    sql_total += " ) with_total"
+    sql_total += " LEFT JOIN philhealths AS ph ON ph.id = #{@payroll.philhealth_id}"
+    sql_total += " LEFT JOIN pagibigs AS pb ON pb.id = #{@payroll.pagibig_id ? @payroll.pagibig_id : 'null'}"
+    sql_total += " LEFT JOIN social_security_systems AS sss ON sss.id = "
+    sql_total += " (SELECT ss.id FROM social_security_systems as ss"
+    sql_total += " WHERE (IF((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) > 0, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount), 0)" 
+    sql_total += " BETWEEN ss.com_from AND ss.com_to) AND sss_contribution_id = #{@payroll.sss_contribution_id}"
+    sql_total += " LIMIT 1)"
 
     payroll = execute_sql_query(sql_total)
     render json: payroll
@@ -207,14 +241,14 @@ class Api::V1::PayrollsController < PmsDesktopController
     value = '"value"'
     label = '"label"'
     ats = '"'
-    sql = "SELECT *, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
+    sql = "SELECT py.id, py.from, py.to, py.status, py.approver_id, py.require_approver, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
     sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
     sql += " (SELECT cac.id as id, cac.name FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
     sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC)"
     sql += " AS pa) AS payroll_account_json"
     sql += " FROM payrolls AS py"
-    sql += " LEFT JOIN users as usr ON usr.id = py.approver_id"
+    sql += " LEFT JOIN users AS usr ON usr.id = py.approver_id"
     sql += " WHERE py.id = #{params[:id]}"
     sql += " LIMIT 1;"
     execute_sql_query("SET SESSION group_concat_max_len = 10000;")
@@ -224,15 +258,39 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # POST /payrolls
   def create
-    @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"]}))
-    if @payroll.save
+    philhealth_id = Philhealth.find_by!(status: "A").id
+    sss_contribution_id = SssContribution.find_by!(status: "A").id
+    pagibig = Pagibig.find_by!(status: "A")
+    pagibig_id = nil
+
+    date = Date.parse(payroll_params[:from])
+    exist_on_month_payroll = Payroll.where("(? BETWEEN payrolls.from AND payrolls.to OR ? BETWEEN payrolls.from AND payrolls.to)
+                            AND payrolls.company_id = ?", date.beginning_of_month, date.end_of_month, payload["company_id"]).first
+
+    if exist_on_month_payroll && exist_on_month_payroll.payroll_accounts.pluck(:company_account_id) == request.params[:payroll][:company_account_ids]
+      pagibig_id = nil
+    else
+      pagibig_id = pagibig.id if pagibig
+    end
+    
+    @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"], pagibig_id: pagibig_id, philhealth_id: philhealth_id, sss_contribution_id: sss_contribution_id}))
+
+    if philhealth_id && sss_contribution_id && pagibig && @payroll.save
       store = []
       request.params[:payroll][:company_account_ids].each { |id| store.push({company_account_id: id})}
       @payroll.payroll_accounts.create(store) if store.length > 0
       OnPayrollCompensationWorker.perform_async(@payroll.id, payload["company_id"])
       render json: @payroll, status: :created
     else
-      render json: @payroll.errors, status: :unprocessable_entity
+      if !philhealth_id
+        render json: {error: "there is no active philhealth records"}, status: :unprocessable_entity
+      elsif !sss_contribution_id
+        render json: {error: "there is no active sss records"}, status: :unprocessable_entity
+      elsif !pagibig
+        render json: {error: "there is no active pagibig records"}, status: :unprocessable_entity
+      else
+        render json: @payroll.errors, status: :unprocessable_entity
+      end
     end
   end
 

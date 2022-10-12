@@ -6,14 +6,7 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
 
   # GET /official_businesses
   def index
-    max = 20
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    per_page = max unless per_page <= max
-    records_fetch_point = (current_page - 1) * per_page
-
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
     sql_fields = " ob.client, ob.reason, ob.status,"
@@ -28,22 +21,14 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
     sql_join = " LEFT JOIN employees AS emp ON emp.id = ob.employee_id"
     sql_condition = " WHERE ob.status != 'P'"
     sql_sort = " ORDER BY ob.created_at DESC"
-    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
-
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
     ob = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate )
     count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
     render json: {data: ob, total_count: count.first["total_count"]}
   end
 
   def pending_ob
-    max = 20
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    per_page = max unless per_page <= max
-    records_fetch_point = (current_page - 1) * per_page
-
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
     sql_fields = " ob.client, ob.reason, ob.status,"
@@ -58,8 +43,7 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
     sql_join = " LEFT JOIN employees AS emp ON emp.id = ob.employee_id"
     sql_condition = " WHERE ob.status = 'P'"
     sql_sort = " ORDER BY ob.created_at DESC"
-    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
-
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
     ob = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate )
     count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
     render json: {data: ob, total_count: count.first["total_count"]}

@@ -4,8 +4,14 @@ class Api::Admin::PmsDevicesController < AdministratorsController
 
   # GET /pms_devices
   def index
-    @pms_devices = PmsDevice.all
-    render json: @pms_devices
+    sql = "SELECT"
+    sql += " pd.id, pd.allowed, pd.device_id, pd.device_name, com.description AS company_name,"
+    sql += " DATE_FORMAT(pd.created_at, '%b %d, %Y %h:%i %p') AS created_at"
+    sql += " FROM pms_devices pd"
+    sql += " LEFT JOIN companies AS com ON com.id = pd.company_id"
+
+    pms_devices = execute_sql_query(sql)
+    render json: pms_devices
   end
 
   # GET /pms_devices/1
