@@ -133,13 +133,11 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     record = request.params[:time_list] || []
     if record && record.length > 0
       company = Company.find(payload["company_id"])
-      if company.update(pending_time_keeping: company.pending_time_keeping + record.length)
-        ActionCable.server.broadcast "time_keeping_#{payload["company_id"]}", { pending: company.pending_time_keeping }
-        TimeKeepingWorker.perform_async(record, payload["company_id"])
-        render json: { message: "data processing" }, status: :created
-      else
-        render json: {error: "failed to update pending or company not exist"}, status: :unprocessable_entity
-      end
+      pid = TimeKeepingWorker.perform_async(record, payload["company_id"])
+      pid_list = company.worker_pid_list.push(pid)
+      company.update(worker_pid_list: pid_list)
+      ActionCable.server.broadcast "time_keeping_#{payload["company_id"]}", { add_counts: record.length}
+      render json: { message: "data processing" }, status: :created
     else
       render json: {error: "biometric data not valid or empty"}, status: :unprocessable_entity
     end
@@ -147,14 +145,34 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
 
   def time_keeping_counts
     sql = "SELECT"
-    sql += " com.pending_time_keeping AS pending,"
     sql += " (SELECT COUNT(*) FROM time_keepings AS tk WHERE tk.company_id = com.id) AS succeeded,"
     sql += " (SELECT COUNT(*) FROM failed_time_keepings AS ftk WHERE ftk.company_id = com.id) AS rejected"
     sql += " FROM companies AS com"
     sql += " WHERE id = #{payload["company_id"]} LIMIT 1"
 
+    company = Company.find(payload["company_id"])
+    pid_list = company.worker_pid_list
+    pending_count = 0
+
+    pid_list.each do |jid|
+      if queued = Sidekiq::Queue.new('default').find_job(jid)
+        pending_count += queued.item["args"][0].size
+      elsif workers = Sidekiq::Workers.new
+        workers.each do |process_id, thread_id, work|
+          pending_count += work["payload"]["args"][0].size if work["payload"]["jid"] = jid
+          break if work["payload"]["jid"] = jid
+        end
+      elsif scheduled = Sidekiq::ScheduledSet.new.find_job(jid)
+        pending_count += scheduled.item["args"][0].size
+      elsif retried = Sidekiq::RetrySet.new.find_job(jid)
+        pending_count += retried.item["args"][0].size
+      else
+        pending_count += 0
+      end
+    end
+
     counts = execute_sql_query(sql).first
-    counts = counts.merge!({proccesed: counts["succeeded"] + counts["rejected"]})
+    counts = counts.merge!({proccesed: counts["succeeded"] + counts["rejected"], pending: pending_count})
     render json: counts
   end
 

@@ -6,13 +6,7 @@ class Api::V1::OvertimesController < PmsDesktopController
 
   # GET /overtimes
   def index
-    max = 20
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    per_page = max unless per_page <= max
-    records_fetch_point = (current_page - 1) * per_page
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
@@ -26,7 +20,7 @@ class Api::V1::OvertimesController < PmsDesktopController
     sql_join = " LEFT JOIN employees as emp ON emp.id = ov.employee_id"
     sql_condition = " WHERE ov.company_id = #{payload['company_id']} AND ov.status != 'P'"
     sql_sort = " ORDER BY ov.created_at DESC"
-    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
 
     overtimes = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
     count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
@@ -34,13 +28,7 @@ class Api::V1::OvertimesController < PmsDesktopController
   end
 
   def pending_overtimes
-    max = 20
-    current_page = params[:page].to_i 
-    per_page = params[:per_page].to_i
-    current_page = current_page || 1
-    per_page = per_page || max
-    per_page = max unless per_page <= max
-    records_fetch_point = (current_page - 1) * per_page
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
@@ -54,7 +42,7 @@ class Api::V1::OvertimesController < PmsDesktopController
     sql_join = " LEFT JOIN employees as emp ON emp.id = ov.employee_id"
     sql_condition = " WHERE ov.company_id = #{payload['company_id']} AND ov.status = 'P'"
     sql_sort = " ORDER BY ov.created_at DESC"
-    sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
 
     overtimes = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
     count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)

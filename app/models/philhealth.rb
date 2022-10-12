@@ -1,0 +1,2 @@
+class Philhealth < ApplicationRecord
+end

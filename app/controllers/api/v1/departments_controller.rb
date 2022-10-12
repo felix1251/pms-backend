@@ -13,18 +13,10 @@ class Api::V1::DepartmentsController < PmsDesktopController
     sql_sort = " ORDER BY dp.name ASC"
 
     if params[:page].present? && params[:per_page].present?
-      max = 20
-      current_page = params[:page].to_i 
-      per_page = params[:per_page].to_i
-      current_page = current_page || 1
-      per_page = per_page || max
-      unless per_page <= max
-        per_page = max
-      end
-      records_fetch_point = (current_page - 1) * per_page
+      pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
       sql_employee_count = " ,(SELECT COUNT(*) FROM employees as emp WHERE dp.id = emp.department_id and emp.status = 'A') AS employee_count" 
-      sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point}"
+      sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
       sql_count = " COUNT(*) as total_count"
 
       sql_count = " COUNT(*) as total_count"
