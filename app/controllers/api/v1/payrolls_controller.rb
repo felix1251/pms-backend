@@ -137,7 +137,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname," 
     sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
     sql_employee += " dep.name AS department_name, emp.id,"
-    sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate, pb.amount AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction,"
+    sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
     sql_employee += sql_payed_offset_hours_sum
     sql_employee += sql_payed_leave_hours_sum
     sql_employee += sql_payed_ob_hours_sum
@@ -149,8 +149,6 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
     sql_employee += " LEFT JOIN salary_modes AS sm ON sm.id = IFNULL(opc.salary_mode_id, emp.salary_mode_id)"
     sql_employee += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
-    sql_employee += " LEFT JOIN pagibigs AS pb ON pb.id = #{@payroll.pagibig_id}"
-    sql_employee += " LEFT JOIN philhealths AS ph ON ph.id = #{@payroll.philhealth_id}"
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
@@ -216,11 +214,19 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_total += " (payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS premium_pay_total,"
     sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday) AS gross_pay,"
     sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + payed_regular_holiday + payed_special_holiday"
-    sql_total += " - pagibig_deduction - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(phic_percentage_deduction/100), 2)) AS net_pay,"
-    sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(phic_percentage_deduction/100), 2) AS phic_deduction"
+    sql_total += " - IFNULL(pb.amount, 0) - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) - IFNULL(sss.total_ee, 0) AS net_pay,"
+    sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2) AS phic_deduction,"
+    sql_total += " IFNULL(sss.total_ee, 0) AS sss_deduction, IFNULL(pb.amount, 0) AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction"
     sql_total += " from ("
     sql_total += sql_gather_fields
-    sql_total += " ) with_total;"
+    sql_total += " ) with_total"
+    sql_total += " LEFT JOIN philhealths AS ph ON ph.id = #{@payroll.philhealth_id}"
+    sql_total += " LEFT JOIN pagibigs AS pb ON pb.id = #{@payroll.pagibig_id ? @payroll.pagibig_id : 'null'}"
+    sql_total += " LEFT JOIN social_security_systems AS sss ON sss.id = "
+    sql_total += " (SELECT ss.id FROM social_security_systems as ss"
+    sql_total += " WHERE (IF((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) > 0, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount), 0)" 
+    sql_total += " BETWEEN ss.com_from AND ss.com_to) AND sss_contribution_id = #{@payroll.sss_contribution_id}"
+    sql_total += " LIMIT 1)"
 
     payroll = execute_sql_query(sql_total)
     render json: payroll
@@ -252,23 +258,39 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # POST /payrolls
   def create
-    philhealth = Philhealth.find_by!(status: "A")
-    pagibig = Pagibig.find_by!(status: "A") 
-    @payroll = Payroll.new(payroll_params.merge!(
-      {
-        company_id: payload["company_id"], 
-        pagibig_id: pagibig.id,
-        philhealth_id: philhealth.id
-      }
-    ))
-    if @payroll.save
+    philhealth_id = Philhealth.find_by!(status: "A").id
+    sss_contribution_id = SssContribution.find_by!(status: "A").id
+    pagibig = Pagibig.find_by!(status: "A")
+    pagibig_id = nil
+
+    date = Date.parse(payroll_params[:from])
+    exist_on_month_payroll = Payroll.where("(? BETWEEN payrolls.from AND payrolls.to OR ? BETWEEN payrolls.from AND payrolls.to)
+                            AND payrolls.company_id = ?", date.beginning_of_month, date.end_of_month, payload["company_id"]).first
+
+    if exist_on_month_payroll && exist_on_month_payroll.payroll_accounts.pluck(:company_account_id) == request.params[:payroll][:company_account_ids]
+      pagibig_id = nil
+    else
+      pagibig_id = pagibig.id if pagibig
+    end
+    
+    @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"], pagibig_id: pagibig_id, philhealth_id: philhealth_id, sss_contribution_id: sss_contribution_id}))
+
+    if philhealth_id && sss_contribution_id && pagibig && @payroll.save
       store = []
       request.params[:payroll][:company_account_ids].each { |id| store.push({company_account_id: id})}
       @payroll.payroll_accounts.create(store) if store.length > 0
       OnPayrollCompensationWorker.perform_async(@payroll.id, payload["company_id"])
       render json: @payroll, status: :created
     else
-      render json: @payroll.errors, status: :unprocessable_entity
+      if !philhealth_id
+        render json: {error: "there is no active philhealth records"}, status: :unprocessable_entity
+      elsif !sss_contribution_id
+        render json: {error: "there is no active sss records"}, status: :unprocessable_entity
+      elsif !pagibig
+        render json: {error: "there is no active pagibig records"}, status: :unprocessable_entity
+      else
+        render json: @payroll.errors, status: :unprocessable_entity
+      end
     end
   end
 

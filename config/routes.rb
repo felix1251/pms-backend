@@ -8,6 +8,8 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
+  resources :sss_contributions
+  resources :social_security_systems
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"

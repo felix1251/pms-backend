@@ -16,7 +16,6 @@ class API::V2::SupportChatsController < ApplicationController
   # POST /support_chats
   def create
     @support_chat = SupportChat.new(support_chat_params)
-
     if @support_chat.save
       render json: @support_chat, status: :created, location: @support_chat
     else

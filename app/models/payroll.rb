@@ -1,9 +1,9 @@
 class Payroll < ApplicationRecord
   belongs_to :company
+  belongs_to :pagibig, optional: true
   has_many :on_payroll_compensations, dependent: :destroy
   has_many :payroll_accounts, dependent: :destroy
   enum status: { P: "P", A: "A", V: "V"}
-
   validates :from, presence: true, :if => :from_changed?
   validates :to, presence: true, :if => :to_changed?
   validates :pay_date, presence: true, :if => :pay_date_changed?
@@ -16,5 +16,4 @@ class Payroll < ApplicationRecord
           errors.add(:from, 'payroll cut-off date overlaps or already exist')
     end
   end
-
 end

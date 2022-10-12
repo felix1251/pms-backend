@@ -1,0 +1,2 @@
+class SocialSecuritySystem < ApplicationRecord
+end
