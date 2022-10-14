@@ -38,10 +38,12 @@ class PmsDesktopController < ActionController::API
   end
   
   def custom_pagination(current_page, per_page)
-    default_page = 1
     max = 30
-    current_page = default_page if current_page
-    per_page = max if per_page >= max && per_page
+    current_page = current_page || 1
+    per_page = per_page || max
+    unless per_page <= max
+      per_page = max
+    end
     return {:fetch_point => (current_page - 1) * per_page, :per_page => per_page} 
   end
 
