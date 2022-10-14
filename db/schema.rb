@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_11_080736) do
+ActiveRecord::Schema.define(version: 2022_10_14_051449) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
@@ -360,6 +360,18 @@ ActiveRecord::Schema.define(version: 2022_10_11_080736) do
     t.index ["payroll_id"], name: "index_payroll_accounts_on_payroll_id"
   end
 
+  create_table "payroll_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "payroll_id", null: false
+    t.string "comment_type", default: "text"
+    t.text "comment", null: false
+    t.bigint "user_id", null: false
+    t.datetime "time_sent", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["payroll_id"], name: "index_payroll_comments_on_payroll_id"
+    t.index ["user_id"], name: "index_payroll_comments_on_user_id"
+  end
+
   create_table "payrolls", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.date "from", null: false
     t.date "to", null: false
@@ -587,6 +599,8 @@ ActiveRecord::Schema.define(version: 2022_10_11_080736) do
   add_foreign_key "overtimes", "users", column: "actioned_by_id"
   add_foreign_key "payroll_accounts", "company_accounts"
   add_foreign_key "payroll_accounts", "payrolls"
+  add_foreign_key "payroll_comments", "payrolls"
+  add_foreign_key "payroll_comments", "users"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "pagibigs"
   add_foreign_key "payrolls", "philhealths"
