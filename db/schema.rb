@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_14_051449) do
+ActiveRecord::Schema.define(version: 2022_10_15_180952) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
@@ -110,6 +110,15 @@ ActiveRecord::Schema.define(version: 2022_10_14_051449) do
     t.datetime "updated_at", null: false
     t.index ["action_by_id"], name: "index_employee_action_histories_on_action_by_id"
     t.index ["employee_id"], name: "index_employee_action_histories_on_employee_id"
+  end
+
+  create_table "employee_allowances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.decimal "amount", precision: 8, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "name", null: false
+    t.index ["employee_id"], name: "index_employee_allowances_on_employee_id"
   end
 
   create_table "employee_schedules", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
@@ -289,6 +298,29 @@ ActiveRecord::Schema.define(version: 2022_10_14_051449) do
     t.index ["employee_id"], name: "index_offsets_on_employee_id"
   end
 
+  create_table "on_payroll_adjustments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "payroll_id", null: false
+    t.bigint "employee_id", null: false
+    t.string "description", null: false
+    t.decimal "amount", precision: 8, scale: 2, null: false
+    t.string "type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_on_payroll_adjustments_on_employee_id"
+    t.index ["payroll_id"], name: "index_on_payroll_adjustments_on_payroll_id"
+  end
+
+  create_table "on_payroll_allowances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.decimal "amount", precision: 8, scale: 2, null: false
+    t.text "name", null: false
+    t.bigint "payroll_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_on_payroll_allowances_on_employee_id"
+    t.index ["payroll_id"], name: "index_on_payroll_allowances_on_payroll_id"
+  end
+
   create_table "on_payroll_compensations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.bigint "employee_id"
     t.decimal "compensation", precision: 8, scale: 2
@@ -360,10 +392,10 @@ ActiveRecord::Schema.define(version: 2022_10_14_051449) do
     t.index ["payroll_id"], name: "index_payroll_accounts_on_payroll_id"
   end
 
-  create_table "payroll_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
+  create_table "payroll_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.bigint "payroll_id", null: false
     t.string "comment_type", default: "text"
-    t.text "comment", null: false
+    t.text "comment"
     t.bigint "user_id", null: false
     t.datetime "time_sent", null: false
     t.datetime "created_at", null: false
@@ -569,6 +601,7 @@ ActiveRecord::Schema.define(version: 2022_10_14_051449) do
   add_foreign_key "contracts", "companies"
   add_foreign_key "departments", "users", column: "created_by_id"
   add_foreign_key "employee_action_histories", "users", column: "action_by_id"
+  add_foreign_key "employee_allowances", "employees"
   add_foreign_key "employee_schedules", "employees"
   add_foreign_key "employee_schedules", "schedules"
   add_foreign_key "employees", "company_accounts"
@@ -587,6 +620,10 @@ ActiveRecord::Schema.define(version: 2022_10_14_051449) do
   add_foreign_key "offsets", "companies"
   add_foreign_key "offsets", "employees"
   add_foreign_key "offsets", "users", column: "actioned_by_id"
+  add_foreign_key "on_payroll_adjustments", "employees"
+  add_foreign_key "on_payroll_adjustments", "payrolls"
+  add_foreign_key "on_payroll_allowances", "employees"
+  add_foreign_key "on_payroll_allowances", "payrolls"
   add_foreign_key "on_payroll_compensations", "company_accounts"
   add_foreign_key "on_payroll_compensations", "departments"
   add_foreign_key "on_payroll_compensations", "employees"
