@@ -157,6 +157,11 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_spec_hol_hours_sum += " WHERE type_of_holiday = 'S' AND (spec_hol.date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
 		sql_payed_spec_hol_hours_sum += " ) AS total_special_holiday_hours,"
 
+    sql_total_emp_allwances = " TRUNCATE(COALESCE("
+		sql_total_emp_allwances += " (SELECT SUM(amount) FROM on_payroll_allowances WHERE employee_id = emp.id),"
+		sql_total_emp_allwances += " COALESCE((SELECT SUM(amount) FROM employee_allowances WHERE employee_id = emp.id), 0)"
+    sql_total_emp_allwances += " ), 2) AS total_allowances_amount,"
+
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname,  sm.code AS salary_mode_code," 
     sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
@@ -164,6 +169,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
     sql_employee += sql_payed_offset_hours_sum
     sql_employee += sql_payed_leave_hours_sum
+    sql_employee += sql_total_emp_allwances
     sql_employee += sql_payed_ob_hours_sum
     sql_employee += sql_payed_overtime_hours_sum
     sql_employee += sql_time_undertime_sum

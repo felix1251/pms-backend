@@ -1,4 +1,4 @@
-class ContractsController < ApplicationController
+class Api::Admin::ContractsController < AdministratorsController
   before_action :set_contract, only: [:show, :update, :destroy]
 
   # GET /contracts
