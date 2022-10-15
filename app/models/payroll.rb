@@ -3,6 +3,10 @@ class Payroll < ApplicationRecord
   belongs_to :pagibig, optional: true
   has_many :on_payroll_compensations, dependent: :destroy
   has_many :payroll_accounts, dependent: :destroy
+  has_many :on_payroll_allowances, dependent: :destroy
+  has_many :payroll_comments, dependent: :destroy
+  has_many :on_payroll_allowances, dependent: :destroy
+  has_many :on_payroll_adjustments, dependent: :destroy
   enum status: { P: "P", A: "A", V: "V"}
   validates :from, presence: true, :if => :from_changed?
   validates :to, presence: true, :if => :to_changed?
