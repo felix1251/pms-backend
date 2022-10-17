@@ -14,12 +14,14 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
     sql_fields = " tk.id, tk.biometric_no, tk.verified,tk.status, tk.date, tk.work_code, tk.device_id,"
-    sql_fields += " emp.first_name, emp.last_name, SUBSTR(emp.middle_name, 1, 1) AS middle_name, emp.suffix,"
-    sql_fields += " CASE WHEN tk.record_type = 1 THEN 'BIOMETRIC' ELSE 'ERS' END AS record_type,"
-    sql_fields += " IFNULL(emp.employee_id, '-------------------') AS employee_id"
+    sql_fields += " emp.first_name, emp.last_name, SUBSTR(emp.middle_name, 1, 1) AS middle_name, emp.suffix," if !params[:biometric_no].present?
+    sql_fields += " IFNULL(emp.employee_id, '-----UNKNOWN-----') AS employee_id," if !params[:biometric_no].present?
+    sql_fields += " CASE tk.record_type WHEN 1 THEN 'BIOMETRIC' WHEN 2 THEN 'CUSTOM' ELSE 'ERS' END AS record_type"
     sql_from = " FROM time_keepings AS tk"
     sql_join = " LEFT JOIN employees AS emp ON emp.biometric_no = tk.biometric_no"
-    sql_condition = " WHERE tk.company_id = #{payload['company_id']} AND tk.status = 0 OR tk.status = 1"
+    sql_condition = " WHERE tk.company_id = #{payload['company_id']} AND (tk.status = 0 OR tk.status = 1)"
+    sql_condition += " AND tk.biometric_no = #{params[:biometric_no]}" if params[:biometric_no].present?
+    sql_condition += " AND (tk.date BETWEEN '#{params["from"]}' AND '#{params["to"]}')" if params["from"].present? && params["to"].present?
     sql_sort = " ORDER BY tk.date ASC"
     sql_paginate = " LIMIT #{per_page} OFFSET #{records_fetch_point};"
 
@@ -121,7 +123,7 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
 
   # POST /time_keepings
   def create
-    @time_keeping = TimeKeeping.new(time_keeping_params)
+    @time_keeping = TimeKeeping.new(time_keeping_params.merge!({record_type: 2, company_id: payload["company_id"], device_id: 0}))
     if @time_keeping.save
       render json: @time_keeping, status: :created
     else
@@ -132,10 +134,7 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
   def bulk_create
     record = request.params[:time_list] || []
     if record && record.length > 0
-      company = Company.find(payload["company_id"])
-      pid = TimeKeepingWorker.perform_async(record, payload["company_id"])
-      pid_list = company.worker_pid_list.push(pid)
-      company.update(worker_pid_list: pid_list)
+      TimeKeepingWorker.perform_async(record, payload["company_id"])
       ActionCable.server.broadcast "time_keeping_#{payload["company_id"]}", { add_counts: record.length}
       render json: { message: "data processing" }, status: :created
     else
@@ -222,6 +221,6 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def time_keeping_params
-      params.require(:time_keeping).permit(:biomectric_no, :date, :status, :verified, :work_code, :record_type)
+      params.require(:time_keeping).permit(:biometric_no, :date, :status)
     end
 end

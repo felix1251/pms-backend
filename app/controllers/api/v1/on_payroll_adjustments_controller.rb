@@ -14,6 +14,44 @@ class Api::V1::OnPayrollAdjustmentsController < PmsDesktopController
     render json: @on_payroll_adjustment
   end
 
+  def payroll_under_payments
+    sql_start = "SELECT"
+    sql_sum = " COALESCE(TRUNCATE(SUM(amount), 2), 0) AS total_amount"
+    sql_fields = " id, description, payroll_id, employee_id, amount, adjustment_type"
+    sql_from = " FROM on_payroll_adjustments"
+    sql_conditions = " WHERE adjustment_type = 'U'"
+    sql_conditions += " AND employee_id = #{params[:employee_id]}" if params[:employee_id].present?
+    sql_conditions += " AND payroll_id = #{params[:payroll_id]}" if params[:payroll_id].present?
+    sql_sort = " ORDER BY created_at DESC"
+
+    sql_list = sql_start + sql_fields + sql_from + sql_conditions + sql_sort
+    sql_total = sql_start + sql_sum + sql_from + sql_conditions
+
+    under_payments_list = execute_sql_query(sql_list)
+    under_payments_sum = execute_sql_query(sql_total)
+
+    render json: {data: under_payments_list, amount_sum: under_payments_sum.first["total_amount"]}
+  end
+
+  def payroll_over_payments
+    sql_start = "SELECT"
+    sql_sum = " COALESCE(TRUNCATE(SUM(amount), 2), 0) AS total_amount"
+    sql_fields = " id, description, payroll_id, employee_id, amount, adjustment_type"
+    sql_from = " FROM on_payroll_adjustments"
+    sql_conditions = " WHERE adjustment_type = 'O'"
+    sql_conditions += " AND employee_id = #{params[:employee_id]}" if params[:employee_id].present?
+    sql_conditions += " AND payroll_id = #{params[:payroll_id]}" if params[:payroll_id].present?
+    sql_sort = " ORDER BY created_at DESC"
+
+    sql_list = sql_start + sql_fields + sql_from + sql_conditions + sql_sort
+    sql_total = sql_start + sql_sum + sql_from + sql_conditions
+
+    over_payments_list = execute_sql_query(sql_list)
+    over_payments_sum = execute_sql_query(sql_total)
+
+    render json: {data: over_payments_list, amount_sum: over_payments_sum.first["total_amount"]}
+  end
+
   # POST /on_payroll_adjustments
   def create
     @on_payroll_adjustment = OnPayrollAdjustment.new(on_payroll_adjustment_params)
@@ -46,6 +84,6 @@ class Api::V1::OnPayrollAdjustmentsController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def on_payroll_adjustment_params
-      params.require(:on_payroll_adjustment).permit(:payroll_id, :employee_id, :description, :amount, :type)
+      params.require(:on_payroll_adjustment).permit(:payroll_id, :employee_id, :description, :amount, :adjustment_type)
     end
 end
