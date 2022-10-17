@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_15_180952) do
+ActiveRecord::Schema.define(version: 2022_10_17_163322) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
@@ -42,6 +42,7 @@ ActiveRecord::Schema.define(version: 2022_10_15_180952) do
     t.datetime "updated_at", null: false
     t.string "status", default: "A"
     t.string "worker_pid_list"
+    t.string "logo"
     t.index ["code"], name: "index_companies_on_code"
   end
 
@@ -303,7 +304,7 @@ ActiveRecord::Schema.define(version: 2022_10_15_180952) do
     t.bigint "employee_id", null: false
     t.string "description", null: false
     t.decimal "amount", precision: 8, scale: 2, null: false
-    t.string "type", null: false
+    t.string "adjustment_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["employee_id"], name: "index_on_payroll_adjustments_on_employee_id"
