@@ -134,10 +134,7 @@ class Api::V1::TimeKeepingsController < PmsDesktopController
   def bulk_create
     record = request.params[:time_list] || []
     if record && record.length > 0
-      company = Company.find(payload["company_id"])
-      pid = TimeKeepingWorker.perform_async(record, payload["company_id"])
-      pid_list = company.worker_pid_list.push(pid)
-      company.update(worker_pid_list: pid_list)
+      TimeKeepingWorker.perform_async(record, payload["company_id"])
       ActionCable.server.broadcast "time_keeping_#{payload["company_id"]}", { add_counts: record.length}
       render json: { message: "data processing" }, status: :created
     else
