@@ -185,6 +185,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
     sql_employee += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
     sql_employee += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
+    sql_employee += " AND (opc.company_account_id IN (#{params[:company_account_ids]})" if params[:company_account_ids].present?
+    sql_employee += " OR emp.company_account_id IN (#{params[:company_account_ids]}))" if params[:company_account_ids].present?
     sql_employee += " ORDER BY fullname"
 
     sql_gather_fields = " SELECT"
@@ -240,7 +242,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_total += " with_total.*, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
     sql_total += " (payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday) AS premium_pay_total,"
     sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday) AS gross_pay,"
-    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday - IFNULL(sss.total_ee, 0)"
+    sql_total += " (payed_hours_amount - undertime_amount + total_allowances_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday - IFNULL(sss.total_ee, 0)"
     sql_total += " - IFNULL(pb.amount, 0) - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) AS net_pay,"
     sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2) AS phic_deduction,"
     sql_total += " IFNULL(sss.total_ee, 0) AS sss_deduction, IFNULL(pb.amount, 0) AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction,"
