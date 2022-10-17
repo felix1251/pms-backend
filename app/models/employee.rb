@@ -44,7 +44,7 @@ class Employee < ApplicationRecord
 
       def on_emp_update
             auto_upcase
-            set_compensation_history('update') if self.compensation_changed?
+            set_compensation_history if self.compensation_changed?
       end
 
       def generate_emp_id
@@ -81,7 +81,7 @@ class Employee < ApplicationRecord
             self.graduate_school = self.graduate_school.upcase
       end
 
-      def set_compensation_history(description)
-            CompensationHistory.new(compensation: self.compensation, employee_id: self.id, description: description).save
+      def set_compensation_history
+            CompensationHistory.new(compensation: self.compensation, employee_id: self.id, description: "UPDATE").save
       end
 end

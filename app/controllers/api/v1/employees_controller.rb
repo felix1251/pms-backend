@@ -93,7 +93,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql += " WHERE emp.biometric_no LIKE '%#{search.to_i}%'" if search_by.present? && search_by == "biometric_no" 
     sql += " WHERE emp.employee_id LIKE '%#{search}%'" if search_by.present? && search_by == "employee_uid"
     sql += " ORDER BY emp.last_name ASC, emp.first_name ASC, emp.middle_name ASC"
-    sql += " LIMIT 10"
+    sql += " LIMIT 15"
     results = execute_sql_query(sql)
     render json: results
   end
