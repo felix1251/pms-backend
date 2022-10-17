@@ -162,6 +162,13 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_total_emp_allwances += " COALESCE((SELECT SUM(amount) FROM employee_allowances WHERE employee_id = emp.id), 0)"
     sql_total_emp_allwances += " ), 2) AS total_allowances_amount,"
 
+    sql_total_emp_under_and_over_payments = " TRUNCATE("
+		sql_total_emp_under_and_over_payments +=	" (SELECT COALESCE(TRUNCATE(SUM(amount), 2), 0) AS total_amount FROM on_payroll_adjustments WHERE adjustment_type = 'O' AND employee_id = emp.id AND payroll_id = #{@payroll.id})"
+    sql_total_emp_under_and_over_payments += " ,2) AS total_over_payment_amount,"
+		sql_total_emp_under_and_over_payments += " TRUNCATE("
+		sql_total_emp_under_and_over_payments += "	(SELECT COALESCE(TRUNCATE(SUM(amount), 2), 0) AS total_amount FROM on_payroll_adjustments WHERE adjustment_type = 'U' AND employee_id = emp.id AND payroll_id = #{@payroll.id})"
+    sql_total_emp_under_and_over_payments += " ,2) AS total_under_payment_amount,"
+
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname,  sm.code AS salary_mode_code," 
     sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
@@ -172,6 +179,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += sql_total_emp_allwances
     sql_employee += sql_payed_ob_hours_sum
     sql_employee += sql_payed_overtime_hours_sum
+    sql_employee += sql_total_emp_under_and_over_payments
     sql_employee += sql_time_undertime_sum
     sql_employee += sql_payed_spec_hol_hours_sum
     sql_employee += sql_time_keeping_hours_sum
@@ -230,24 +238,33 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " WHEN 'HRLY' THEN ((emp_data.rate/60) * emp_data.undertime_minutes)"
     sql_gather_fields += " ELSE ((((emp_data.rate/26)/8)/60) * emp_data.undertime_minutes)"
     sql_gather_fields += " END, 2) AS undertime_amount,"
-    sql_gather_fields += " TRUNCATE((CASE salary_mode_code WHEN 'DLY' THEN (emp_data.rate/8) WHEN 'HRLY'"
-    sql_gather_fields += " THEN emp_data.rate ELSE (emp_data.rate/26)/8 END)*total_special_holiday_hours*0.30, 2) AS payed_special_holiday,"
-    sql_gather_fields += " (SELECT COUNT(id) from holidays reg_hol WHERE type_of_holiday = 'R' AND (date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
-    sql_gather_fields += " ) AS total_regular_holiday_days"
+    sql_gather_fields += " COALESCE(TRUNCATE((CASE salary_mode_code WHEN 'DLY' THEN (emp_data.rate/8) WHEN 'HRLY'"
+    sql_gather_fields += " THEN emp_data.rate ELSE (emp_data.rate/26)/8 END)*total_special_holiday_hours*0.30, 2), 0) AS payed_special_holiday,"
+    sql_gather_fields += " COALESCE((SELECT COUNT(id) from holidays reg_hol WHERE type_of_holiday = 'R' AND (date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql_gather_fields += " ),0) AS total_regular_holiday_days"
     sql_gather_fields += " FROM ("
     sql_gather_fields += sql_employee
     sql_gather_fields += " ) emp_data"
 
     sql_total = "SELECT"
+    #regular pay
     sql_total += " with_total.*, (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount) AS total_regular_pay,"
+    #premium_pay
     sql_total += " (payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday) AS premium_pay_total,"
-    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday) AS gross_pay,"
-    sql_total += " (payed_hours_amount - undertime_amount + total_allowances_amount + payed_leave_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday - IFNULL(sss.total_ee, 0)"
+    #gross_pay
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + total_allowances_amount + total_under_payment_amount - total_over_payment_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday) AS gross_pay,"
+    #net pay
+    sql_total += " (payed_hours_amount - undertime_amount + payed_leave_amount + total_allowances_amount + total_under_payment_amount - total_over_payment_amount + payed_ob_amount + payed_overtime_amount + (total_regular_holiday_days * daily_rate) + payed_special_holiday - IFNULL(sss.total_ee, 0)"
     sql_total += " - IFNULL(pb.amount, 0) - ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) AS net_pay,"
+    
     sql_total += " ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2) AS phic_deduction,"
+
     sql_total += " IFNULL(sss.total_ee, 0) AS sss_deduction, IFNULL(pb.amount, 0) AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction,"
+
     sql_total += " (total_regular_holiday_days * daily_rate) AS payed_regular_holiday,"
+    #total deductions
     sql_total += " (IFNULL(pb.amount, 0) + IFNULL(sss.total_ee, 0) + ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) AS total_deductions"
+    
     sql_total += " from ("
     sql_total += sql_gather_fields
     sql_total += " ) with_total"

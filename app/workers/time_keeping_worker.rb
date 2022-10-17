@@ -4,6 +4,8 @@ class TimeKeepingWorker
 
       def perform(record, company_id)
             company = Company.find(company_id)
+            jid_list = company.worker_pid_list
+            company.update(worker_pid_list: company.worker_pid_list + [self.jid]) if !jid_list.include?(self.jid)
             failed = []
             record.each do |r|
                   rec = TimeKeeping.new(r.merge!({company_id: company_id, record_type: 1}))
@@ -14,8 +16,8 @@ class TimeKeepingWorker
             end
             FailedTimeKeeping.create(failed)
             pid_list = company.worker_pid_list - [self.jid]
-            company.update(worker_pid_list: pid_list)
-            send_cable(company_id)
+            company.update(worker_pid_list: pid_list) rescue nil
+            send_cable(company_id) rescue nil
       end
 
       private

@@ -10,6 +10,7 @@ class Employee < ApplicationRecord
       has_many :leaves
       has_many :official_businesses
       has_many :allowances
+      has_many :on_payroll_adjustments
       
       belongs_to :created_by, class_name: "User"
 

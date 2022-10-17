@@ -8,9 +8,6 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-  
-  resources :on_payroll_adjustments
-  resources :on_payroll_allowances
   mount Sidekiq::Web => '/sidekiq'
   
   root to: "welcome#index"
@@ -30,6 +27,10 @@ Rails.application.routes.draw do
         end
       end
       #------
+      resources :on_payroll_adjustments
+      resources :on_payroll_allowances
+      get 'payroll_under_payments', controller: :on_payroll_adjustments, action: :payroll_under_payments
+      get 'payroll_over_payments', controller: :on_payroll_adjustments, action: :payroll_over_payments
       get 'employee_allowance_list', controller: :employee_allowances, action: :employee_allowance_list
       resources :employee_allowances
       resources :payroll_comments
