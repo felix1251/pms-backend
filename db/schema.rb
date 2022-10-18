@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_17_163322) do
+ActiveRecord::Schema.define(version: 2022_10_18_062424) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3", force: :cascade do |t|
     t.string "username"
@@ -186,6 +186,7 @@ ActiveRecord::Schema.define(version: 2022_10_17_163322) do
     t.decimal "leave_credit", precision: 8, scale: 2, default: "10.0", null: false
     t.bigint "company_account_id"
     t.string "emergency_contact_relationship", default: ""
+    t.string "profile"
     t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
     t.index ["company_account_id"], name: "index_employees_on_company_account_id"
     t.index ["company_id"], name: "index_employees_on_company_id"

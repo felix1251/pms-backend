@@ -201,7 +201,7 @@ class Api::V1::EmployeesController < PmsDesktopController
                                       :phone_number, :email, :street, :barangay, :municipality, :province,
                                       :sss_no, :hdmf_no, :tin_no, :phic_no, :highest_educational_attainment,
                                       :institution, :course, :course_major, :graduate_school, :remarks, :company_account_id,
-                                      :emergency_contact_number, :emergency_contact_person, :compensation,
+                                      :emergency_contact_number, :emergency_contact_person, :compensation, :profile,
                                       :date_regularized, :work_sched_start, :work_sched_end, :work_sched_type, 
                                       :company_email, :date_resigned, :emergency_contact_relationship, :work_sched_days => [])
     end
