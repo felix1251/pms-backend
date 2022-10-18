@@ -35,6 +35,8 @@ class Api::V1::PayrollsController < PmsDesktopController
   end
 
   def payroll_data
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
+
     sql_time_keeping_hours_sum = " COALESCE("
     sql_time_keeping_hours_sum += " (SELECT"
     sql_time_keeping_hours_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
@@ -195,7 +197,9 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
     sql_employee += " AND (opc.company_account_id IN (#{params[:company_account_ids]})" if params[:company_account_ids].present?
     sql_employee += " OR emp.company_account_id IN (#{params[:company_account_ids]}))" if params[:company_account_ids].present?
+    sql_employee += " emp.id = #{params[:employee_id]}" if params[:employee_id].present?
     sql_employee += " ORDER BY fullname"
+    sql_employee += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}" if params[:page].present? && params[:per_page].present?
 
     sql_gather_fields = " SELECT"
     sql_gather_fields += " emp_data.*,"
@@ -277,7 +281,24 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_total += " LIMIT 1)"
 
     payroll = execute_sql_query(sql_total)
-    render json: payroll
+
+    if params[:page].present? && params[:per_page].present?
+      count_sql = "SELECT"
+      count_sql += " COUNT(emp.id) AS total_count"
+      count_sql += " FROM employees AS emp"
+      count_sql += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
+      count_sql += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
+      count_sql += " AND emp.company_id = #{payload['company_id']}"
+      count_sql += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+      count_sql += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
+      count_sql += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
+      count = execute_sql_query(count_sql)
+      render json: {data: payroll, total_count: count.first["total_count"]}
+    elsif params[:employee_id].present?
+      render json: payroll.first
+    else
+      render json: payroll
+    end
   end
 
   # GET /payrolls/1

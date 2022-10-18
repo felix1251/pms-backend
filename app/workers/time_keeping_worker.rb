@@ -15,7 +15,7 @@ class TimeKeepingWorker
                   end
             end
             FailedTimeKeeping.create(failed)
-            pid_list = company.worker_pid_list - [self.jid]
+            pid_list = jid_list - [self.jid]
             company.update(worker_pid_list: pid_list) rescue nil
             send_cable(company_id) rescue nil
       end
