@@ -32,6 +32,7 @@ Rails.application.routes.draw do
       get 'payroll_under_payments', controller: :on_payroll_adjustments, action: :payroll_under_payments
       get 'payroll_over_payments', controller: :on_payroll_adjustments, action: :payroll_over_payments
       get 'employee_allowance_list', controller: :employee_allowances, action: :employee_allowance_list
+      
       resources :employee_allowances
       resources :payroll_comments
       resources :philhealths
@@ -65,6 +66,8 @@ Rails.application.routes.draw do
       put 'offset_action', controller: :offsets, action: :offset_action
       resources :compensation_histories
       resources :payrolls
+      get 'daily_time_records', controller: :payrolls, action: :daily_time_records
+      get 'on_params_details', controller: :payrolls, action: :on_params_details
       get 'payroll_details', controller: :payrolls, action: :payroll_details
       get 'payroll_data', controller: :payrolls, action: :payroll_data
       get 'approver_list', controller: :payrolls, action: :approver_list
