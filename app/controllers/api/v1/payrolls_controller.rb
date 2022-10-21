@@ -1,7 +1,7 @@
 class Api::V1::PayrollsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data]
+  before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data, :daily_time_records]
 
   # GET /payrolls
   def index
@@ -20,7 +20,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
     sql += " ORDER BY py.from ASC"
-  
+
     payrolls = execute_sql_query(sql)
     render json: payrolls
   end
@@ -36,6 +36,11 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   def payroll_data
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
+
+    num_days_of_month = @payroll.from.end_of_month.day
+    days_on_range = (@payroll.to - @payroll.from).to_i
+
+    puts "-------------", num_days_of_month, days_on_range
 
     sql_time_keeping_hours_sum = " COALESCE("
     sql_time_keeping_hours_sum += " (SELECT"
@@ -65,8 +70,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT *,"
     sql_time_undertime_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
-    sql_time_undertime_sum += " THEN (SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
-    sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1)"
+    sql_time_undertime_sum += " THEN IFNULL((SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
+    sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1), 0)"
     sql_time_undertime_sum += " ELSE 8*60 END"
     sql_time_undertime_sum += " AS expected_hours"
     sql_time_undertime_sum += " FROM ("
@@ -208,8 +213,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_gather_fields += " ELSE CONCAT(TRUNCATE((emp_data.total_hours_earned/8), 1), ' days')"
     sql_gather_fields += " END AS total_time,"
     sql_gather_fields += " TRUNCATE(CASE salary_mode_code"
-    sql_gather_fields += " WHEN 'DLY' THEN emp_data.rate/8"
-    sql_gather_fields += " WHEN 'HRLY' THEN emp_data.rate"
+    sql_gather_fields += " WHEN 'DLY' THEN emp_data.rate"
+    sql_gather_fields += " WHEN 'HRLY' THEN emp_data.rate*8"
     sql_gather_fields += " ELSE (emp_data.rate/26)"
     sql_gather_fields += " END, 2) AS daily_rate,"
     sql_gather_fields += " TRUNCATE(CASE salary_mode_code"
@@ -266,9 +271,11 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_total += " IFNULL(sss.total_ee, 0) AS sss_deduction, IFNULL(pb.amount, 0) AS pagibig_deduction, ph.percentage_deduction AS phic_percentage_deduction,"
 
     sql_total += " (total_regular_holiday_days * daily_rate) AS payed_regular_holiday,"
+    #total adjusment and additional
+    sql_total += " (total_allowances_amount + total_under_payment_amount + total_over_payment_amount) AS additional_and_adjustment_total,"
     #total deductions
     sql_total += " (IFNULL(pb.amount, 0) + IFNULL(sss.total_ee, 0) + ROUND((payed_hours_amount - undertime_amount + payed_leave_amount + payed_ob_amount + payed_offset_amount)*(ph.percentage_deduction /100), 2)) AS total_deductions"
-    
+  
     sql_total += " from ("
     sql_total += sql_gather_fields
     sql_total += " ) with_total"
@@ -280,7 +287,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_total += " BETWEEN ss.com_from AND ss.com_to) AND sss_contribution_id = #{@payroll.sss_contribution_id}"
     sql_total += " LIMIT 1)"
 
-    payroll = execute_sql_query(sql_total)
+    payroll = execute_sql_query(sql_total) if !params[:summary].present?
 
     if params[:page].present? && params[:per_page].present?
       count_sql = "SELECT"
@@ -294,11 +301,87 @@ class Api::V1::PayrollsController < PmsDesktopController
       count_sql += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
       count = execute_sql_query(count_sql)
       render json: {data: payroll, total_count: count.first["total_count"]}
+    elsif params[:summary].present?
+      sql_total_ext = "SELECT"
+      sql_total_ext += " SUM(total_regular_pay) AS regular_pay_summary, SUM(gross_pay) AS gross_pay_summary,"
+      sql_total_ext += " SUM(net_pay) AS net_pay_summary, SUM(total_deductions) as deductions_summary,"
+      sql_total_ext += " SUM(premium_pay_total) AS premium_pay_summary,"
+      sql_total_ext += " SUM(additional_and_adjustment_total) as additional_and_adjustment_summary"
+      sql_total_ext += " FROM ("
+      sql_total_ext += sql_total
+      sql_total_ext += " ) summary"
+      summary = execute_sql_query(sql_total_ext)
+      render json: summary.first
     elsif params[:employee_id].present?
       render json: payroll.first
     else
       render json: payroll
     end
+  end
+
+  def daily_time_records
+    start_day_payroll = @payroll.from
+    end_day_payroll = @payroll.to
+    date_range = (start_day_payroll..end_day_payroll).map(&:to_s)
+
+    sql = "SELECT "
+    sql += " IFNULL(TRUNCATE((TIMESTAMPDIFF(MINUTE, CONCAT('2000-01-01 ', emp.work_sched_start), CONCAT('2000-01-01 ', emp.work_sched_end))-60)/60, 0), 0) AS expected_hours,"
+    sql += " COALESCE((SELECT json_arrayagg(JSON_OBJECT('in', DATE_FORMAT(start_time, '%H:%i %p'), 'out', DATE_FORMAT(end_time, '%H:%i %p'),"
+    sql += " 'expected_hours', TRUNCATE((TIMESTAMPDIFF(MINUTE, start_time, end_time)-60)/60, 0)"
+    sql += " )) FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time)"
+    sql += " BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'), '[]') AS fl_actual,"
+    sql += " COALESCE((SELECT"
+    sql += " SUM(TRUNCATE((TIMESTAMPDIFF(minute, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i') ELSE DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i') END,"
+    sql += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END)/60), 1))"
+    sql += " FROM overtimes ov"
+    sql += " WHERE ov.status = 'A' AND ov.employee_id = emp.id"
+    sql += " AND (DATE(ov.start_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR DATE(ov.end_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
+    sql += " GROUP BY ov.employee_id"
+    sql += " ), 0.0) total_payed_overtime_hours,"
+    sql += " CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
+    sql += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname, pos.name AS position, dep.name As department,"
+    sql += " IFNULL(opc.work_sched_type, emp.work_sched_type) AS shed_type, emp.id, emp.first_name, emp.last_name, emp.biometric_no, emp.work_sched_start, emp.work_sched_end,"
+    sql += " (SELECT IFNULL(json_arrayagg(JSON_OBJECT('date', only_date, 'in', actual_in, 'out', actual_out, 'undertime_minutes', (expected_minutes - minutes_in_date),"
+    sql += " 'expected_hours', TRUNCATE(expected_minutes/60, 0), 'actual_minutes', minutes_in_date"
+    sql += " )), '[]') FROM"
+    sql += " (SELECT from_bio.only_date, group_concat(date_format(from_bio.date, '%h:%i %p')) AS actual_in, group_concat(date_format(from_bio.next_date, '%h:%i %p')) as actual_out,"
+    sql += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
+    sql += " THEN COALESCE((SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
+    sql += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = from_bio.only_date LIMIT 1), 0)"
+    sql += " ELSE TIMESTAMPDIFF(MINUTE, CONCAT('2000-01-01 ', emp.work_sched_start), CONCAT('2000-01-01 ', emp.work_sched_end))-60 END AS expected_minutes,"
+    sql += " COALESCE(CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL' THEN"
+    sql += " SUM(TIMESTAMPDIFF(MINUTE,"
+    sql += " IF(date > (SELECT start_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1), DATE_FORMAT(date, '%Y-%m-%d %H:%i'), (SELECT start_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1)),"
+    sql += " IF(next_date < (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1))))"
+    sql += " ELSE"
+    sql += " SUM(TIMESTAMPDIFF(MINUTE,"
+    sql += " IF(date > CONCAT(only_date,' ',emp.work_sched_start), DATE_FORMAT(date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_start)),"
+    sql += " IF(next_date < CONCAT(only_date,' ',emp.work_sched_end), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_end))"
+    sql += " ) - IF(CONCAT(only_date,' 11:00') AND CONCAT(only_date,' 12:00') BETWEEN date AND next_date, 60, 0))"
+    sql += " END, 0) AS minutes_in_date"
+    sql += " FROM (SELECT id, date, status, biometric_no, DATE(date) AS only_date,"
+    sql += " LEAD(date) OVER (ORDER BY biometric_no, date) AS next_date,"
+    sql += " LEAD(status) OVER (ORDER BY biometric_no, date) AS next_status"
+    sql += " FROM time_keepings"
+    sql += " WHERE biometric_no = emp.biometric_no AND"
+    sql += " DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
+    sql += " AND (status = 0 OR status = 1) AND company_id = 1) from_bio"
+    sql += " WHERE status = 0 and next_status = 1"
+    sql += " GROUP BY only_date) AS final"
+    sql += " ) AS actual"
+    sql += " FROM employees AS emp"
+    sql += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
+    sql += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
+    sql += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
+    sql += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
+    sql += " AND emp.company_id = #{payload['company_id']}"
+    sql += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+    sql += " ORDER BY fullname"
+    #count_sql += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
+    #count_sql += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
+
+    data = execute_sql_query(sql)
+    render json: {date_range: date_range, data: data}
   end
 
   # GET /payrolls/1
@@ -321,6 +404,17 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " WHERE py.id = #{params[:id]}"
     sql += " LIMIT 1;"
     execute_sql_query("SET SESSION group_concat_max_len = 10000;")
+    details = execute_sql_query(sql).first
+    render json: details
+  end
+
+  def on_params_details
+    sql = "SELECT py.id, "
+    sql += " (SELECT cac.id as com_id FROM payroll_accounts pa"
+    sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql += " WHERE pa.payroll_id = py.id ORDER BY cac.name ASC LIMIT 1)"
+    sql += " AS pa) AS com_id"
+    sql += " FROM payroll AS py"
     details = execute_sql_query(sql).first
     render json: details
   end
