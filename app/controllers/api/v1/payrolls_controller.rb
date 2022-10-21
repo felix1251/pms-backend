@@ -140,7 +140,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_payed_offset_hours_sum += " WHERE ofs.status = 'A' AND ofs.employee_id = emp.id AND ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'"
 		sql_payed_offset_hours_sum += " ), 0.0) AS total_payed_offset_hours,"
 
-    sql_payed_spec_hol_hours_sum = " (SELECT IFNULL((SELECT"
+    sql_payed_spec_hol_hours_sum = " (SELECT IFNULL(SUM((SELECT"
 		sql_payed_spec_hol_hours_sum += " TRUNCATE(COALESCE(CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL' THEN"
 		sql_payed_spec_hol_hours_sum += " SUM(TIMESTAMPDIFF(MINUTE,"
 		sql_payed_spec_hol_hours_sum +=	" IF(date > emp_sch.start_time, DATE_FORMAT(date, '%Y-%m-%d %H:%i'), emp_sch.start_time),"
@@ -158,7 +158,7 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_spec_hol_hours_sum += " AND DATE(tk.date) = spec_hol.date"
 		sql_payed_spec_hol_hours_sum +=	" AND (tk.status = 0 OR tk.status = 1) AND tk.company_id = #{payload['company_id']}"
 		sql_payed_spec_hol_hours_sum += " ) AS bio_logs"
-		sql_payed_spec_hol_hours_sum += " WHERE bio_logs.status = 0 AND bio_logs.next_status = 1), 0) AS rendered_hours"
+		sql_payed_spec_hol_hours_sum += " WHERE bio_logs.status = 0 AND bio_logs.next_status = 1)), 0) AS rendered_hours"
 		sql_payed_spec_hol_hours_sum += " from holidays spec_hol"
 		sql_payed_spec_hol_hours_sum += " LEFT JOIN employee_schedules as emp_sch ON emp_sch.employee_id = emp.id AND DATE(emp_sch.start_time) = spec_hol.date" 
 		sql_payed_spec_hol_hours_sum += " WHERE type_of_holiday = 'S' AND (spec_hol.date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
@@ -374,6 +374,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
     sql += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
     sql += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
+    sql += " AND (opc.company_account_id IN (#{params[:company_account_ids]})" if params[:company_account_ids].present?
+    sql += " OR emp.company_account_id IN (#{params[:company_account_ids]}))" if params[:company_account_ids].present?
     sql += " AND emp.company_id = #{payload['company_id']}"
     sql += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
     sql += " ORDER BY fullname"
