@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   include ActiveModel::Serializers::JSON
+  serialize :page_accesses, Array
   has_secure_password
   belongs_to :company
   has_one :session_record
@@ -11,6 +12,7 @@ class User < ApplicationRecord
   has_many :job_classifications, foreign_key: :created_by_id
   # has_many :payrolls, foreign_key: :approver_id
 
+  validates :page_accesses, presence: true
   validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
   validates :username, presence: true, uniqueness: { scope: :company_id }, format: { without: /\s/ , message: 'cannot contain whitespace' }
   validates :position, presence: true

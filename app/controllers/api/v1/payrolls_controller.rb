@@ -179,7 +179,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee = "SELECT CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' '," 
     sql_employee += "CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname,  sm.code AS salary_mode_code," 
     sql_employee += " pos.name AS position, sm.description AS salary_mode, IFNULL(opc.salary_mode_id, emp.salary_mode_id) AS salary_id, emp.employee_id,"
-    sql_employee += " dep.name AS department_name, emp.id, emp.biometric_no,"
+    sql_employee += " dep.name AS department_name, emp.id, emp.biometric_no, IF(emp.date_hired < date_add('#{@payroll.from}', interval -1 month), 0, 1) AS is_newly_hired,"
     sql_employee += " COALESCE(opc.compensation, emp.compensation) AS rate,"
     sql_employee += sql_payed_offset_hours_sum
     sql_employee += sql_payed_leave_hours_sum
@@ -197,7 +197,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_employee += " LEFT JOIN departments AS dep ON dep.id = IFNULL(opc.department_id, emp.department_id)"
     sql_employee += " WHERE (emp.status = 'A' OR (SELECT COUNT(*) FROM time_keepings WHERE biometric_no = emp.biometric_no AND DATE(date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}') > 0)"
     sql_employee += " AND emp.company_id = #{payload['company_id']}"
-    sql_employee += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
+    sql_employee += " AND '#{@payroll.to}' > DATE(emp.date_hired)"
     sql_employee += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
     sql_employee += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
     sql_employee += " AND (opc.company_account_id IN (#{params[:company_account_ids]})" if params[:company_account_ids].present?
