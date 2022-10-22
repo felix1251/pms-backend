@@ -88,10 +88,14 @@ class PmsDesktopController < ActionController::API
     Socket.gethostname
   end
 
+  def company_settings
+    Company.find(payload['company_id']).settings
+  end
+  
   def current_user
     @current_user ||= User.joins("LEFT JOIN companies AS c ON c.id = users.company_id")
                           .select("users.id, users.company_id, users.admin, users.email, users.position, users.name,
-                                  c.logo, c.description AS company_name")
+                          c.logo, c.description AS company_name, c.settings")
                           .find(payload['user_id'])
   end
 
