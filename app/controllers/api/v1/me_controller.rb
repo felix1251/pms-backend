@@ -4,7 +4,8 @@ class Api::V1::MeController < PmsDesktopController
       
       def me
             render json: { 
-                  user: current_user, 
+                  user: current_user,
+                  settings: company_settings,
                   access: user_page_action_access(current_user),
                   goTo: '/'+user_page_action_route(current_user)
             }
