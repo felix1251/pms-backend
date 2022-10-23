@@ -61,24 +61,24 @@ class PmsDesktopController < ActionController::API
     end
   end
 
-  def user_page_action_access(user)
-    page_action_access = user.user_page_action_accesses
-                            .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
-                            .joins("LEFT JOIN page_action_accesses AS pa ON pa.id = user_page_action_accesses.page_action_access_id") 
-                            .select("user_page_action_accesses.*, p.access_code, pa.access_code")
-                            .where(status: "A")
-                            .pluck("p.access_code, pa.access_code")
-                            .map{|e| e.join('')}
-  end
+  # def user_page_action_access(user)
+  #   page_action_access = user.user_page_action_accesses
+  #                           .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
+  #                           .joins("LEFT JOIN page_action_accesses AS pa ON pa.id = user_page_action_accesses.page_action_access_id") 
+  #                           .select("user_page_action_accesses.*, p.access_code, pa.access_code")
+  #                           .where(status: "A")
+  #                           .pluck("p.access_code, pa.access_code")
+  #                           .map{|e| e.join('')}
+  # end
 
-  def user_page_action_route(user)
-    page_action_access = user.user_page_action_accesses
-                            .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
-                            .select("LOWER(p.page) as route, user_page_action_accesses.status")
-                            .find_by!(status: "A")
-                            .route
-                            .parameterize(separator: '-')        
-  end
+  # def user_page_action_route(user)
+  #   page_action_access = user.user_page_action_accesses
+  #                           .joins("LEFT JOIN page_accesses AS p ON p.id = user_page_action_accesses.page_access_id")  
+  #                           .select("LOWER(p.page) as route, user_page_action_accesses.status")
+  #                           .find_by!(status: "A")
+  #                           .route
+  #                           .parameterize(separator: '-')        
+  # end
 
   def ip_address
     Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address rescue "unknown #{request.ip}"
@@ -95,7 +95,7 @@ class PmsDesktopController < ActionController::API
   def current_user
     @current_user ||= User.joins("LEFT JOIN companies AS c ON c.id = users.company_id")
                           .select("users.id, users.company_id, users.admin, users.email, users.position, users.name,
-                          c.logo, c.description AS company_name, c.settings")
+                          users.page_accesses, c.logo, c.description AS company_name, c.settings")
                           .find(payload['user_id'])
   end
 

@@ -12,7 +12,6 @@ class User < ApplicationRecord
   has_many :job_classifications, foreign_key: :created_by_id
   # has_many :payrolls, foreign_key: :approver_id
 
-  validates :page_accesses, presence: true
   validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
   validates :username, presence: true, uniqueness: { scope: :company_id }, format: { without: /\s/ , message: 'cannot contain whitespace' }
   validates :position, presence: true
@@ -20,7 +19,7 @@ class User < ApplicationRecord
   enum status: { A: "A", I: "I"}
 
   def attributes
-    super.except('password_digest', 'reset_password_token', 'reset_password_token_expires_at')
+    super.except('reset_password_token', 'reset_password_token_expires_at')
   end
 
   def generate_password_token!
