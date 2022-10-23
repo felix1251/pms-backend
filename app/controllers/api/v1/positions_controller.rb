@@ -36,7 +36,7 @@ class Api::V1::PositionsController < PmsDesktopController
 
   # POST /positions
   def create
-    @position = Position.new(position_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
+    @position = Position.new(position_params.merge!({company_id: payload["company_id"], created_by_id: payload['user_id']}))
     if @position.save
       render json: @position, status: :created
     else

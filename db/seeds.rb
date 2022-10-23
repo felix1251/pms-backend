@@ -4,14 +4,13 @@ page_access = [
       {access_code: "C", page: "Schedules"},
       {access_code: "T", page: "Time Keeping"},
       {access_code: "P", page: "Payroll"},
-      {access_code: "B", page: "Benefits"},
+      {access_code: "B", page: "Benefits and Loans"},
       {access_code: "Q", page: "Employee Request"},
       {access_code: "R", page: "Reports"},
       {access_code: "Y", page: "System Accounts"},
 ]
 
 PageAccess.create(page_access)
-
 PageActionAccess.create(access_code: "V", action: "View")
 PageActionAccess.create(access_code: "A", action: "Add")
 PageActionAccess.create(access_code: "E", action: "Edit")
@@ -22,58 +21,36 @@ Company.create(code: 'erxil', description: 'Erxil Tech. Solutions')
 
 company = Company.first
 
+all_access = []
+
+page = PageAccess.all.pluck("access_code")
+access = PageActionAccess.all.pluck("access_code")
+
+page.each do |pg|
+      all_access.push(pg)
+      if pg == "H"
+            access.each do |ac|
+                  all_access.push(pg+ac) if ac == "V" 
+            end
+      elsif pg = "R"
+            access.each do |ac|
+                  all_access.push(pg+ac) if ac == "V" || ac == "X"
+            end
+      else
+            access.each do |ac|
+                  all_access.push(pg+ac)
+            end
+      end
+end
+
+
 User.create(position: "Head", company_id: company.id, admin: true, username: "owner", name: "Head",
-                  email: "sample5@dev.com", password: "password", password_confirmation: "password", system_default: true)
+            email: "sample5@dev.com", password: "password", password_confirmation: "password", system_default: true,
+            page_accesses: all_access)
       
 User.create(position: "HR-head", company_id: company.id, admin: true, username: "hrhead", name: "Hr head",
-                  email: "sample6@dev.com", password: "password", password_confirmation: "password", system_default: true)
-
-users = User.where("admin = true")
-
-users.each do |user|
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 1, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 2, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 3, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 3, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 3, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 3, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 3, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 4, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 4, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 4, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 4, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 4, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 5, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 5, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 5, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 5, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 5, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 6, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 7, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 8, page_action_access_id: 5, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 1, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 2, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 3, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 4, status: "A")
-      UserPageActionAccess.create(user_id: user.id, page_access_id: 9, page_action_access_id: 5, status: "A")
-end
+            email: "sample6@dev.com", password: "password", password_confirmation: "password", system_default: true,
+            page_accesses: all_access)
 
 SalaryMode.create(description: "monthly", code: "mnly")
 SalaryMode.create(description: "hourly", code: "hrly")
@@ -93,8 +70,8 @@ TypeOfLeave.create(name: 'Maternity/Paternity Leave with pay', with_pay: true)
 TypeOfLeave.create(name: 'Maternity/Paternity Leave w/o pay', with_pay: false)
 TypeOfLeave.create(name: 'Birthday leave', with_pay: true)
 
-[
-{
+
+[{
       "com_from": 0,
       "com_to": 3250,
       "employe_compensation": 3000,
@@ -948,5 +925,4 @@ TypeOfLeave.create(name: 'Birthday leave', with_pay: true)
       "total_er": 2155,
       "total_ee": 1125,
       "final_total": 3280
-}
-]
+}]

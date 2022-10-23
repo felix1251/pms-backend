@@ -10,7 +10,7 @@ class Api::V1::SigninController < PmsDesktopController
         payload  = {  user_id: @user.id, 
                       company_id: @user.company_id,
                       admin: @user.admin,
-                      aud: user_page_action_access(@user)
+                      aud: @user.page_accesses,
                     }
         session = JWTSessions::Session.new(payload: payload,
                                             refresh_by_access_allowed: true,
