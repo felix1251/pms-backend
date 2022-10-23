@@ -37,10 +37,10 @@ class Api::V1::PayrollsController < PmsDesktopController
   def payroll_data
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
 
-    num_days_of_month = @payroll.from.end_of_month.day
-    days_on_range = (@payroll.to - @payroll.from).to_i
+    num_days_of_month = @payroll.from.end_of_month.day.to_f
+    days_on_range = (@payroll.to - @payroll.from).to_f  
 
-    puts "-------------", num_days_of_month, days_on_range
+    percentage_of_month = ((days_on_range + 1) / num_days_of_month)
 
     sql_time_keeping_hours_sum = " COALESCE("
     sql_time_keeping_hours_sum += " (SELECT"
@@ -48,7 +48,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += " THEN SUM(COALESCE((SELECT SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))/60, 1))"
     sql_time_keeping_hours_sum += " FROM employee_schedules"
     sql_time_keeping_hours_sum += " WHERE employee_id = emp.id AND date(start_time) = only_date LIMIT 1), 1))"
-    sql_time_keeping_hours_sum += " ELSE SUM(8) END"
+    sql_time_keeping_hours_sum += " ELSE SUM(COALESCE(TRUNCATE((TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60)/60, 2), 0)) END"
     sql_time_keeping_hours_sum += " AS total_hours"
     sql_time_keeping_hours_sum += " FROM ("
     sql_time_keeping_hours_sum += " SELECT only_date"
@@ -72,7 +72,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
     sql_time_undertime_sum += " THEN IFNULL((SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
     sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1), 0)"
-    sql_time_undertime_sum += " ELSE 8*60 END"
+    sql_time_undertime_sum += " ELSE COALESCE(TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60, 0) END"
     sql_time_undertime_sum += " AS expected_hours"
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT only_date,"
@@ -102,8 +102,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " ) final)"
     sql_time_undertime_sum += " , 0) as undertime_minutes,"
 
-    sql_payed_leave_hours_sum = " COALESCE((SELECT "
-    sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0 " 
+    sql_payed_leave_hours_sum = " COALESCE((SELECT"
+    sql_payed_leave_hours_sum += " SUM((CASE le.half_day WHEN 0" 
     sql_payed_leave_hours_sum += " THEN (DATEDIFF("
     sql_payed_leave_hours_sum += " CASE WHEN le.end_date > '#{@payroll.to}' THEN '#{@payroll.to}' ELSE le.end_date  END,"
     sql_payed_leave_hours_sum += " CASE WHEN le.start_date < '#{@payroll.from}' THEN '#{@payroll.from}' ELSE le.start_date END) + 1) ELSE 0.5 END)*8)"
@@ -165,7 +165,7 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_spec_hol_hours_sum += " ) AS total_special_holiday_hours,"
 
     sql_total_emp_allwances = " TRUNCATE(COALESCE("
-		sql_total_emp_allwances += " (SELECT SUM(amount) FROM on_payroll_allowances WHERE employee_id = emp.id),"
+		sql_total_emp_allwances += " (SELECT SUM(amount*#{percentage_of_month}) FROM on_payroll_allowances WHERE employee_id = emp.id),"
 		sql_total_emp_allwances += " COALESCE((SELECT SUM(amount) FROM employee_allowances WHERE employee_id = emp.id), 0)"
     sql_total_emp_allwances += " ), 2) AS total_allowances_amount,"
 

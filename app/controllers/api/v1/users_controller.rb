@@ -7,56 +7,30 @@ class Api::V1::UsersController < PmsDesktopController
   def create
     company = Company.find(payload["company_id"])
     @user = company.users.new(user_params)
-    action = params[:access][:action]
-    if action.present?
-      if @user.save
-        action_store = []
-        action.each do |ac|
-          action_store.push({page_access_id: ac["page_access_id"], page_action_access_id: ac["page_action_access_id"],status: ac["status"]})
-        end
-        action_access_save = @user.user_page_action_accesses.create(action_store)
-        if action_access_save
-          render json: {user: @user, page_action_access: action_access_save}, status: :created
-        else
-          render json: {error: "Saving access error"}, status: :unprocessable_entity
-        end
-      else
-        render json: @user.errors, status: :unprocessable_entity
-      end
+    if @user.save
+      render json: @user, status: :created
     else
-      render json: {error: "missing params"}, status: :unprocessable_entity
+      render json: @user.errors, status: :unprocessable_entity
     end
   end
 
   def update
-    if @user.update(update_params)
-      action_store = []
-      if !@user.system_default && params[:access].present? && params[:access][:action].present?
-        action = params[:access][:action]
-        action.each do |ac|
-          info = @user.user_page_action_accesses.find_by!(page_access_id: ac["page_access_id"], 
-                                                          page_action_access_id: ac["page_action_access_id"])
-                                                          .update(status: ac["status"])
-          if info
-            action_store.push({page_access_id: ac["page_access_id"], page_action_access_id: ac["page_action_access_id"], status: ac["status"]})
-          end
-        end
-      end
-      render json: {user: @user, action_access: action_store}
+    if @user.update(user_params)
+      render json: @user
     else
       render json: @user.errors, status: :unprocessable_entity
     end
   end
 
   def destroy
-    if !@user.system_default
+    if !@user.system_default && @user.id != payload["user_id"]
       if @user.update(status: "I")
         render json: @user
       else
         render json: @user.errors, status: :unprocessable_entity
       end
     else
-      render json: {error: "can't modify, user is default"}, status: :forbidden
+      render json: {error: "can't delete, user is default or current user"}, status: :forbidden
     end
   end
 
@@ -74,10 +48,10 @@ class Api::V1::UsersController < PmsDesktopController
 
   def get_account
     @account = User.select("id, company_id, admin, email, position, system_default,
-                          name, status, created_at, username")
+                          name, status, created_at, username, page_accesses")
                           .find(params[:id])
-    
-    render json: {account: @account, access: user_page_action_access(@account)}
+
+    render json: {account: @account}
   end
 
   def system_accounts
@@ -137,11 +111,7 @@ class Api::V1::UsersController < PmsDesktopController
   end
 
   def user_params
-    params.require(:user).permit(:name, :email, :position, :username, :admin, :password, :password_confirmation)
-  end
-
-  def update_params
-    params.require(:user).permit(:name, :email, :position, :admin)
+    params.require(:user).permit(:name, :email, :position, :username, :admin, :password, :password_confirmation, :page_accesses => [])
   end
 
   def set_user
