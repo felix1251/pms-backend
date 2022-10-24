@@ -91,7 +91,36 @@ class PmsDesktopController < ActionController::API
   def company_settings
     Company.find(payload['company_id']).settings
   end
+
+  def current_company
+    Company.find(payload["company_id"])
+  end
   
+  def all_access
+    all_access = []
+    page = PageAccess.order("id ASC").pluck("access_code")
+    access = PageActionAccess.order("id ASC").pluck("access_code")
+    
+    page.each do |pg|
+      all_access.push(pg)
+      if pg == "H"
+        access.each do |ac|
+              all_access.push(pg+ac) if ac == "V" 
+        end
+      elsif pg == "R"
+        access.each do |ac|
+              all_access.push(pg+ac) if ac == "V" || ac == "X"
+        end
+      else
+        access.each do |ac|
+              all_access.push(pg+ac)
+        end
+      end
+    end
+
+    return all_access
+  end
+
   def current_user
     @current_user ||= User.joins("LEFT JOIN companies AS c ON c.id = users.company_id")
                           .select("users.id, users.company_id, users.admin, users.email, users.position, users.name,
