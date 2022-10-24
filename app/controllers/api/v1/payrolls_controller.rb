@@ -5,22 +5,21 @@ class Api::V1::PayrollsController < PmsDesktopController
 
   # GET /payrolls
   def index
-    value = '"value"'
-    label = '"label"'
-    ats = '"'
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
 
     sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
     sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver,"
-    sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
+    sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('value', pa.id, 'label', pa.name)), '[]') FROM"
     sql += " (SELECT cac.id as id, cac.name  FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
-    sql += " WHERE payroll_id = py.id)"
-    sql += " AS pa) AS payroll_account_json" 
+    sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC) AS pa"
+    sql += " ) AS payroll_account_json" 
     sql += " FROM payrolls as py"
     sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
     sql += " ORDER BY py.from ASC"
-
+    sql += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}" if params[:page].present? && params[:per_page].present?
+    
     payrolls = execute_sql_query(sql)
     render json: payrolls
   end
@@ -48,7 +47,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_keeping_hours_sum += " THEN SUM(COALESCE((SELECT SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))/60, 1))"
     sql_time_keeping_hours_sum += " FROM employee_schedules"
     sql_time_keeping_hours_sum += " WHERE employee_id = emp.id AND date(start_time) = only_date LIMIT 1), 1))"
-    sql_time_keeping_hours_sum += " ELSE SUM(COALESCE(TRUNCATE((TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60)/60, 2), 0)) END"
+    sql_time_keeping_hours_sum += " ELSE SUM(IF(emp.work_sched_days LIKE CONCAT('%', DATE_FORMAT(only_date, '%a'), '%'),"
+    sql_time_keeping_hours_sum += " COALESCE(TRUNCATE((TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60)/60, 2), 0), 0)) END"
     sql_time_keeping_hours_sum += " AS total_hours"
     sql_time_keeping_hours_sum += " FROM ("
     sql_time_keeping_hours_sum += " SELECT only_date"
@@ -72,7 +72,8 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " CASE IFNULL(opc.work_sched_type, emp.work_sched_type) WHEN 'FL'"
     sql_time_undertime_sum += " THEN IFNULL((SELECT TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_time, '%Y-%m-%d %H:%i'))"
     sql_time_undertime_sum += " FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time) = only_date LIMIT 1), 0)"
-    sql_time_undertime_sum += " ELSE COALESCE(TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60, 0) END"
+    sql_time_undertime_sum += " ELSE IF(emp.work_sched_days LIKE CONCAT('%', DATE_FORMAT(only_date, '%a'), '%'),"
+    sql_time_undertime_sum += " COALESCE(TIMESTAMPDIFF(MINUTE, CONCAT(only_date,' ', emp.work_sched_start), CONCAT(only_date,' ', emp.work_sched_end))-60, 0), 0) END"
     sql_time_undertime_sum += " AS expected_hours"
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT only_date,"
@@ -82,10 +83,10 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql_time_undertime_sum += " IF(next_date < (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), (SELECT end_time FROM employee_schedules WHERE DATE(start_time) = only_date LIMIT 1))"
     sql_time_undertime_sum += " ))"
     sql_time_undertime_sum += " ELSE"
-    sql_time_undertime_sum += " SUM(TIMESTAMPDIFF(MINUTE,"
+    sql_time_undertime_sum += " SUM(IF(emp.work_sched_days LIKE CONCAT('%', DATE_FORMAT(only_date, '%a'), '%'), TIMESTAMPDIFF(MINUTE,"
     sql_time_undertime_sum += " IF(date > CONCAT(only_date,' ',emp.work_sched_start), DATE_FORMAT(date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_start)),"
     sql_time_undertime_sum += " IF(next_date < CONCAT(only_date,' ',emp.work_sched_end), DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), CONCAT(only_date,' ',emp.work_sched_end))"
-    sql_time_undertime_sum += " ) - IF(CONCAT(only_date,' 11:00') AND CONCAT(only_date,' 12:00') BETWEEN date AND next_date, 60, 0))"
+    sql_time_undertime_sum += " ) - IF(CONCAT(only_date,' 11:00') AND CONCAT(only_date,' 12:00') BETWEEN date AND next_date, 60, 0),0))"
     sql_time_undertime_sum += " END, 0) AS hours_in_date"
     sql_time_undertime_sum += " FROM ("
     sql_time_undertime_sum += " SELECT id, date, status, biometric_no, DATE(date) AS only_date,"
@@ -145,10 +146,10 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_spec_hol_hours_sum += " SUM(TIMESTAMPDIFF(MINUTE,"
 		sql_payed_spec_hol_hours_sum +=	" IF(date > emp_sch.start_time, DATE_FORMAT(date, '%Y-%m-%d %H:%i'), emp_sch.start_time),"
 		sql_payed_spec_hol_hours_sum +=	"	IF(next_date < emp_sch.end_time, DATE_FORMAT(next_date, '%Y-%m-%d %H:%i'), emp_sch.end_time)))"
-		sql_payed_spec_hol_hours_sum += " ELSE SUM(TIMESTAMPDIFF(MINUTE,"		
+		sql_payed_spec_hol_hours_sum += " ELSE SUM(IF(emp.work_sched_days LIKE CONCAT('%', DATE_FORMAT(spec_hol.date, '%a'), '%'), TIMESTAMPDIFF(MINUTE,"		
 		sql_payed_spec_hol_hours_sum +=	"	IF(bio_logs.date > CONCAT(spec_hol.date,' ',emp.work_sched_start), DATE_FORMAT(bio_logs.date, '%Y-%m-%d %H:%i'), CONCAT(spec_hol.date,' ',emp.work_sched_start)),"
 		sql_payed_spec_hol_hours_sum +=	"	IF(bio_logs.next_date < CONCAT(spec_hol.date,' ',emp.work_sched_end), DATE_FORMAT(bio_logs.next_date, '%Y-%m-%d %H:%i'), CONCAT(spec_hol.date,' ',emp.work_sched_end))"
-		sql_payed_spec_hol_hours_sum +=	" ) - IF(CONCAT(spec_hol.date,' 11:00') AND CONCAT(spec_hol.date,' 12:00') BETWEEN bio_logs.date AND bio_logs.next_date, 60, 0))"
+		sql_payed_spec_hol_hours_sum +=	" ) - IF(CONCAT(spec_hol.date,' 11:00') AND CONCAT(spec_hol.date,' 12:00') BETWEEN bio_logs.date AND bio_logs.next_date, 60, 0),0))"
 		sql_payed_spec_hol_hours_sum += " END/60, 0), 2) AS minutes_in_date"
 		sql_payed_spec_hol_hours_sum += "	FROM (SELECT tk.id, tk.date, tk.status, tk.biometric_no, DATE(tk.date) AS only_date,"
 		sql_payed_spec_hol_hours_sum += " LEAD(tk.date) OVER (ORDER BY tk.biometric_no, tk.date) AS next_date,"
