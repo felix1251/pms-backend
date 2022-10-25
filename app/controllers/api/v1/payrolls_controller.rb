@@ -1,21 +1,19 @@
 class Api::V1::PayrollsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data, :daily_time_records]
+  before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data, :daily_time_records, :get_payroll_approvers]
 
   # GET /payrolls
   def index
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
 
     sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
-    sql += " CASE WHEN py.require_approver = true THEN u.name ELSE 'none' END as approver,"
     sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('value', pa.id, 'label', pa.name)), '[]') FROM"
     sql += " (SELECT cac.id as id, cac.name  FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
     sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC) AS pa"
     sql += " ) AS payroll_account_json" 
     sql += " FROM payrolls as py"
-    sql += " LEFT JOIN users as u ON u.id = py.approver_id"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
     sql += " ORDER BY py.from ASC"
     sql += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}" if params[:page].present? && params[:per_page].present?
@@ -396,19 +394,33 @@ class Api::V1::PayrollsController < PmsDesktopController
     value = '"value"'
     label = '"label"'
     ats = '"'
-    sql = "SELECT py.id, py.from, py.to, py.status, py.approver_id, py.require_approver, CONCAT('[{#{value}:',py.approver_id,',#{label}:','#{ats}',usr.name,' (',usr.position,')','#{ats}','}]') AS approver,"
+    sql = "SELECT py.id, py.from, py.to, py.status, py.pay_date, py.remarks,"
     sql += " (SELECT CONCAT('[',GROUP_CONCAT('{#{value}:',pa.id, ',#{label}:','#{ats}',pa.name,'#{ats}','}' ORDER BY pa.name SEPARATOR ','),']') FROM"
     sql += " (SELECT cac.id as id, cac.name FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
     sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC)"
     sql += " AS pa) AS payroll_account_json"
     sql += " FROM payrolls AS py"
-    sql += " LEFT JOIN users AS usr ON usr.id = py.approver_id"
     sql += " WHERE py.id = #{params[:id]}"
     sql += " LIMIT 1;"
     execute_sql_query("SET SESSION group_concat_max_len = 10000;")
     details = execute_sql_query(sql).first
     render json: details
+  end
+
+  def get_payroll_approvers
+    company_account_ids = @payroll.payroll_accounts.pluck("company_account_id")
+    approvers = CompanyAccount.select(:id, :name, :approvers).where(id: company_account_ids)
+    render json: approvers
+  end
+
+  def approved_payroll_account
+    payroll_account = PayrollAccount.find(params[:id])
+    if payroll_account.update(approved: true, approved_by_id: payload['user_id'])
+      render json: payroll_account.approved
+    else
+      render json: payroll_account.errors, status: :unprocessable_entity
+    end
   end
 
   def on_params_details
@@ -420,6 +432,12 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " FROM payroll AS py"
     details = execute_sql_query(sql).first
     render json: details
+  end
+
+  def get_payroll_approvers_users
+    company_account = CompanyAccount.find(params[:company_account_id])
+    users = User.select(:id, :name, :position).where(id: company_account.approvers)
+    render json: users
   end
 
   # POST /payrolls
@@ -502,12 +520,13 @@ class Api::V1::PayrollsController < PmsDesktopController
       end
     end
     # Use callbacks to share common setup or constraints between actions.
+
     def set_payroll
       @payroll = Payroll.find(params[:id])
     end
 
     # Only allow a trusted parameter "white list" through.
     def payroll_params
-      params.require(:payroll).permit(:from, :to, :approver_id, :require_approver, :remarks, :pay_date)
+      params.require(:payroll).permit(:from, :to, :remarks, :pay_date)
     end
 end
