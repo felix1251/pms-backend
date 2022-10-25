@@ -16,10 +16,11 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: { scope: :company_id }, format: { without: /\s/ , message: 'cannot contain whitespace' }
   validates :position, presence: true
   validates :name, presence: true
+  validates :password, length: { minimum: 6, maximum: 100 }, :if => :password_digest_changed?
   enum status: { A: "A", I: "I"}
 
   def attributes
-    super.except('reset_password_token', 'reset_password_token_expires_at')
+    super.except('password_digest')
   end
 
   def generate_password_token!
