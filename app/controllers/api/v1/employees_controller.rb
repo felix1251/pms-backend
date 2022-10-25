@@ -129,7 +129,8 @@ class Api::V1::EmployeesController < PmsDesktopController
 
   # POST /employees
   def create
-    @employee = Employee.new(employee_params.merge!({company_id: payload["company_id"], created_by_id: payload["user_id"]}))
+    secure_random = SecureRandom.hex(10)
+    @employee = Employee.new(employee_params.merge!({company_id: payload["company_id"], created_by_id: payload["user_id"], password: secure_random, password_confirmation: secure_random}))
     if @employee.save
       EmployeeActionHistoryWorker.perform_async(payload['user_id'], @employee.created_at, 'CREATED', @employee.id, @employee.compensation)
       render json: {message: "Successfully created"}, status: :created

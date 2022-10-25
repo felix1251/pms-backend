@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_24_065815) do
+ActiveRecord::Schema.define(version: 2022_10_25_050926) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
@@ -45,6 +45,8 @@ ActiveRecord::Schema.define(version: 2022_10_24_065815) do
     t.string "logo"
     t.json "settings"
     t.json "employee_approvers"
+    t.json "schedule_approvers"
+    t.json "time_keeping_approvers"
     t.index ["code"], name: "index_companies_on_code"
   end
 
@@ -56,6 +58,7 @@ ActiveRecord::Schema.define(version: 2022_10_24_065815) do
     t.datetime "updated_at", null: false
     t.string "code"
     t.bigint "created_by_id"
+    t.json "approvers"
     t.index ["company_id"], name: "index_company_accounts_on_company_id"
     t.index ["created_by_id"], name: "index_company_accounts_on_created_by_id"
   end
@@ -159,7 +162,7 @@ ActiveRecord::Schema.define(version: 2022_10_24_065815) do
     t.string "work_sched_type", null: false
     t.string "work_sched_start"
     t.string "work_sched_end"
-    t.string "work_sched_days"
+    t.json "work_sched_days"
     t.string "civil_status", default: ""
     t.string "phone_number", default: ""
     t.string "email", default: ""
@@ -189,6 +192,7 @@ ActiveRecord::Schema.define(version: 2022_10_24_065815) do
     t.bigint "company_account_id"
     t.string "emergency_contact_relationship", default: ""
     t.string "profile"
+    t.string "password_digest"
     t.index ["assigned_area_id"], name: "index_employees_on_assigned_area_id"
     t.index ["company_account_id"], name: "index_employees_on_company_account_id"
     t.index ["company_id"], name: "index_employees_on_company_id"
