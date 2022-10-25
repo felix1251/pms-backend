@@ -1,7 +1,7 @@
 class PayrollAccount < ApplicationRecord
   belongs_to :payroll
   belongs_to :company_account
-  validate :unique_record
+  validate :unique_record, :if => [:payroll_id_changed?, :company_account_id_changed?]
 
   private
 

@@ -5,9 +5,11 @@ class Api::V1::PayrollAccountsController < PmsDesktopController
 
   # GET /payroll_accounts
   def index
-    sql = "SELECT pa.id, cac.name, cac.code, pa.company_account_id"
+    sql = "SELECT pa.id, cac.name, cac.code, pa.company_account_id, IFNULL(cac.approvers, '[]') as approvers, pa.approved,"
+    sql += " pa.approved_by_id, CONCAT(us.name,' (', us.position, ')') AS approved_by"
     sql += " FROM payroll_accounts as pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql += " LEFT JOIN users AS us ON us.id = pa.approved_by_id"
     sql += " WHERE pa.payroll_id = #{params[:payroll_id]}"
     sql += " ORDER BY cac.name"
     payroll_accounts = execute_sql_query(sql)
