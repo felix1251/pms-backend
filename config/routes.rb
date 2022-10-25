@@ -94,6 +94,8 @@ Rails.application.routes.draw do
       resources :page_access_controls
       resources :page_accesses
       resources :user_page_accesses
+      get 'get_company_accounts_details', controller: :companies, action: :get_company_accounts_details
+      put 'update_company_accounts_approvers', controller: :companies, action: :update_company_accounts_approvers
       get 'get_company_details', controller: :companies, action: :get_company_details
       get 'get_account_list_selection', controller: :companies, action: :get_account_list_selection
       put 'update_company_approver_settings', controller: :companies, action: :update_company_approver_settings
