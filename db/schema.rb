@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_25_050926) do
+ActiveRecord::Schema.define(version: 2022_10_25_112143) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
@@ -396,6 +396,9 @@ ActiveRecord::Schema.define(version: 2022_10_25_050926) do
     t.bigint "company_account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "approved", default: false
+    t.bigint "approved_by_id"
+    t.index ["approved_by_id"], name: "index_payroll_accounts_on_approved_by_id"
     t.index ["company_account_id"], name: "index_payroll_accounts_on_company_account_id"
     t.index ["payroll_id"], name: "index_payroll_accounts_on_payroll_id"
   end
@@ -416,8 +419,6 @@ ActiveRecord::Schema.define(version: 2022_10_25_050926) do
     t.date "from", null: false
     t.date "to", null: false
     t.bigint "company_id", null: false
-    t.bigint "approver_id"
-    t.boolean "require_approver", default: false
     t.string "status", limit: 1, default: "P"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -426,7 +427,6 @@ ActiveRecord::Schema.define(version: 2022_10_25_050926) do
     t.bigint "pagibig_id"
     t.bigint "philhealth_id"
     t.bigint "sss_contribution_id"
-    t.index ["approver_id"], name: "index_payrolls_on_approver_id"
     t.index ["company_id"], name: "index_payrolls_on_company_id"
     t.index ["from"], name: "index_payrolls_on_from"
     t.index ["pagibig_id"], name: "index_payrolls_on_pagibig_id"
@@ -645,13 +645,13 @@ ActiveRecord::Schema.define(version: 2022_10_25_050926) do
   add_foreign_key "overtimes", "users", column: "actioned_by_id"
   add_foreign_key "payroll_accounts", "company_accounts"
   add_foreign_key "payroll_accounts", "payrolls"
+  add_foreign_key "payroll_accounts", "users", column: "approved_by_id"
   add_foreign_key "payroll_comments", "payrolls"
   add_foreign_key "payroll_comments", "users"
   add_foreign_key "payrolls", "companies"
   add_foreign_key "payrolls", "pagibigs"
   add_foreign_key "payrolls", "philhealths"
   add_foreign_key "payrolls", "sss_contributions"
-  add_foreign_key "payrolls", "users", column: "approver_id"
   add_foreign_key "pms_devices", "companies"
   add_foreign_key "positions", "companies"
   add_foreign_key "positions", "users", column: "created_by_id"
