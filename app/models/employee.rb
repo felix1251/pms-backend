@@ -1,5 +1,5 @@
 class Employee < ApplicationRecord
-      serialize :work_sched_days, Array
+      has_secure_password
       belongs_to :company
       belongs_to :department
       belongs_to :salary_mode
@@ -34,6 +34,10 @@ class Employee < ApplicationRecord
       enum status: { A: "A", I: "I"}
       enum work_sched_type: { FX: "FX", FL: "FL"}
       # enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
+
+      def attributes
+            super.except('password_digest')
+      end
 
       private
 

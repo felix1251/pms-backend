@@ -17,15 +17,39 @@ class Api::V1::CompaniesController < PmsDesktopController
   end
 
   def get_company_details
-    company = Company.select(:settings, :employee_approvers).find(payload['company_id'])
-    company.employee_approvers = company.employee_approvers || []
+    company = Company.select(:settings, :employee_approvers, :schedule_approvers, 
+                            :time_keeping_approvers)
+                      .find(payload['company_id'])
+
     company.settings = company.settings || {}
-    render json: company
+    company.employee_approvers = company.employee_approvers || []
+    company.schedule_approvers = company.schedule_approvers || []
+    company.time_keeping_approvers = company.time_keeping_approvers || []
+    render json: company, :except => [:id]
+  end
+
+  def get_company_accounts_details
+    company_accounts = CompanyAccount.select(:id, :name, :approvers)
+                      .where(company_id: payload['company_id']).map{|e| {id: e.id, name: e.name, approvers: e.approvers || []} }
+    render json: company_accounts
+  end
+
+  def update_company_accounts_approvers
+    company_account = CompanyAccount.find(params[:id])
+    if company_account.update(company_account_params)
+      render json: company_account.approvers || []
+    else
+      render json: company_account.errors, status: :unprocessable_entity
+    end
   end
 
   def update_company_approver_settings
     @company = Company.find(payload['company_id'])
     if @company.update(custom_params)
+      @company.settings = @company.settings || {}
+      @company.employee_approvers = @company.employee_approvers || []
+      @company.schedule_approvers = @company.schedule_approvers || []
+      @company.time_keeping_approvers = @company.time_keeping_approvers || []
       render json: @company
     else
       render json: @company.errors, status: :unprocessable_entity
@@ -33,7 +57,7 @@ class Api::V1::CompaniesController < PmsDesktopController
   end
 
   def get_account_list_selection
-    company = Company.find(payload['company_id'])
+    company = Company.find(payload['company_id']) if params[:employee].present? || params[:schedules].present? || params[:schedules].present?
 
     #employee approvers
     find_employee_approvers_id = ""
@@ -42,14 +66,27 @@ class Api::V1::CompaniesController < PmsDesktopController
       find_employee_approvers_id = "OR id IN (#{employee_approvers.join(',')})" if employee_approvers.length > 0
     end
 
+    find_schedule_approvers_id = ""
+    if params[:schedules].present?
+      schedule_approvers = company.schedule_approvers || [] 
+      find_schedule_approvers_id = "OR id IN (#{schedule_approvers.join(',')})" if schedule_approvers.length > 0
+    end
+
+    find_time_keeping_approvers_id = ""
+    if params[:schedules].present?
+      time_keeping_approvers = company.time_keeping_approvers || [] 
+      find_time_keeping_approvers_id = "OR id IN (#{time_keeping_approvers.join(',')})" if time_keeping_approvers.length > 0
+    end
+
     sql = "SELECT"
     sql += " id AS value, CONCAT(name,' (', position, ')') AS label"
     sql += " FROM users"
     sql += " WHERE company_id = #{payload['company_id']}"
     sql += " AND (page_accesses LIKE '%EV%' OR admin = 1 #{find_employee_approvers_id})" if params[:employee].present?
-    sql += " AND (page_accesses LIKE '%CV%' OR admin = 1)" if params[:schedules].present?
-    sql += " AND (page_accesses LIKE '%TV%' OR admin = 1)" if params[:time_keeping].present?
-    sql += " AND (page_accesses LIKE '%YV%' OR admin = 1)" if params[:employee_request].present?
+    sql += " AND (page_accesses LIKE '%CV%' OR admin = 1 #{find_schedule_approvers_id})" if params[:schedules].present?
+    sql += " AND (page_accesses LIKE '%TV%' OR admin = 1 #{find_time_keeping_approvers_id})" if params[:time_keeping].present?
+    sql += " AND (page_accesses LIKE '%PV%' OR admin = 1)" if params[:payroll].present?
+    sql += " AND (page_accesses LIKE '%QV%' OR admin = 1)" if params[:employee_request].present?
     sql += " ORDER BY name ASC"
     result = execute_sql_query(sql)
     render json: result
@@ -69,7 +106,12 @@ class Api::V1::CompaniesController < PmsDesktopController
     end
 
     # Only allow a trusted parameter "white list" through.
+
+    def company_account_params
+      params.require(:params).permit(:approvers => [])
+    end
+
     def custom_params
-      params.require(:params).permit(:settings => {}, :employee_approvers => [])
+      params.require(:params).permit(:settings => {}, :employee_approvers => [], :schedule_approvers => [], :time_keeping_approvers => [])
     end
 end
