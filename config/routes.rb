@@ -94,6 +94,9 @@ Rails.application.routes.draw do
       resources :page_access_controls
       resources :page_accesses
       resources :user_page_accesses
+      put 'approved_payroll_account', controller: :payrolls, action: :approved_payroll_account
+      get 'get_payroll_approvers_users', controller: :payrolls, action: :get_payroll_approvers_users
+      get 'get_payroll_approvers', controller: :payrolls, action: :get_payroll_approvers
       get 'get_company_accounts_details', controller: :companies, action: :get_company_accounts_details
       put 'update_company_accounts_approvers', controller: :companies, action: :update_company_accounts_approvers
       get 'get_company_details', controller: :companies, action: :get_company_details
