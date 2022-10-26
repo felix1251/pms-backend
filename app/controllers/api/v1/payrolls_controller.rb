@@ -313,6 +313,17 @@ class Api::V1::PayrollsController < PmsDesktopController
       render json: summary.first
     elsif params[:employee_id].present?
       render json: payroll.first
+    elsif params[:for_excel].present?
+      sql_total_ext = "SELECT"
+      sql_total_ext += " SUM(total_regular_pay) AS regular_pay_summary, SUM(gross_pay) AS gross_pay_summary,"
+      sql_total_ext += " SUM(net_pay) AS net_pay_summary, SUM(total_deductions) as deductions_summary,"
+      sql_total_ext += " SUM(premium_pay_total) AS premium_pay_summary,"
+      sql_total_ext += " SUM(additional_and_adjustment_total) as additional_and_adjustment_summary"
+      sql_total_ext += " FROM ("
+      sql_total_ext += sql_total
+      sql_total_ext += " ) summary"
+      summary = execute_sql_query(sql_total_ext)
+      render json: {data: payroll, summary: summary.first}
     else
       render json: payroll
     end
