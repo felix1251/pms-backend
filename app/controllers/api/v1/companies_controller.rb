@@ -17,14 +17,10 @@ class Api::V1::CompaniesController < PmsDesktopController
   end
 
   def get_company_details
-    company = Company.select(:settings, :employee_approvers, :schedule_approvers, 
-                            :time_keeping_approvers)
-                      .find(payload['company_id'])
+    company = Company.select(:settings, :employee_approvers, :schedule_approvers, :time_keeping_approvers, 
+                            :request_administrative_approvers, :request_supervisory_approvers)
+                            .find(payload['company_id'])
 
-    company.settings = company.settings || {}
-    company.employee_approvers = company.employee_approvers || []
-    company.schedule_approvers = company.schedule_approvers || []
-    company.time_keeping_approvers = company.time_keeping_approvers || []
     render json: company, :except => [:id]
   end
 
@@ -57,7 +53,7 @@ class Api::V1::CompaniesController < PmsDesktopController
   end
 
   def get_account_list_selection
-    company = Company.find(payload['company_id']) if params[:employee].present? || params[:schedules].present? || params[:schedules].present?
+    company = Company.find(payload['company_id']) if params[:employee].present? || params[:schedules].present? || params[:employee_request].present?
 
     #employee approvers
     find_employee_approvers_id = ""
@@ -78,6 +74,20 @@ class Api::V1::CompaniesController < PmsDesktopController
       find_time_keeping_approvers_id = "OR id IN (#{time_keeping_approvers.join(',')})" if time_keeping_approvers.length > 0
     end
 
+    find_request_administrative_approvers_id = nil;
+    if params[:schedules].present?
+      request_administrative_approvers = company.request_administrative_approvers || [] 
+      find_request_administrative_approvers_id = "OR id IN (#{request_administrative_approvers.join(',')})" if request_administrative_approvers.length > 0
+    end
+
+    find_request_supervisory_approvers_id = nil
+    if params[:schedules].present?
+      request_supervisory_approvers = company.request_supervisory_approvers || [] 
+      find_request_supervisory_approvers_id = "OR id IN (#{request_supervisory_approvers.join(',')})" if request_supervisory_approvers.length > 0
+    end
+
+    find_request_approvers_id = find_request_administrative_approvers_id || find_request_supervisory_approvers_id || ""
+
     sql = "SELECT"
     sql += " id AS value, CONCAT(name,' (', position, ')') AS label"
     sql += " FROM users"
@@ -86,7 +96,9 @@ class Api::V1::CompaniesController < PmsDesktopController
     sql += " AND (page_accesses LIKE '%CV%' OR admin = 1 #{find_schedule_approvers_id})" if params[:schedules].present?
     sql += " AND (page_accesses LIKE '%TV%' OR admin = 1 #{find_time_keeping_approvers_id})" if params[:time_keeping].present?
     sql += " AND (page_accesses LIKE '%PV%' OR admin = 1)" if params[:payroll].present?
-    sql += " AND (page_accesses LIKE '%QV%' OR admin = 1)" if params[:employee_request].present?
+    sql += " AND (page_accesses LIKE '%QV%' OR admin = 1 #{find_request_approvers_id})" if params[:employee_request].present?
+    sql += " AND id NOT IN (#{company.request_supervisory_approvers.join(',')})" if params[:employee_request].present? && params[:request_type].present? && params[:request_type] == 'A' && company.request_supervisory_approvers.length > 0
+    sql += " AND id NOT IN (#{company.request_administrative_approvers.join(',')})" if params[:employee_request].present? && params[:request_type].present? && params[:request_type] == 'S' && company.request_administrative_approvers.length > 0
     sql += " ORDER BY name ASC"
     result = execute_sql_query(sql)
     render json: result
@@ -112,6 +124,8 @@ class Api::V1::CompaniesController < PmsDesktopController
     end
 
     def custom_params
-      params.require(:params).permit(:settings => {}, :employee_approvers => [], :schedule_approvers => [], :time_keeping_approvers => [])
+      params.require(:params).permit(:settings => {}, :employee_approvers => [], :schedule_approvers => [],
+                                    :time_keeping_approvers => [], :request_administrative_approvers => [], 
+                                    :request_supervisory_approvers => [])
     end
 end
