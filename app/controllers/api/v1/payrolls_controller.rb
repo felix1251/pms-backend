@@ -4,24 +4,27 @@ class Api::V1::PayrollsController < PmsDesktopController
   before_action :set_payroll, only: [:show, :update, :destroy, :payroll_data, :daily_time_records, :get_payroll_approvers]
 
   # GET /payrolls
+  
   def index
-    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
+    sql_start = "SELECT"
+    sql_count = " COUNT(*) AS total_count"
+    sql_fields = " py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
+    sql_fields += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id) total_payroll_accounts,"
+    sql_fields += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id AND approved = 1) total_approved_payroll_accounts,"
+    sql_fields += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('value', pa.id, 'label', pa.name)), '[]') FROM"
+    sql_fields += " (SELECT cac.id as id, cac.name FROM payroll_accounts pa"
+    sql_fields += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
+    sql_fields += " WHERE payroll_id = py.id ORDER BY name ASC) AS pa"
+    sql_fields += " ) AS payroll_account_json"
+    sql_from = " FROM payrolls as py"
+    sql_condition = " WHERE py.company_id = #{payload['company_id']}"
+    sql_sort = " ORDER BY py.from ASC"
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
 
-    sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
-    sql += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id) total_payroll_accounts,"
-    sql += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id AND approved = 1) total_approved_payroll_accounts,"
-    sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('value', pa.id, 'label', pa.name)), '[]') FROM"
-    sql += " (SELECT cac.id as id, cac.name  FROM payroll_accounts pa"
-    sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
-    sql += " WHERE payroll_id = py.id ORDER BY name ASC) AS pa"
-    sql += " ) AS payroll_account_json"
-    sql += " FROM payrolls as py"
-    sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
-    sql += " ORDER BY py.from ASC"
-    sql += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}" if params[:page].present? && params[:per_page].present?
-    
-    payrolls = execute_sql_query(sql)
-    render json: payrolls
+    payrolls = execute_sql_query(sql_start + sql_fields + sql_from + sql_condition + sql_sort + sql_paginate)
+    payrolls_total = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
+    render json: {payrolls: payrolls, total_count: payrolls_total.first["total_count"]}
   end
 
   def approver_list
