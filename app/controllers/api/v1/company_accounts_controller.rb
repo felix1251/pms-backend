@@ -45,7 +45,7 @@ class Api::V1::CompanyAccountsController < PmsDesktopController
 
   # POST /company_accounts
   def create
-    @company_account = CompanyAccount.new(company_account_params.merge!({company_id: payload["company_id"] ,created_by_id: payload['user_id']}))
+    @company_account = CompanyAccount.new(company_account_params.merge!({company_id: payload["company_id"], created_by_id: payload['user_id']}))
     if @company_account.save
       render json: @company_account, status: :created
     else
@@ -64,7 +64,7 @@ class Api::V1::CompanyAccountsController < PmsDesktopController
 
   # DELETE /company_accounts/1
   def destroy
-    if Employee.where(company_account_id: @company_account.id).count > 0
+    if Employee.where(company_account_id: @company_account.id).any? || PayrollAccount.where(company_account_id: @company_account.id).any? || OnPayrollCompensation.where(company_account_id: @company_account.id).any?
       @company_account.update(status: "I")
     else
       @company_account.destroy

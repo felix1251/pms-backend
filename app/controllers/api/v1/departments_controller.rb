@@ -57,7 +57,7 @@ class Api::V1::DepartmentsController < PmsDesktopController
 
   # DELETE /departments/1
   def destroy
-    if Employee.where(department_id: @department.id).count > 0
+    if Employee.where(department_id: @department.id).any? || Schedule.where(department_id: @department.id).any?
       @department.update(status: "I")
     else
       @department.destroy

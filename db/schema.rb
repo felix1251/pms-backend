@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_25_112143) do
+ActiveRecord::Schema.define(version: 2022_10_27_065708) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
@@ -47,6 +47,8 @@ ActiveRecord::Schema.define(version: 2022_10_25_112143) do
     t.json "employee_approvers"
     t.json "schedule_approvers"
     t.json "time_keeping_approvers"
+    t.json "request_administrative_approvers"
+    t.json "request_supervisory_approvers"
     t.index ["code"], name: "index_companies_on_code"
   end
 
