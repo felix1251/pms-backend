@@ -11,7 +11,7 @@ class Payroll < ApplicationRecord
   validates :from, presence: true, :if => :from_changed?
   validates :to, presence: true, :if => :to_changed?
   validates :pay_date, presence: true, :if => :pay_date_changed?
-  validate :no_date_overlap, :if => [:from_changed?, :to_changed?]
+  # validate :no_date_overlap, :if => [:from_changed?, :to_changed?]
 
   private
 
