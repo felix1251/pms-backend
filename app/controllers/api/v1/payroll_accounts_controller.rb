@@ -5,13 +5,17 @@ class Api::V1::PayrollAccountsController < PmsDesktopController
 
   # GET /payroll_accounts
   def index
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
+
     sql = "SELECT pa.id, cac.name, cac.code, pa.company_account_id, IFNULL(cac.approvers, '[]') as approvers, pa.approved,"
     sql += " pa.approved_by_id, CONCAT(us.name,' (', us.position, ')') AS approved_by"
     sql += " FROM payroll_accounts as pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
     sql += " LEFT JOIN users AS us ON us.id = pa.approved_by_id"
     sql += " WHERE pa.payroll_id = #{params[:payroll_id]}"
-    sql += " ORDER BY cac.name"
+    sql += " ORDER BY name ASC"
+    sql += " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}" if params[:page].present? && params[:per_page].present?
+
     payroll_accounts = execute_sql_query(sql)
     render json: payroll_accounts
   end

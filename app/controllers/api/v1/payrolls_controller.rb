@@ -8,11 +8,13 @@ class Api::V1::PayrollsController < PmsDesktopController
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i) if params[:page].present? && params[:per_page].present?
 
     sql = "SELECT py.id, CONCAT(py.from, ' to ', py.to) as date_range, py.from, py.to, py.pay_date, py.status,"
+    sql += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id) total_payroll_accounts,"
+    sql += " (SELECT COUNT(*) FROM payroll_accounts WHERE payroll_id = py.id AND approved = 1) total_approved_payroll_accounts,"
     sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('value', pa.id, 'label', pa.name)), '[]') FROM"
     sql += " (SELECT cac.id as id, cac.name  FROM payroll_accounts pa"
     sql += " LEFT JOIN company_accounts AS cac ON cac.id = pa.company_account_id"
-    sql += " WHERE payroll_id = py.id ORDER BY cac.name ASC) AS pa"
-    sql += " ) AS payroll_account_json" 
+    sql += " WHERE payroll_id = py.id ORDER BY name ASC) AS pa"
+    sql += " ) AS payroll_account_json"
     sql += " FROM payrolls as py"
     sql += " WHERE py.company_id = #{payload['company_id']} and py.status != 'V'"
     sql += " ORDER BY py.from ASC"
@@ -428,7 +430,8 @@ class Api::V1::PayrollsController < PmsDesktopController
   def approved_payroll_account
     payroll_account = PayrollAccount.find(params[:id])
     if payroll_account.update(approved: true, approved_by_id: payload['user_id'])
-      render json: payroll_account.approved
+      user = User.find(payroll_account.approved_by_id)
+      render json: {approved: payroll_account.approved, approved_by: user.name}
     else
       render json: payroll_account.errors, status: :unprocessable_entity
     end
