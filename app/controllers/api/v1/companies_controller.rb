@@ -25,8 +25,7 @@ class Api::V1::CompaniesController < PmsDesktopController
   end
 
   def get_company_accounts_details
-    company_accounts = CompanyAccount.select(:id, :name, :approvers)
-                      .where(company_id: payload['company_id']).map{|e| {id: e.id, name: e.name, approvers: e.approvers || []} }
+    company_accounts = CompanyAccount.select(:id, :name, :approvers).where(company_id: payload['company_id'])
     render json: company_accounts
   end
 
@@ -42,11 +41,7 @@ class Api::V1::CompaniesController < PmsDesktopController
   def update_company_approver_settings
     @company = Company.find(payload['company_id'])
     if @company.update(custom_params)
-      @company.settings = @company.settings || {}
-      @company.employee_approvers = @company.employee_approvers || []
-      @company.schedule_approvers = @company.schedule_approvers || []
-      @company.time_keeping_approvers = @company.time_keeping_approvers || []
-      render json: @company
+      render json: @company, :only => [:settings, :employee_approvers, :schedule_approvers, :time_keeping_approvers, :request_administrative_approvers, :request_supervisory_approvers]
     else
       render json: @company.errors, status: :unprocessable_entity
     end
