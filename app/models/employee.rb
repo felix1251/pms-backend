@@ -31,7 +31,7 @@ class Employee < ApplicationRecord
       validates :email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       validates :company_email, allow_blank: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP , :message => "email format is invalid"}
       validates :work_sched_type, presence: true
-      enum status: { A: "A", I: "I"}
+      enum status: { A: "A", I: "I", P: "P"}
       enum work_sched_type: { FX: "FX", FL: "FL"}
       # enum sex: { male: "male", female: "female", MALE: "MALE", FEMALE: "FEMALE"}
 
@@ -43,7 +43,7 @@ class Employee < ApplicationRecord
 
       def on_emp_create
             auto_upcase
-            self.company.code = self.company.code.upcase
+            self.status = "P" if self.company.settings["employeePageApprovalOnCreate"]
             self.employee_id = generate_emp_id
       end
 
@@ -60,8 +60,8 @@ class Employee < ApplicationRecord
             final_init = l_init + f_init + m_init + s_init
             final_init = final_init.split.join
             loop do
-                  id = "#{self.company.code}-#{final_init}-#{SecureRandom.hex(3).upcase}"
-                  break id unless Employee.where(company_id: self.company.id, employee_id: id).exists?
+                  id = "#{self.company.code}-#{final_init}-#{SecureRandom.hex(3)}"
+                  break id.upcase unless Employee.where(company_id: self.company.id, employee_id: id.upcase).exists?
             end
       end
 
@@ -87,6 +87,6 @@ class Employee < ApplicationRecord
       end
 
       def set_compensation_history
-            CompensationHistory.new(compensation: self.compensation, employee_id: self.id, description: "UPDATE").save
+            CompensationHistory.create(compensation: self.compensation, employee_id: self.id, description: "UPDATE")
       end
 end

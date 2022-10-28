@@ -1,13 +1,13 @@
 page_access = [
-      {access_code: "H", page: "Dashboard"},
-      {access_code: "E", page: "Employees"},
-      {access_code: "C", page: "Schedules"},
-      {access_code: "T", page: "Time Keeping"},
-      {access_code: "P", page: "Payroll"},
-      {access_code: "B", page: "Benefits and Loans"},
-      {access_code: "Q", page: "Employee Request"},
-      {access_code: "R", page: "Reports"},
-      {access_code: "Y", page: "System Accounts"},
+      {access_code: "H", page: "Dashboard", position: 1},
+      {access_code: "E", page: "Employees", position: 2},
+      {access_code: "C", page: "Schedules", position: 3},
+      {access_code: "T", page: "Time Keeping", position: 4},
+      {access_code: "P", page: "Payroll", position: 5},
+      {access_code: "B", page: "Benefits and Loans", position: 6},
+      {access_code: "Q", page: "Employee Request", position: 7},
+      {access_code: "R", page: "Reports", position: 8},
+      {access_code: "Y", page: "System Accounts", position: 9},
 ]
 
 PageAccess.create(page_access)
@@ -21,7 +21,7 @@ Company.create(code: 'erxil', description: 'Erxil Tech. Solutions')
 
 all_access = []
 
-page = PageAccess.order("id ASC").pluck("access_code")
+page = PageAccess.order("position ASC").pluck("access_code")
 access = PageActionAccess.order("id ASC").pluck("access_code")
 
 page.each do |pg|

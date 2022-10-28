@@ -1,4 +1,6 @@
 class Api::V1::TypeOfLeavesController < PmsDesktopController
+  before_action :authorize_access_request!
+  before_action :check_backend_session
   before_action :set_type_of_leafe, only: [:show, :update, :destroy]
 
   # GET /type_of_leaves
