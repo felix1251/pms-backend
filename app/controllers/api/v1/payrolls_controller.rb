@@ -466,14 +466,14 @@ class Api::V1::PayrollsController < PmsDesktopController
 
     date = Date.parse(payroll_params[:from])
     exist_on_month_payroll = Payroll.where("(? BETWEEN payrolls.from AND payrolls.to OR ? BETWEEN payrolls.from AND payrolls.to)
-                            AND payrolls.company_id = ?", date.beginning_of_month, date.end_of_month, payload["company_id"]).first
+                                          AND payrolls.company_id = ?", date.beginning_of_month, date.end_of_month, payload["company_id"])
 
-    if exist_on_month_payroll && exist_on_month_payroll.payroll_accounts.pluck(:company_account_id) == request.params[:payroll][:company_account_ids]
+    if exist_on_month_payroll.any? && exist_on_month_payroll.payroll_accounts.pluck(:company_account_id) == request.params[:payroll][:company_account_ids]
       pagibig_id = nil
     else
       pagibig_id = pagibig.id if pagibig
     end
-    
+
     @payroll = Payroll.new(payroll_params.merge!({company_id: payload["company_id"], pagibig_id: pagibig_id, philhealth_id: philhealth_id, sss_contribution_id: sss_contribution_id}))
 
     if philhealth_id && sss_contribution_id && pagibig && @payroll.save

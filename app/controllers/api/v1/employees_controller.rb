@@ -18,7 +18,7 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_fields += " ,po.name AS position, dp.name AS department_name, sm.description AS salary_mode_desc"
     sql_fields += " ,aa.name AS assigned_area, jc.name AS job_classification"
     sql_fields += " ,DATE_FORMAT(date_hired, '%b %d, %Y') as date_hired, es.name AS employment_status, emp.sex"
-    sql_fields += " ,emp.birthdate, emp.status, emp.phone_number"
+    sql_fields += " ,emp.birthdate, emp.status, emp.phone_number, cac.name AS company_account_name"
     sql_fields += " ,emp.sss_no, emp.tin_no, emp.phic_no, emp.hdmf_no"
     sql_fields += " ,emp.biometric_no, emp.employee_id, emp.work_sched_type"
     # main table
@@ -30,8 +30,10 @@ class Api::V1::EmployeesController < PmsDesktopController
     sql_join += " LEFT JOIN employment_statuses AS es ON es.id = emp.employment_status_id"
     sql_join += " LEFT JOIN job_classifications AS jc ON jc.id = emp.job_classification_id"
     sql_join += " LEFT JOIN assigned_areas AS aa ON aa.id = emp.assigned_area_id"
+    sql_join += " LEFT JOIN company_accounts AS cac ON cac.id = emp.company_account_id"
     # conditions
-    sql_condition = " WHERE emp.status = 'A' AND emp.company_id = #{payload["company_id"]}"
+    sql_condition = " WHERE emp.company_id = #{payload["company_id"]}"
+    sql_condition += " AND emp.status = 'A'"
     sql_sort = " ORDER BY last_name ASC, first_name ASC, middle_name ASC"
     # paginate
     sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]};"

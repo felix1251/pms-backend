@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_27_065708) do
+ActiveRecord::Schema.define(version: 2022_10_28_082947) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
@@ -374,6 +374,7 @@ ActiveRecord::Schema.define(version: 2022_10_27_065708) do
     t.string "page", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "position", null: false
     t.index ["access_code"], name: "index_page_accesses_on_access_code"
   end
 
@@ -571,6 +572,22 @@ ActiveRecord::Schema.define(version: 2022_10_27_065708) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "undertimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.string "status", default: "P"
+    t.bigint "company_id"
+    t.bigint "employee_id"
+    t.integer "origin", default: 0
+    t.text "reason"
+    t.bigint "actioned_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actioned_by_id"], name: "index_undertimes_on_actioned_by_id"
+    t.index ["company_id"], name: "index_undertimes_on_company_id"
+    t.index ["employee_id"], name: "index_undertimes_on_employee_id"
+  end
+
   create_table "user_page_action_accesses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "page_access_id", null: false
@@ -660,5 +677,8 @@ ActiveRecord::Schema.define(version: 2022_10_27_065708) do
   add_foreign_key "schedules", "companies"
   add_foreign_key "schedules", "departments"
   add_foreign_key "social_security_systems", "sss_contributions"
+  add_foreign_key "undertimes", "companies"
+  add_foreign_key "undertimes", "employees"
+  add_foreign_key "undertimes", "users", column: "actioned_by_id"
   add_foreign_key "users", "companies"
 end
