@@ -4,19 +4,29 @@ class TimeKeepingWorker
 
       def perform(record, company_id)
             company = Company.find(company_id)
-            jid_list = company.worker_pid_list
-            company.update(worker_pid_list: company.worker_pid_list + [self.jid]) if !jid_list.include?(self.jid)
+            pid_list = company.worker_pid_list || []
+            list = pid_list + [self.jid]
+            company.update(worker_pid_list: list.uniq)
+
+            success = []
             failed = []
+
             record.each do |r|
-                  rec = TimeKeeping.new(r.merge!({company_id: company_id, record_type: 1}))
-                  unless rec.save
-                        details = { errors: rec.errors, record: r }.to_json
+                  is_exist = TimeKeeping.where(company_id: company_id, date: r["date"], biometric_no: r["biometric_no"]).any?
+                  if !is_exist
+                        success.push(r.merge!({company_id: company_id, record_type: 1}))
+                  else
+                        details = {error: "record already exist", record: r }.to_json
                         failed.push({emp_bio_no: r["biometric_no"], details: details.to_s, company_id: company_id})
                   end
             end
+
+            TimeKeeping.create(success)
             FailedTimeKeeping.create(failed)
-            pid_list = jid_list - [self.jid]
-            company.update(worker_pid_list: pid_list) rescue nil
+
+            new_pid_list = company.worker_pid_list - [self.jid]
+            company.update(worker_pid_list: new_pid_list.uniq) rescue nil
+
             send_cable(company_id) rescue nil
       end
 
