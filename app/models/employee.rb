@@ -1,19 +1,20 @@
 class Employee < ApplicationRecord
+      include BCrypt
       has_secure_password
       belongs_to :company
       belongs_to :department
       belongs_to :salary_mode
       belongs_to :position
       belongs_to :employment_status
+      belongs_to :created_by, class_name: "User"
       has_many :employee_action_histories
       has_many :compensation_histories
       has_many :leaves
       has_many :official_businesses
       has_many :allowances
-      has_many :on_payroll_adjustments
-      
-      belongs_to :created_by, class_name: "User"
+      has_many :on_payroll_adjustment
 
+      before_validation :emp_set_password, on: :create
       before_create :on_emp_create
       before_update :on_emp_update
 
@@ -41,10 +42,15 @@ class Employee < ApplicationRecord
 
       private
 
+      def emp_set_password
+            self.employee_id = generate_emp_id
+            self.password = self.employee_id 
+            self.password_confirmation = self.password
+      end
+
       def on_emp_create
             auto_upcase
             self.status = "P" if self.company.settings["employeePageApprovalOnCreate"]
-            self.employee_id = generate_emp_id
       end
 
       def on_emp_update
