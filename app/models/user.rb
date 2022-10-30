@@ -20,7 +20,7 @@ class User < ApplicationRecord
   enum status: { A: "A", I: "I"}
 
   def attributes
-    super.except('password_digest')
+    super.except('password_digest', 'reset_password_token', 'reset_password_token_expires_at')
   end
 
   def generate_password_token!
