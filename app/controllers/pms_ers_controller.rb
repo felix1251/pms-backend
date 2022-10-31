@@ -10,6 +10,20 @@ class PmsErsController < ActionController::API
 
   private
 
+  def custom_pagination(current_page, per_page)
+    max = 30
+    current_page = current_page || 1
+    per_page = per_page || max
+    unless per_page <= max
+      per_page = max
+    end
+    return {:fetch_point => (current_page - 1) * per_page, :per_page => per_page} 
+  end
+
+  def employee_company_id
+    Employee.select(:company_id).find(payload['employee_id']).company_id rescue nil
+  end
+
   def execute_sql_query(sql)
     ActiveRecord::Base.connection.exec_query(sql)
   end
