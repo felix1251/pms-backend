@@ -9,7 +9,7 @@ class Api::V2::LeavesController < PmsErsController
     sql_count = " COUNT(*) AS total_count"
     sql_fields = " CASE WHEN le.end_date = le.start_date THEN end_date"
     sql_fields += " ELSE CONCAT(DATE_FORMAT(le.start_date, '%b %d, %Y'),' - ',DATE_FORMAT(le.end_date, '%b %d, %Y'))" 
-    sql_fields += " END AS inclusive_date, le.id, le.created_at AS date_filed,"
+    sql_fields += " END AS inclusive_date, le.id, DATE_FORMAT(le.created_at, '%b %d, %Y %h:%i %p') AS date_filed,"
     sql_fields += " tol.name as type, reason, le.status, tol.with_pay,"
     sql_fields += " (CASE le.half_day WHEN 0 THEN (DATEDIFF(le.end_date, le.start_date) + 1) ELSE 0.5 END) AS days"
     sql_from = " FROM leaves as le"
