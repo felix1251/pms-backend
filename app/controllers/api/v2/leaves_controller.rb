@@ -7,7 +7,7 @@ class Api::V2::LeavesController < PmsErsController
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
-    sql_fields = " CASE WHEN le.end_date = le.start_date THEN end_date"
+    sql_fields = " CASE WHEN le.end_date = le.start_date THEN DATE_FORMAT(le.end_date, '%b %d, %Y')"
     sql_fields += " ELSE CONCAT(DATE_FORMAT(le.start_date, '%b %d, %Y'),' - ',DATE_FORMAT(le.end_date, '%b %d, %Y'))" 
     sql_fields += " END AS inclusive_date, le.id, DATE_FORMAT(le.created_at, '%b %d, %Y %h:%i %p') AS date_filed,"
     sql_fields += " tol.name as type, reason, le.status, tol.with_pay,"
@@ -43,7 +43,7 @@ class Api::V2::LeavesController < PmsErsController
 
   # POST /leaves
   def create
-    @leave = Leave.new(leave_params.merge!({company_id: employee_company_id, employee_id: payload['employee_id']}))
+    @leave = Leave.new(leave_params.merge!({company_id: employee_company_id, employee_id: payload['employee_id'], origin: 1}))
     if @leave.save
       render json: @leave, status: :created
     else
@@ -53,19 +53,27 @@ class Api::V2::LeavesController < PmsErsController
 
   # PATCH/PUT /leaves/1
   def update
-    if @leave.update(leave_params)
+    if @leave.status == "P" && @leave.update(leave_params)
       render json: @leave
     else
-      render json: @leave.errors, status: :unprocessable_entity
+      if @leave.status != "P"
+        render json: {error: "Cant't update leave"}, status: :unprocessable_entity
+      else
+        render json: @leave.errors, status: :unprocessable_entity
+      end
     end
   end
 
   # DELETE /leaves/1
   def destroy
-    if @leave.update(status: "V")
+    if @leave.status == "P" && @leave.update(status: "V")
       render json: {message: "Leave Voided"}
     else
-      render json: @leave.errors, status: :unprocessable_entity
+      if @leave.status != "P"
+        render json: {error: "Cant't void leave"}, status: :unprocessable_entity
+      else
+        render json: @leave.errors, status: :unprocessable_entity
+      end
     end
   end
 

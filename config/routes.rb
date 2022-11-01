@@ -119,7 +119,11 @@ Rails.application.routes.draw do
       post 'refresh', controller: :refresh, action: :create
       post 'signin', controller: :signin, action: :create
       delete 'signin', controller: :signin, action: :logout
+      get 'me', controller: :me, action: :me
       resources :leaves
+      resources :type_of_leaves
+      resources :overtimes
+      resources :password_change
     end
   end
 
