@@ -24,8 +24,11 @@ class Api::V2::SigninController < PmsErsController
   private
 
   def set_employee
-    @employee = Employee.select("employees.id, employees.employee_id, employees.first_name, employees.middle_name, employees.last_name, employees.suffix, 
-                        com.description AS company_name, employees.biometric_no, employees.password_digest, employees.profile")
+    sql = " CONCAT(employees.last_name, ', ', employees.first_name, ' ', CASE WHEN employees.suffix = '' THEN '' ELSE CONCAT(employees.suffix, '.') END,' '," 
+    sql += " CASE employees.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(employees.middle_name, 1, 1), '.') END) AS fullname"
+
+    @employee = Employee.select("employees.id, employees.employee_id, com.description AS company_name, 
+                        employees.biometric_no, employees.password_digest, employees.profile," + sql)
                         .joins("LEFT JOIN companies AS com ON com.id = employees.company_id")
                         .find_by!(employee_id: params[:employee_id], status: "A")
   end
