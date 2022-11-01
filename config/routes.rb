@@ -123,6 +123,7 @@ Rails.application.routes.draw do
       resources :leaves
       resources :type_of_leaves
       resources :overtimes
+      resources :password_change
     end
   end
 
