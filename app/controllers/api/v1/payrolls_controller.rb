@@ -128,14 +128,14 @@ class Api::V1::PayrollsController < PmsDesktopController
 		sql_payed_ob_hours_sum += " ), 0.0) AS total_payed_ob_hours,"
 
     sql_payed_overtime_hours_sum = " COALESCE((SELECT "
-    sql_payed_overtime_hours_sum += " SUM(TIMESTAMPDIFF(HOUR, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i')"
+    sql_payed_overtime_hours_sum += " SUM(TRUNCATE(TIMESTAMPDIFF(MINUTE, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i')"
     sql_payed_overtime_hours_sum += " ELSE DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i') END,"
-		sql_payed_overtime_hours_sum += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END))"
+		sql_payed_overtime_hours_sum += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END)/60, 2))"
 		sql_payed_overtime_hours_sum += " FROM overtimes ov"
 		sql_payed_overtime_hours_sum += " WHERE ov.status = 'A' AND ov.employee_id = emp.id AND ov.billable = 1 AND ov.offset_id IS NULL"
 		sql_payed_overtime_hours_sum += " AND (DATE(ov.start_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}' OR DATE(ov.end_date) BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')"
     sql_payed_overtime_hours_sum += " GROUP BY ov.employee_id"
-    sql_payed_overtime_hours_sum += " ), 0.0) total_payed_overtime_hours,"
+    sql_payed_overtime_hours_sum += " ), 0.0) AS total_payed_overtime_hours,"
 
     sql_payed_offset_hours_sum = " COALESCE((SELECT" 
 		sql_payed_offset_hours_sum += " SUM((SELECT COALESCE(IF(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'),"
