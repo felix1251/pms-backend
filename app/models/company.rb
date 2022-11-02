@@ -1,5 +1,4 @@
 class Company < ApplicationRecord
-      serialize :worker_pid_list, Array
       has_many :users
       has_many :employees
       has_many :departments
@@ -24,11 +23,13 @@ class Company < ApplicationRecord
             self.time_keeping_approvers ||= []
             self.request_administrative_approvers ||= []
             self.request_supervisory_approvers ||= []
+            self.worker_pid_list ||= []
 
             self.employee_approvers = self.employee_approvers.uniq
             self.schedule_approvers = self.schedule_approvers.uniq
             self.time_keeping_approvers = self.time_keeping_approvers.uniq
             self.request_administrative_approvers = self.request_administrative_approvers.uniq
             self.request_supervisory_approvers =  self.request_supervisory_approvers.uniq
+            self.worker_pid_list = self.worker_pid_list.uniq
       end
 end

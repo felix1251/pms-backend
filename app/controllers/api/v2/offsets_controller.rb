@@ -1,7 +1,7 @@
 class Api::V2::OffsetsController < PmsErsController
   before_action :authorize_access_request!
   before_action :set_offset, only: [:show, :update, :destroy]
-  before_action :set_action, only: [:offset_action]
+  before_action :check_credits, only: [:create] 
 
   # GET /offsets
   def index
@@ -25,16 +25,7 @@ class Api::V2::OffsetsController < PmsErsController
   end
 
   def emp_overtime
-    sql = "SELECT"
-    sql += " IFNULL(SUM(TRUNCATE((TIMESTAMPDIFF("
-    sql += " MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60)"
-    sql += " - (SELECT SUM(8) FROM offsets WHERE employee_id = #{payload['employee_id']} AND status = 'A' )"
-    sql += " ,2)), 0) AS overtime_credits"
-    sql += " FROM overtimes"
-    sql += " WHERE employee_id = #{payload['employee_id']} AND status = 'A' AND billable = 0"
-
-    emp_ov = execute_sql_query(sql)
-    render json: emp_ov.first["overtime_credits"]
+    render json: offset_credits
   end
 
   # POST /offsets
@@ -47,40 +38,52 @@ class Api::V2::OffsetsController < PmsErsController
     end
   end
 
-  def offset_action
-    if @offset.update(action_params.merge!({actioned_by_id: payload['user_id']}))
-      render json: @offset
-    else
-      render json:  @offset.errors, status: :unprocessable_entity
-    end
-  end
-
-  # PATCH/PUT /offsets/1
   def update
-    if @offset.update(offset_params)
+    if @offset.status == "P" && @offset.update(offset_params)
       render json: @offset
     else
-      render json: @offset.errors, status: :unprocessable_entity
+      if @offset.status != "P"
+        render json: {error: "Cant't update offset"}, status: :unprocessable_entity
+      else
+        render json: @offset.errors, status: :unprocessable_entity
+      end
     end
   end
 
   # DELETE /offsets/1
   def destroy
-    @offset.destroy
+    if @offset.status == "P" && @offset.update(status: "V")
+      render json: {message: "Overtime voided"}
+    else
+      if @offset.status != "P"
+        render json: {error: "Cant't void offset"}, status: :unprocessable_entity
+      else
+        render json: @offset.errors, status: :unprocessable_entity
+      end
+    end
   end
 
   private
+    def check_credits
+      unless offset_credits.to_d >= 8
+        render json: {error: "Not enough offset credits"}, status: :unprocessable_entity
+      end
+    end
+
+    def offset_credits
+      sql = "SELECT (final.overtime_credits"
+      sql += " - IFNULL((SELECT SUM(8) FROM offsets AS ofc WHERE ofc.employee_id = #{payload['employee_id']} AND ofc.status IN ('A','P') ), 0)) AS total"
+      sql += " FROM ("
+      sql += " SELECT SUM(TRUNCATE((TIMESTAMPDIFF("
+      sql += " MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60),2)) AS overtime_credits"
+      sql += " FROM overtimes ov"
+      sql += " WHERE ov.employee_id = #{payload['employee_id']} AND ov.status = 'A' AND ov.billable = 0"
+      sql += " ) final"
+      return execute_sql_query(sql).first["total"]
+    end
     # Use callbacks to share common setup or constraints between actions.
     def set_offset
       @offset = Offset.find(params[:id])
-    end
-
-    def set_action
-      @offset = Offset.find(params[:id])
-    end
-
-    def action_params
-      params.require(:offset).permit(:status)
     end
 
     # Only allow a trusted parameter "white list" through.
