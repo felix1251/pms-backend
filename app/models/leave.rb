@@ -9,7 +9,7 @@ class Leave < ApplicationRecord
 
       def no_date_overlap
             if (Leave.where("(? BETWEEN start_date AND end_date OR ? BETWEEN start_date AND end_date) AND employee_id = ?", self.start_date, self.end_date, self.employee_id).any?)
-                  errors.add(:end_time, 'Employee leave date range overlaps or already exist')
+                  errors.add(:end_date, 'Employee leave date range overlaps or already exist')
             end
       end
 end

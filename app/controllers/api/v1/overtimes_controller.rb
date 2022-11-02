@@ -13,7 +13,7 @@ class Api::V1::OvertimesController < PmsDesktopController
     sql_fields = " CONCAT(ov.start_date, ',', ov.end_date) AS datetime,"
     sql_fields += " ov.output, ov.status, ov.id, ov.created_at AS date_filed, ov.billable,"
     sql_fields += " CASE ov.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
-    sql_fields += " TIMESTAMPDIFF(HOUR, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i')) AS hours,"
+    sql_fields += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i'))/60, 2) AS hours,"
     sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
     sql_fields += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname"
     sql_from = " FROM overtimes as ov"
@@ -35,7 +35,7 @@ class Api::V1::OvertimesController < PmsDesktopController
     sql_fields = " CONCAT(ov.start_date,',', ov.end_date) AS datetime,"
     sql_fields += " ov.output, ov.status, ov.id, ov.created_at AS date_filed, ov.billable,"
     sql_fields += " CASE ov.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
-    sql_fields += " TIMESTAMPDIFF(HOUR, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i')) AS hours,"
+    sql_fields += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i'))/60, 2) AS hours,"
     sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
     sql_fields += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname"
     sql_from = " FROM overtimes as ov"
@@ -67,8 +67,8 @@ class Api::V1::OvertimesController < PmsDesktopController
 
   def emp_overtime
     sql = " SELECT CONCAT(DATE_FORMAT(start_date, '%b %d, %Y %h:%i %p'), ' to ', DATE_FORMAT(end_date, '%b %d, %Y %h:%i %p'), ' (',"
-    sql += " TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i')), ' hours)') AS label,"
-    sql += " id as value, TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i')) hours"
+    sql += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60, 2), ' hours)') AS label,"
+    sql += " id AS value, TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60, 2) AS hours"
     sql += " FROM overtimes"
     sql += " WHERE employee_id = #{params[:emp_id]} AND status = 'A' AND offset_id IS NULL"
     emp_ov = execute_sql_query(sql)
