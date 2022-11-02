@@ -9,9 +9,8 @@ class Api::V1::OffsetsController < PmsDesktopController
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
     sql_start = " SELECT"
     sql_count = " COUNT(*) AS total_count"
-    sql_fields = " (SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))), 0)"
-    sql_fields += " FROM overtimes WHERE offset_id = ofs.id) AS ot_total_hours, DATE_FORMAT(ofs.offset_date, '%b %d, %Y') AS offset_date, ofs.id,"
-    sql_fields += " DATE_FORMAT(ofs.created_at, '%b %d, %Y %h:%i %p') AS date_filed, CASE ofs.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
+    sql_fields = " DATE_FORMAT(ofs.offset_date, '%b %d, %Y') AS offset_date, ofs.id, 8 AS hours_used,"
+    sql_fields += " DATE_FORMAT(ofs.created_at, '%b %d, %Y %h:%i %p') AS date_filed, CASE ofs.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin, ofs.id,"
     sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
     sql_fields += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname, ofs.reason, ofs.status"
     sql_from = " FROM offsets as ofs"
@@ -28,9 +27,8 @@ class Api::V1::OffsetsController < PmsDesktopController
     pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
     sql_start = " SELECT"
     sql_count = " COUNT(*) AS total_count"
-    sql_fields = " (SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))), 0)"
-    sql_fields += " FROM overtimes WHERE offset_id = ofs.id) AS ot_total_hours, DATE_FORMAT(ofs.offset_date, '%b %d, %Y') AS offset_date, ofs.id,"
-    sql_fields += " DATE_FORMAT(ofs.created_at, '%b %d, %Y %h:%i %p') AS date_filed, CASE ofs.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
+    sql_fields = " DATE_FORMAT(ofs.offset_date, '%b %d, %Y') AS offset_date, ofs.id, 8 AS hours_used,"
+    sql_fields += " DATE_FORMAT(ofs.created_at, '%b %d, %Y %h:%i %p') AS date_filed, CASE ofs.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin, ofs.id,"
     sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
     sql_fields += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname, ofs.reason, ofs.status"
     sql_from = " FROM offsets as ofs"
@@ -63,8 +61,7 @@ class Api::V1::OffsetsController < PmsDesktopController
   def create
     @offset = Offset.new(offset_params.merge!({company_id: payload['company_id']}))
     if @offset.save
-      overtime = Overtime.where(id: offset_params[:overtime_ids]).update(offset_id: @offset.id)
-      render json: {offset: @offset, overtimes: overtime}, status: :created
+      render json: @offset, status: :created
     else
       render json: @offset.errors, status: :unprocessable_entity
     end
@@ -108,6 +105,6 @@ class Api::V1::OffsetsController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def offset_params
-      params.require(:offset).permit(:employee_id, :offset_date, :reason, :overtime_ids => [])
+      params.require(:offset).permit(:employee_id, :offset_date, :reason)
     end
 end
