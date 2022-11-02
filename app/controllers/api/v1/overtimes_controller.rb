@@ -66,13 +66,16 @@ class Api::V1::OvertimesController < PmsDesktopController
   end
 
   def emp_overtime
-    sql = " SELECT CONCAT(DATE_FORMAT(start_date, '%b %d, %Y %h:%i %p'), ' to ', DATE_FORMAT(end_date, '%b %d, %Y %h:%i %p'), ' (',"
-    sql += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60, 2), ' hours)') AS label,"
-    sql += " id AS value, TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60, 2) AS hours"
+    sql = "SELECT"
+    sql += " IFNULL(SUM(TRUNCATE((TIMESTAMPDIFF("
+    sql += " MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60)"
+    sql += " - (SELECT SUM(8) FROM offsets WHERE employee_id = #{params[:emp_id]} AND status = 'A' )"
+    sql += " ,2)), 0) AS overtime_credits"
     sql += " FROM overtimes"
-    sql += " WHERE employee_id = #{params[:emp_id]} AND status = 'A' AND offset_id IS NULL"
+    sql += " WHERE employee_id = #{params[:emp_id]} AND status = 'A' AND billable = 0"
+
     emp_ov = execute_sql_query(sql)
-    render json: emp_ov
+    render json: emp_ov.first["overtime_credits"]
   end
 
   # POST /overtimes
