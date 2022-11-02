@@ -34,6 +34,6 @@ class Api::V2::SigninController < PmsErsController
   end
 
   def not_found
-    render json: { error: "Can't find such uid and password combination" }, status: :not_found
+    render json: { error: "Can't find such UID and password combination" }, status: :not_found
   end
 end
