@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_28_082947) do
+ActiveRecord::Schema.define(version: 2022_11_02_124940) do
 
   create_table "administrators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
@@ -37,11 +37,10 @@ ActiveRecord::Schema.define(version: 2022_10_28_082947) do
   create_table "companies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "code", null: false
     t.text "description", null: false
-    t.integer "pending_time_keeping", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "status", default: "A"
-    t.string "worker_pid_list"
+    t.json "worker_pid_list"
     t.string "logo"
     t.json "settings"
     t.json "employee_approvers"
@@ -49,6 +48,8 @@ ActiveRecord::Schema.define(version: 2022_10_28_082947) do
     t.json "time_keeping_approvers"
     t.json "request_administrative_approvers"
     t.json "request_supervisory_approvers"
+    t.decimal "max_vacation_leave_credit", precision: 8, scale: 2, default: "9.0"
+    t.decimal "max_sick_leave_credit", precision: 8, scale: 2, default: "9.0"
     t.index ["code"], name: "index_companies_on_code"
   end
 
@@ -570,6 +571,7 @@ ActiveRecord::Schema.define(version: 2022_10_28_082947) do
     t.boolean "with_pay", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code", null: false
   end
 
   create_table "undertimes", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", force: :cascade do |t|

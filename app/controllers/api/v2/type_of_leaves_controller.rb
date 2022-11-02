@@ -2,7 +2,11 @@ class Api::V2::TypeOfLeavesController < PmsErsController
   before_action :authorize_access_request!
 
   def index
-    type_of_leaves = TypeOfLeave.select('id, name')
+    sql = "SELECT"
+    sql += " id, name"
+    sql += " FROM type_of_leaves"
+    type_of_leaves = execute_sql_query(sql)
     render json: type_of_leaves
   end
+
 end
