@@ -10,7 +10,7 @@ class Api::V2::OvertimesController < PmsErsController
     sql_count = " COUNT(*) AS total_count"
     sql_fields = " CONCAT(DATE_FORMAT(ov.start_date, '%b %d, %Y %h:%i %p'),' - ',DATE_FORMAT(ov.end_date, '%b %d, %Y %h:%i %p')) AS datetime, DATE_FORMAT(ov.created_at, '%b %d, %Y %h:%i %p') AS date_filed,"
     sql_fields += " ov.output, ov.status, ov.id, ov.billable,"
-    sql_fields += " TIMESTAMPDIFF(HOUR, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i')) AS hours"
+    sql_fields += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i'))/60, 2) AS hours"
     sql_from = " FROM overtimes as ov"
     sql_condition = " WHERE ov.employee_id = #{payload['employee_id']}"
     sql_sort = " ORDER BY ov.created_at DESC"
@@ -26,10 +26,9 @@ class Api::V2::OvertimesController < PmsErsController
     render json: @overtime
   end
 
-
   # POST /overtimes
   def create
-    @overtime = Overtime.new(overtime_params.merge!({company_id: payload['company_id']}))
+    @overtime = Overtime.new(overtime_params.merge!({company_id: employee_company_id, employee_id: payload['employee_id'], origin: 1}))
     if @overtime.save
       render json: @overtime, status: :created
     else
@@ -46,17 +45,29 @@ class Api::V2::OvertimesController < PmsErsController
   end
 
   # PATCH/PUT /overtimes/1
+
   def update
-    if @overtime.update(overtime_params)
+    if @overtime.status == "P" && @overtime.update(overtime_params)
       render json: @overtime
     else
-      render json: @overtime.errors, status: :unprocessable_entity
+      if @overtime.status != "P"
+        render json: {error: "Cant't update overtime"}, status: :unprocessable_entity
+      else
+        render json: @overtime.errors, status: :unprocessable_entity
+      end
     end
   end
 
-  # DELETE /overtimes/1
   def destroy
-    @overtime.destroy
+    if @overtime.status == "P" && @overtime.update(status: "V")
+      render json: {message: "Overtime voided"}
+    else
+      if @overtime.status != "P"
+        render json: {error: "Cant't void overtime"}, status: :unprocessable_entity
+      else
+        render json: @overtime.errors, status: :unprocessable_entity
+      end
+    end
   end
 
   private
