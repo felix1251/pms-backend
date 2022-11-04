@@ -81,7 +81,7 @@ class Api::V2::LeavesController < PmsErsController
       today = Date.today
       start_of_the_year = today.beginning_of_year.strftime("%Y-%m-%d")
       end_of_the_year = today.end_of_year.strftime("%Y-%m-%d")
-      
+
       if code
         tol = TypeOfLeave.find_by!(code: code) 
       else
@@ -96,7 +96,7 @@ class Api::V2::LeavesController < PmsErsController
       if code 
         sql += " AND le.leave_type = #{tol.id} AND le.status IN ('A', 'P')"
       else
-        sql += " AND le.leave_type IN (#{tol_arr.join(',')}) AND le.status IN ('A', 'P')"
+        sql += " AND le.leave_type IN (#{tol_arr.join(',')}) AND le.status = 'A'"
       end
 
       sql += " AND (le.start_date BETWEEN '#{start_of_the_year}' AND '#{end_of_the_year}')"
