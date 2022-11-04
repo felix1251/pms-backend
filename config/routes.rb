@@ -126,6 +126,7 @@ Rails.application.routes.draw do
       resources :offsets
       resources :password_change
       get 'emp_overtime', controller: :offsets, action: :emp_overtime
+      get 'leave_credits_total', controller: :leaves, action: :leave_credits_total
     end
   end
 

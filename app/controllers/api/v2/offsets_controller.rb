@@ -30,7 +30,7 @@ class Api::V2::OffsetsController < PmsErsController
 
   # POST /offsets
   def create
-    @offset = Offset.new(offset_params.merge!({company_id: employee_company_id, employee_id: payload["employee_id"]}))
+    @offset = Offset.new(offset_params.merge!({company_id: payload["company_id"], employee_id: payload["employee_id"]}))
     if @offset.save
       render json: @offset, status: :created
     else
@@ -79,7 +79,7 @@ class Api::V2::OffsetsController < PmsErsController
       sql += " FROM overtimes ov"
       sql += " WHERE ov.employee_id = #{payload['employee_id']} AND ov.status = 'A' AND ov.billable = 0"
       sql += " ) final"
-      return execute_sql_query(sql).first["total"]
+      return execute_sql_query(sql).first["total"] || "0.0"
     end
     # Use callbacks to share common setup or constraints between actions.
     def set_offset

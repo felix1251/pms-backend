@@ -66,16 +66,7 @@ class Api::V1::OvertimesController < PmsDesktopController
   end
 
   def emp_overtime
-    sql = "SELECT"
-    sql += " IFNULL(SUM(TRUNCATE((TIMESTAMPDIFF("
-    sql += " MINUTE, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60)"
-    sql += " - (SELECT SUM(8) FROM offsets WHERE employee_id = #{params[:emp_id]} AND status = 'A' )"
-    sql += " ,2)), 0) AS overtime_credits"
-    sql += " FROM overtimes"
-    sql += " WHERE employee_id = #{params[:emp_id]} AND status = 'A' AND billable = 0"
-
-    emp_ov = execute_sql_query(sql)
-    render json: emp_ov.first["overtime_credits"]
+    render json: offset_credits
   end
 
   # POST /overtimes
@@ -111,6 +102,18 @@ class Api::V1::OvertimesController < PmsDesktopController
   end
 
   private
+    def offset_credits
+      sql = "SELECT (final.overtime_credits"
+      sql += " - IFNULL((SELECT SUM(8) FROM offsets AS ofc WHERE ofc.employee_id = #{params[:emp_id]} AND ofc.status IN ('A','P') ), 0)) AS total"
+      sql += " FROM ("
+      sql += " SELECT SUM(TRUNCATE((TIMESTAMPDIFF("
+      sql += " MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60),2)) AS overtime_credits"
+      sql += " FROM overtimes ov"
+      sql += " WHERE ov.employee_id = #{params[:emp_id]} AND ov.status = 'A' AND ov.billable = 0"
+      sql += " ) final"
+      return execute_sql_query(sql).first["total"] || "0.0"
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_overtime
       @overtime = Overtime.find(params[:id])

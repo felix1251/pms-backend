@@ -3,7 +3,7 @@ class Api::V2::TypeOfLeavesController < PmsErsController
 
   def index
     sql = "SELECT"
-    sql += " id, name"
+    sql += " id, name, code"
     sql += " FROM type_of_leaves"
     type_of_leaves = execute_sql_query(sql)
     render json: type_of_leaves
