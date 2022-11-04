@@ -123,6 +123,7 @@ Rails.application.routes.draw do
       resources :leaves
       resources :type_of_leaves
       resources :overtimes
+      resources :official_businesses
       resources :offsets
       resources :password_change
       get 'emp_overtime', controller: :offsets, action: :emp_overtime
