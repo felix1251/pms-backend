@@ -1,7 +1,6 @@
 class Api::V2::OffsetsController < PmsErsController
   before_action :authorize_access_request!
   before_action :set_offset, only: [:show, :update, :destroy]
-  before_action :check_credits, only: [:create] 
 
   # GET /offsets
   def index
@@ -53,7 +52,7 @@ class Api::V2::OffsetsController < PmsErsController
   # DELETE /offsets/1
   def destroy
     if @offset.status == "P" && @offset.update(status: "V")
-      render json: {message: "Overtime voided"}
+      render json: {message: "Offset voided"}
     else
       if @offset.status != "P"
         render json: {error: "Cant't void offset"}, status: :unprocessable_entity
@@ -64,23 +63,26 @@ class Api::V2::OffsetsController < PmsErsController
   end
 
   private
-    def check_credits
-      unless offset_credits.to_d >= 8
-        render json: {error: "Not enough offset credits"}, status: :unprocessable_entity
-      end
-    end
 
     def offset_credits
+      today = Date.today
+      start_of_the_year = today.beginning_of_year.strftime("%Y-%m-%d")
+      end_of_the_year = today.end_of_year.strftime("%Y-%m-%d")
+
       sql = "SELECT (final.overtime_credits"
-      sql += " - IFNULL((SELECT SUM(8) FROM offsets AS ofc WHERE ofc.employee_id = #{payload['employee_id']} AND ofc.status IN ('A','P') ), 0)) AS total"
+      sql += " - IFNULL((SELECT SUM(8) FROM offsets AS ofc WHERE ofc.employee_id = #{payload['employee_id']}"
+      sql += " AND (ofc.offset_date BETWEEN '#{start_of_the_year}' AND '#{end_of_the_year}')"
+      sql += " AND ofc.status IN ('A','P') ), 0)) AS total"
       sql += " FROM ("
       sql += " SELECT SUM(TRUNCATE((TIMESTAMPDIFF("
       sql += " MINUTE, DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i'), DATE_FORMAT(end_date, '%Y-%m-%d %H:%i'))/60),2)) AS overtime_credits"
       sql += " FROM overtimes ov"
       sql += " WHERE ov.employee_id = #{payload['employee_id']} AND ov.status = 'A' AND ov.billable = 0"
+      sql += " AND (ov.start_date BETWEEN '#{start_of_the_year}' AND '#{end_of_the_year}')"
       sql += " ) final"
       return execute_sql_query(sql).first["total"] || "0.0"
     end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_offset
       @offset = Offset.find(params[:id])
