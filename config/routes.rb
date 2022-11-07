@@ -8,9 +8,7 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end
 
 Rails.application.routes.draw do
-  resources :undertimes
   mount Sidekiq::Web => '/sidekiq'
-  
   root to: "welcome#index"
 
   namespace :api do
@@ -39,6 +37,7 @@ Rails.application.routes.draw do
       resources :philhealths
       resources :pagibigs
       resources :schedules
+      resources :undertimes
       get 'schedule_listing', controller: :schedules, action: :schedule_listing
       resources :payroll_accounts
       resources :holidays
@@ -126,6 +125,7 @@ Rails.application.routes.draw do
       resources :official_businesses
       resources :offsets
       resources :password_change
+      resources :undertimes
       get 'emp_overtime', controller: :offsets, action: :emp_overtime
       get 'leave_credits_total', controller: :leaves, action: :leave_credits_total
     end
