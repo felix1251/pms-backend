@@ -5,9 +5,29 @@ class Api::V1::UndertimesController < PmsDesktopController
 
   # GET /undertimes
   def index
-    @undertimes = Undertime.all
+    pagination = custom_pagination(params[:page].to_i, params[:per_page].to_i)
 
-    render json: @undertimes
+    allow_status = ['P']
+    status = allow_status.include?(params[:status] || "") ? " = 'P'" : " != 'P'"
+
+    sql_start = "SELECT"
+    sql_count = " COUNT(*) AS total_count"
+    sql_fields = " und.id, und.status, DATE_FORMAT(und.created_at, '%b %d, %Y %h:%i %p') AS date_filed, und.reason,"
+    sql_fields += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(und.start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(und.end_time, '%Y-%m-%d %H:%i'))/60, 2) AS hours,"
+    sql_fields += " CONCAT(DATE_FORMAT(und.start_time, '%b %d, %Y %h:%i %p'),' - ',DATE_FORMAT(und.end_time, '%b %d, %Y %h:%i %p')) AS datetime,"
+    sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
+    sql_fields += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname"
+    sql_from = " FROM undertimes AS und"
+    sql_join = " LEFT JOIN employees as emp ON emp.id = und.employee_id"
+    sql_condition = " WHERE und.company_id = #{payload['company_id']}"
+    sql_condition += " AND und.status #{status}"
+    sql_sort = " ORDER BY und.created_at DESC"
+    sql_paginate = " LIMIT #{pagination[:per_page]} OFFSET #{pagination[:fetch_point]}"
+
+    undertimes = execute_sql_query(sql_start + sql_fields + sql_from + sql_join + sql_condition + sql_sort + sql_paginate)
+    count = execute_sql_query(sql_start + sql_count + sql_from + sql_condition)
+
+    render json: {data: undertimes, total_count: count.first["total_count"]}
   end
 
   # GET /undertimes/1
@@ -15,10 +35,20 @@ class Api::V1::UndertimesController < PmsDesktopController
     render json: @undertime
   end
 
+  def undertime_count
+    com_id = payload['company_id']
+    sql = "SELECT"
+    sql += " (SELECT COUNT(*) FROM undertimes WHERE status = 'P' AND company_id = #{com_id}) as pending,"
+    sql += " (SELECT COUNT(*) FROM undertimes WHERE status = 'A' AND company_id = #{com_id}) as approved,"
+    sql += " (SELECT COUNT(*) FROM undertimes WHERE status = 'D' AND company_id = #{com_id}) as rejected,"
+    sql += " (SELECT COUNT(*) FROM undertimes WHERE status = 'V' AND company_id = #{com_id}) as voided"
+    counts = execute_sql_query(sql)
+    render json: counts.first
+  end
+
   # POST /undertimes
   def create
-    @undertime = Undertime.new(undertime_params)
-
+    @undertime = Undertime.new(undertime_params.merge!({company_id: payload["company_id"]}))
     if @undertime.save
       render json: @undertime, status: :created
     else
@@ -48,6 +78,6 @@ class Api::V1::UndertimesController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def undertime_params
-      params.require(:undertime).permit(:start_time, :end_time, :status, :company_id, :employee_id, :origin, :reason)
+      params.require(:undertime).permit(:start_time, :end_time, :employee_id, :origin, :reason)
     end
 end

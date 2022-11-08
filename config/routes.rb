@@ -31,13 +31,13 @@ Rails.application.routes.draw do
       get 'payroll_under_payments', controller: :on_payroll_adjustments, action: :payroll_under_payments
       get 'payroll_over_payments', controller: :on_payroll_adjustments, action: :payroll_over_payments
       get 'employee_allowance_list', controller: :employee_allowances, action: :employee_allowance_list
-      
       resources :employee_allowances
       resources :payroll_comments
       resources :philhealths
       resources :pagibigs
       resources :schedules
       resources :undertimes
+      get 'undertime_count', controller: :undertimes, action: :undertime_count 
       get 'schedule_listing', controller: :schedules, action: :schedule_listing
       resources :payroll_accounts
       resources :holidays
