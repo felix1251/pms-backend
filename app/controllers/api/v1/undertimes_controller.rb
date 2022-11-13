@@ -12,7 +12,7 @@ class Api::V1::UndertimesController < PmsDesktopController
 
     sql_start = "SELECT"
     sql_count = " COUNT(*) AS total_count"
-    sql_fields = " und.id, und.status, DATE_FORMAT(und.created_at, '%b %d, %Y %h:%i %p') AS date_filed, und.reason,"
+    sql_fields = " und.id, und.status, DATE_FORMAT(und.created_at, '%b %d, %Y %h:%i %p') AS date_filed, und.reason, CASE und.origin WHEN 0 THEN 'PMS' ELSE 'ERS' END AS origin,"
     sql_fields += " TRUNCATE(TIMESTAMPDIFF(MINUTE, DATE_FORMAT(und.start_time, '%Y-%m-%d %H:%i'), DATE_FORMAT(und.end_time, '%Y-%m-%d %H:%i'))/60, 2) AS hours,"
     sql_fields += " CONCAT(DATE_FORMAT(und.start_time, '%b %d, %Y %h:%i %p'),' - ',DATE_FORMAT(und.end_time, '%b %d, %Y %h:%i %p')) AS datetime,"
     sql_fields += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
@@ -90,6 +90,6 @@ class Api::V1::UndertimesController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def undertime_params
-      params.require(:undertime).permit(:start_time, :end_time, :employee_id, :origin, :reason)
+      params.require(:undertime).permit(:start_time, :end_time, :employee_id, :reason)
     end
 end
