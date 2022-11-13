@@ -1,8 +1,7 @@
 class Api::V1::LeavesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_leave, only: [:show, :update, :destroy]
-  before_action :set_action, only: [:leave_action]
+  before_action :set_leave, only: [:show, :update, :destroy, :leave_action]
 
   # GET /leaves
   def index
@@ -106,10 +105,6 @@ class Api::V1::LeavesController < PmsDesktopController
     # Use callbacks to share common setup or constraints between actions.
     def set_leave
       @leave = Leave.find(params[:id])
-    end
-
-    def set_action
-      @leaveAction = Leave.find(params[:id])
     end
 
     def action_params
