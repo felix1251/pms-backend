@@ -37,8 +37,9 @@ Rails.application.routes.draw do
       resources :pagibigs
       resources :schedules
       resources :undertimes
-      get 'undertime_count', controller: :undertimes, action: :undertime_count 
-      get 'schedule_listing', controller: :schedules, action: :schedule_listing
+      get 'undertime_count', controller: :undertimes, action: :undertime_count
+      put 'offset_action', controller: :offsets, action: :offset_action
+      get 'undertime_action', controller: :undertimes, action: :undertime_action
       resources :payroll_accounts
       resources :holidays
       get 'holidays_api', controller: :holidays, action: :holidays_api

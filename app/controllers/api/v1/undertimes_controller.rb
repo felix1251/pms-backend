@@ -1,7 +1,7 @@
 class Api::V1::UndertimesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_undertime, only: [:show, :update, :destroy]
+  before_action :set_undertime, only: [:show, :update, :destroy, :undertime_action]
 
   # GET /undertimes
   def index
@@ -65,6 +65,14 @@ class Api::V1::UndertimesController < PmsDesktopController
     end
   end
 
+  def undertime_action
+    if @undertime.update(action_params.merge!({actioned_by_id: payload['user_id']}))
+      render json: @leaveAction
+    else
+      render json: @undertime.errors, status: :unprocessable_entity
+    end
+  end
+
   # DELETE /undertimes/1
   def destroy
     @undertime.destroy
@@ -74,6 +82,10 @@ class Api::V1::UndertimesController < PmsDesktopController
     # Use callbacks to share common setup or constraints between actions.
     def set_undertime
       @undertime = Undertime.find(params[:id])
+    end
+
+    def action_params
+      params.require(:undertime).permit(:status)
     end
 
     # Only allow a trusted parameter "white list" through.
