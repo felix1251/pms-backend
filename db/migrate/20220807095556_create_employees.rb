@@ -24,7 +24,7 @@ class CreateEmployees < ActiveRecord::Migration[5.2]
       t.string :work_sched_type, null: false
       t.string :work_sched_start, :length => 5
       t.string :work_sched_end, :length => 5
-      t.string :work_sched_days
+      t.json :work_sched_days
       t.string :civil_status, :default => ""
       t.string :phone_number, :default => ""
       t.string :email, :default => ""
