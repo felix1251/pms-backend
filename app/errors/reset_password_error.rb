@@ -1,2 +1,0 @@
-class ResetPasswordError < StandardError
-end
