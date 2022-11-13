@@ -1,13 +1,13 @@
 GIT
   remote: https://github.com/sinatra/sinatra.git
-  revision: 2b659be947998a5a39bcf0b3d93eaac31af82ac5
+  revision: cafaab99db5b644e5fbe2a19bdba168e671ff1f2
   specs:
-    rack-protection (3.0.1)
+    rack-protection (3.0.3)
       rack
-    sinatra (3.0.1)
+    sinatra (3.0.3)
       mustermann (~> 3.0)
       rack (~> 2.2, >= 2.2.4)
-      rack-protection (= 3.0.1)
+      rack-protection (= 3.0.3)
       tilt (~> 2.0)
 
 GEM
@@ -98,12 +98,12 @@ GEM
     method_source (1.0.0)
     mini_mime (1.1.2)
     minitest (5.16.3)
-    msgpack (1.5.6)
+    msgpack (1.6.0)
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
     mysql2 (0.5.4)
     nio4r (2.5.8)
-    nokogiri (1.13.8-x86_64-linux)
+    nokogiri (1.13.9-x86_64-linux)
       racc (~> 1.4)
     pry (0.13.1)
       coderay (~> 1.1)
@@ -170,8 +170,8 @@ GEM
     ruby-holidayapi (1.0.1)
     ruby2_keywords (0.0.5)
     ruby_dep (1.5.0)
-    sidekiq (6.5.7)
-      connection_pool (>= 2.2.5)
+    sidekiq (6.5.8)
+      connection_pool (>= 2.2.5, < 3)
       rack (~> 2.0)
       redis (>= 4.5.0, < 5)
     spring (2.1.1)
@@ -211,7 +211,7 @@ DEPENDENCIES
   pry-rails (~> 0.3.4)
   puma (~> 3.12)
   rack-cors
-  rails (~> 5.2.7, >= 5.2.7.1)
+  rails (~> 5.2.7, >= 5.2.8.1)
   redis (~> 4.0)
   rspec-rails (~> 3.7)
   ruby-holidayapi
@@ -225,4 +225,4 @@ RUBY VERSION
    ruby 2.6.3p62
 
 BUNDLED WITH
-   2.3.12
+   2.3.25
