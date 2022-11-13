@@ -7,7 +7,7 @@ class PmsDesktopController < ActionController::API
   rescue_from JWTSessions::Errors::Unauthorized, with: :not_authorized
   rescue_from JWTSessions::Errors::ClaimsVerification, with: :forbidden
   rescue_from JWTSessions::Errors::Expired, with: :token_expired
-  rescue_from ResetPasswordError, with: :not_authorized
+  # rescue_from ResetPasswordError, with: :not_authorized
 
   private
 
