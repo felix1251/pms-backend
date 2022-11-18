@@ -28,19 +28,11 @@ class Api::V2::OvertimesController < PmsErsController
 
   # POST /overtimes
   def create
-    @overtime = Overtime.new(overtime_params.merge!({company_id: employee_company_id, employee_id: payload['employee_id'], origin: 1}))
+    @overtime = Overtime.new(overtime_params.merge!({company_id: payload["company_id"], employee_id: payload['employee_id'], origin: 1}))
     if @overtime.save
       render json: @overtime, status: :created
     else
       render json: @overtime.errors, status: :unprocessable_entity
-    end
-  end
-
-  def overtime_action
-    if @overtime.update(action_params.merge!({employee_id: payload['employee_id']}))
-      render json: @overtime
-    else
-      render json:  @overtime.errors, status: :unprocessable_entity
     end
   end
 
