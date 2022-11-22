@@ -40,7 +40,7 @@ class Api::V1::SchedulesController < PmsDesktopController
     sql = "SELECT"
     sql += " CONCAT(emp.last_name, ', ', emp.first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
 		sql += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname,"
-    sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('id', es.id, 'start_time_iso', es.start_time, 'end_time_iso', es.end_time,"
+    sql += " (SELECT IFNULL(JSON_ARRAYAGG(JSON_OBJECT('id', es.id, 'start_time_iso', es.start_time, 'end_time_iso', es.end_time, 'duty_type', es.duty_type,"
     sql += " 'employee_id', es.employee_id, 'start_date', DATE(es.start_time), 'end_date', DATE(es.end_time),"
     sql += " 'end_time_24hrs', DATE_FORMAT(es.end_time, '%H:%i'), 'start_time_24hrs', DATE_FORMAT(es.start_time, '%H:%i'),"
     sql += " 'end_time', DATE_FORMAT(es.end_time, '%h:%i %p'), 'start_time', DATE_FORMAT(es.start_time, '%h:%i %p'),"
