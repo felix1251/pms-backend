@@ -67,6 +67,7 @@ Rails.application.routes.draw do
       put 'offset_action', controller: :offsets, action: :offset_action
       resources :compensation_histories
       resources :payrolls
+      get 'schedule_listing', controller: :schedules, action: :schedule_listing
       get 'daily_time_records', controller: :payrolls, action: :daily_time_records
       get 'on_params_details', controller: :payrolls, action: :on_params_details
       get 'payroll_details', controller: :payrolls, action: :payroll_details
