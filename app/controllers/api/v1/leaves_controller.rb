@@ -80,8 +80,8 @@ class Api::V1::LeavesController < PmsDesktopController
   end
 
   def leave_action
-    if @leaveAction.update(action_params.merge!({actioned_by_id: payload['user_id']}))
-      render json: @leaveAction
+    if @leave.update(action_params.merge!({actioned_by_id: payload['user_id']}))
+      render json: @leave
     else
       render json: @leaveAction.errors, status: :unprocessable_entity
     end
