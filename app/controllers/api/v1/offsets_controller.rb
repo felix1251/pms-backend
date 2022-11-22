@@ -1,8 +1,7 @@
 class Api::V1::OffsetsController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_offset, only: [:show, :update, :destroy]
-  before_action :set_action, only: [:offset_action]
+  before_action :set_offset, only: [:show, :update, :destroy, :offset_action]
 
   # GET /offsets
   def index
@@ -92,10 +91,6 @@ class Api::V1::OffsetsController < PmsDesktopController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_offset
-      @offset = Offset.find(params[:id])
-    end
-
-    def set_action
       @offset = Offset.find(params[:id])
     end
 
