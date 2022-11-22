@@ -1,8 +1,7 @@
 class Api::V1::OvertimesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_overtime, only: [:show, :update, :destroy]
-  before_action :set_action, only: [:overtime_action]
+  before_action :set_overtime, only: [:show, :update, :destroy, :overtime_action]
 
   # GET /overtimes
   def index
@@ -116,10 +115,6 @@ class Api::V1::OvertimesController < PmsDesktopController
 
     # Use callbacks to share common setup or constraints between actions.
     def set_overtime
-      @overtime = Overtime.find(params[:id])
-    end
-
-    def set_action
       @overtime = Overtime.find(params[:id])
     end
 

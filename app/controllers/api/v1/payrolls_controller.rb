@@ -354,7 +354,7 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " ), 0.0) total_payed_overtime_hours,"
     sql += " CONCAT(emp.last_name, ', ', first_name, ' ', CASE WHEN emp.suffix = '' THEN '' ELSE CONCAT(emp.suffix, '.') END,' ',"
     sql += " CASE emp.middle_name WHEN '' THEN '' ELSE CONCAT(SUBSTR(emp.middle_name, 1, 1), '.') END) AS fullname, pos.name AS position, dep.name As department,"
-    sql += " IFNULL(opc.work_sched_type, emp.work_sched_type) AS shed_type, emp.id, emp.first_name, emp.last_name, emp.biometric_no, emp.work_sched_start, emp.work_sched_end,"
+    sql += " IFNULL(opc.work_sched_type, emp.work_sched_type) AS sched_type, emp.id, emp.biometric_no, emp.work_sched_start, emp.work_sched_end, emp.work_sched_days,"
     sql += " (SELECT IFNULL(json_arrayagg(JSON_OBJECT('date', only_date, 'in', actual_in, 'out', actual_out, 'undertime_minutes', (expected_minutes - minutes_in_date),"
     sql += " 'expected_hours', TRUNCATE(expected_minutes/60, 0), 'actual_minutes', minutes_in_date"
     sql += " )), '[]') FROM"
@@ -383,9 +383,12 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " WHERE status = 0 and next_status = 1"
     sql += " GROUP BY only_date) AS final"
     sql += " ) AS actual,"
-    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('from', lv.start_date, 'to', lv.end_date, 'half_day', lv.half_day)), '[]') FROM leaves AS lv where lv.employee_id = emp.id AND (lv.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as leaves,"
-    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('date', ofs.offset_date)), '[]') FROM offsets AS ofs where ofs.employee_id = emp.id AND (ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as offsets,"
-    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('from', ob.start_date, 'to', ob.end_date)), '[]') FROM official_businesses AS ob where ob.employee_id = emp.id AND (ob.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as ob"
+    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('from', lv.start_date, 'to', lv.end_date, 'half_day', lv.half_day, 'with_pay', tol.with_pay)), '[]')"
+    sql += " FROM leaves AS lv"
+    sql += " LEFT JOIN type_of_leaves AS tol ON tol.id = lv.leave_type"
+    sql += " where lv.employee_id = emp.id AND lv.status = 'A' AND (lv.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as leaves," 
+    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('date', ofs.offset_date)), '[]') FROM offsets AS ofs where ofs.employee_id = emp.id AND ofs.status = 'A' AND (ofs.offset_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as offsets,"
+    sql += " (SELECT COALESCE(json_arrayagg(JSON_OBJECT('from', ob.start_date, 'to', ob.end_date)), '[]') FROM official_businesses AS ob where ob.employee_id = emp.id AND ob.status = 'A' AND (ob.start_date BETWEEN '#{@payroll.from}' AND '#{@payroll.to}')) as ob"
     sql += " FROM employees AS emp"
     sql += " LEFT JOIN on_payroll_compensations AS opc ON opc.employee_id = emp.id AND opc.payroll_id = #{@payroll.id}"
     sql += " LEFT JOIN positions AS pos ON pos.id = IFNULL(opc.position_id, emp.position_id)"
@@ -396,8 +399,6 @@ class Api::V1::PayrollsController < PmsDesktopController
     sql += " AND emp.company_id = #{payload['company_id']}"
     sql += " AND '#{@payroll.to}' >= DATE(emp.date_hired)"
     sql += " ORDER BY fullname"
-    #count_sql += " AND (opc.company_account_id = #{params[:company_account_id]}" if params[:company_account_id].present?
-    #count_sql += " OR emp.company_account_id = #{params[:company_account_id]})" if params[:company_account_id].present?
 
     data = execute_sql_query(sql)
     render json: {date_range: date_range, data: data}
