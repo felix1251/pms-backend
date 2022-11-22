@@ -3,6 +3,7 @@ class EmployeeSchedule < ApplicationRecord
   validates :start_time, presence: true
   validates :end_time, presence: true
   validate :no_date_overlap, :if => [:start_time_changed?, :end_time_changed?]
+  enum duty_type: { X: "X", Y: "Y"}
 
   private
 

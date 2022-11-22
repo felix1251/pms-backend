@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_11_02_124940) do
+ActiveRecord::Schema[7.0].define(version: 2022_11_22_073946) do
   create_table "administrators", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "username"
     t.string "password_digest"
@@ -136,6 +136,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_11_02_124940) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.bigint "schedule_id"
+    t.string "duty_type", default: "X"
     t.index ["employee_id"], name: "index_employee_schedules_on_employee_id"
     t.index ["schedule_id"], name: "index_employee_schedules_on_schedule_id"
   end
