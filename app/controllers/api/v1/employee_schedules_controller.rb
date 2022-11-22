@@ -58,6 +58,6 @@ class Api::V1::EmployeeSchedulesController < PmsDesktopController
 
     # Only allow a trusted parameter "white list" through.
     def employee_schedule_params
-      params.require(:employee_schedule).permit(:start_time, :end_time, :employee_id)
+      params.require(:employee_schedule).permit(:start_time, :end_time, :employee_id, :duty_type)
     end
 end

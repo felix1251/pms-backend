@@ -340,10 +340,10 @@ class Api::V1::PayrollsController < PmsDesktopController
 
     sql = "SELECT "
     sql += " IFNULL(TRUNCATE((TIMESTAMPDIFF(MINUTE, CONCAT('2000-01-01 ', emp.work_sched_start), CONCAT('2000-01-01 ', emp.work_sched_end))-60)/60, 0), 0) AS expected_hours,"
-    sql += " COALESCE((SELECT json_arrayagg(JSON_OBJECT('in', DATE_FORMAT(start_time, '%H:%i %p'), 'out', DATE_FORMAT(end_time, '%H:%i %p'),"
+    sql += " COALESCE((SELECT json_arrayagg(JSON_OBJECT('in', start_time, 'out', end_time, 'duty_type', duty_type,"
     sql += " 'expected_hours', TRUNCATE((TIMESTAMPDIFF(MINUTE, start_time, end_time)-60)/60, 0)"
     sql += " )) FROM employee_schedules WHERE employee_id = emp.id AND DATE(start_time)"
-    sql += " BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'), '[]') AS fl_actual,"
+    sql += " BETWEEN '#{@payroll.from}' AND '#{@payroll.to}'), '[]') AS scheduled,"
     sql += " COALESCE((SELECT"
     sql += " SUM(TRUNCATE((TIMESTAMPDIFF(minute, CASE WHEN DATE(ov.end_date) > '#{@payroll.to}' THEN DATE_FORMAT('#{@payroll.to}', '%Y-%m-%d %H:%i') ELSE DATE_FORMAT(ov.start_date, '%Y-%m-%d %H:%i') END,"
     sql += " CASE WHEN DATE(ov.start_date) < '#{@payroll.from}' THEN DATE_FORMAT('#{@payroll.from}', '%Y-%m-%d %H:%i') ELSE  DATE_FORMAT(ov.end_date, '%Y-%m-%d %H:%i') END)/60), 1))"
