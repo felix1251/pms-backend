@@ -1,8 +1,7 @@
 class Api::V1::OfficialBusinessesController < PmsDesktopController
   before_action :authorize_access_request!
   before_action :check_backend_session
-  before_action :set_official_business, only: [:show, :update, :destroy]
-  before_action :set_action, only: [:ob_action]
+  before_action :set_official_business, only: [:show, :update, :destroy, :ob_action]
 
   # GET /official_businesses
   def index
@@ -76,10 +75,10 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
   end
 
   def ob_action
-    if @obAction.update(action_params.merge!({actioned_by_id: payload['user_id']}))
-      render json: @obAction
+    if @official_business.update(action_params.merge!({actioned_by_id: payload['user_id']}))
+      render json: @official_business
     else
-      render json: @obAction.errors, status: :unprocessable_entity
+      render json: @official_business.errors, status: :unprocessable_entity
     end
   end
 
@@ -101,10 +100,6 @@ class Api::V1::OfficialBusinessesController < PmsDesktopController
     # Use callbacks to share common setup or constraints between actions.
     def set_official_business
       @official_business = OfficialBusiness.find(params[:id])
-    end
-
-    def set_action
-      @obAction = OfficialBusiness.find(params[:id])
     end
 
     def action_params
