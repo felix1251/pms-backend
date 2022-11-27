@@ -91,7 +91,6 @@ Rails.application.routes.draw do
       resources :device_session_records
       resources :session_records
       resources :user_page_action_accesses
-      resources :phone_indexes
       resources :page_action_accesses
       resources :page_access_controls
       resources :page_accesses
