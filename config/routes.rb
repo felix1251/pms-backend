@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   mount Sidekiq::Web => '/sidekiq'
   root to: "welcome#index"
 
+  #api/v1
   namespace :api do
     namespace :v1 do
       #cable
@@ -113,6 +114,8 @@ Rails.application.routes.draw do
     end
   end
 
+
+  #api/v2
   namespace :api do
     namespace :v2 do
       post 'refresh', controller: :refresh, action: :create
@@ -131,6 +134,7 @@ Rails.application.routes.draw do
     end
   end
 
+  #api/admin
   namespace :api do
     namespace :admin do
       post 'refresh', controller: :refresh, action: :create
